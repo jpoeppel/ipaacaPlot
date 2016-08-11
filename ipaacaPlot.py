@@ -10,6 +10,10 @@ Last Modified: 17.12.14
 
 10.08.2016
 Fixed a bug that caused ipaaca to crash
+11.08.2016
+Added distribution plots as alternative (still early testing) and refactored channelBoxes
+accordingly.
+Also refactored back to 4 spaces=1 tab, to be more consitent with the python standard.
 """
 import os
 import wx
@@ -29,20 +33,10 @@ from matplotlib.backends.backend_wxagg import \
 import numpy as np
 import pylab
 
-class ParameterChangerBox(wx.Panel):
-  """
-    A static combination of Label and Entry/CheckBox that allows to update parameters 
-  """
-  
-  def __init__(self, parent, ID, label, initVal):
-      wx.Panel.__init__(self,parent, ID)
-      self.value = initVal
-    
-    
 class ChannelBox(wx.Panel):
     """
-        A static box that allows to add another ipaaca categorie and key where from
-        where data can be recieved. Will also be used to store the data belonging to that channel.
+        Abstract class for a channel box, which provides the commong functionality for both timelines
+        and distribution plots.
     """
     
     def __init__(self, parent, ID, ctrl):
@@ -125,8 +119,9 @@ class ChannelBox(wx.Panel):
     
 class DistributionChannelBox(ChannelBox):
     """
-        A static box taht allows to add another ipaaca category over which a distribution
-        is send.
+        A channel box for plotting "distributions". Expects to find x and y values in the payload
+        designated by their respective keys. The x values are used as labels for the bins in
+        the y values. x and y values MUST have identical dimensions!
     """
     
     def __init__(self, parent, ID, ctrl):
@@ -245,6 +240,10 @@ class DistributionChannelBox(ChannelBox):
         
         
 class TimeLineChannelBox(ChannelBox):
+    """
+        A channel box for time series. Expects to find a single new data point in the payload
+        designated by the specified key which is added to the timeline that is being drawn.
+    """
     
     def __init__(self, parent, ID, ctrl):
         self.key = ""
