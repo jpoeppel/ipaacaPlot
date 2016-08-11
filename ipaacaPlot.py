@@ -13,7 +13,6 @@ Fixed a bug that caused ipaaca to crash
 """
 import os
 import wx
-import wx.lib.scrolledpanel as scrolled
 import sys
 import ipaacaHandler
 import time
@@ -418,7 +417,6 @@ class GraphFrame(wx.Frame):
       sys.exit(0)
         
     def updateData(self, iu, event_type, local):
-      print "got iu: ", iu
       if self.firstTime == None:
         self.firstTime = time.time()
       if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
