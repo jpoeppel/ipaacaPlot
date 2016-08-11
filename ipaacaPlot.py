@@ -32,6 +32,7 @@ from matplotlib.backends.backend_wxagg import \
     NavigationToolbar2WxAgg as NavigationToolbar
 import numpy as np
 import pylab
+import json #For config  files
 
 class ChannelBox(wx.Panel):
     """
@@ -39,7 +40,7 @@ class ChannelBox(wx.Panel):
         and distribution plots.
     """
     
-    def __init__(self, parent, ID, ctrl):
+    def __init__(self, parent, ID, ctrl, config=None):
         wx.Panel.__init__(self, parent, ID)
         self.ctrl = ctrl
         self.xData = []
@@ -49,10 +50,11 @@ class ChannelBox(wx.Panel):
         self._isActive = False
         self.minVal = 0.0
         self.maxVal = 0.0
+        self.style= "-"
         self.dataLock = threading.Lock()
         self.category = ""
         
-        self.create_elements()
+        self.create_elements(config)
         
     def create_elements(self):
         raise NotImplementedError
@@ -69,12 +71,15 @@ class ChannelBox(wx.Panel):
       
       
     def on_StyleSelect(self, event):
-        style = event.GetString()
-        if style in ['*','.','d']:
+        self.style = event.GetString()
+        self._update_style()
+        
+    def _update_style(self):
+        if self.style in ['*','.','d']:
             pylab.setp(self.plot_data, linestyle= '')
-            pylab.setp(self.plot_data, marker= style)
+            pylab.setp(self.plot_data, marker= self.style)
         else:
-            pylab.setp(self.plot_data, linestyle= style)
+            pylab.setp(self.plot_data, linestyle= self.style)
             pylab.setp(self.plot_data, marker= '')
       
     def on_catText_enter(self, event):
@@ -104,7 +109,10 @@ class ChannelBox(wx.Panel):
     def on_checkActive(self, event):       
         sender = event.GetEventObject()
         isChecked = sender.GetValue()
-        self.isActive = isChecked
+        self._change_activity(isChecked)
+            
+    def _change_activity(self, activity):
+        self.isActive = activity
         if self._isActive:
             self.ctrl.ih.addInputCategory(self.category)
             if self.plot_data not in self.ctrl.axes.lines:
@@ -112,7 +120,6 @@ class ChannelBox(wx.Panel):
         else:
             if self.plot_data in self.ctrl.axes.lines:
                 self.ctrl.axes.lines.remove(self.plot_data)
-            
             
     def update_data(self, firstTimestep, payload):
         raise NotImplementedError
@@ -245,22 +252,28 @@ class TimeLineChannelBox(ChannelBox):
         designated by the specified key which is added to the timeline that is being drawn.
     """
     
-    def __init__(self, parent, ID, ctrl):
+    def __init__(self, parent, ID, ctrl, config=None):
         self.key = ""
         self.xMin = 0
-        super(TimeLineChannelBox, self).__init__(parent, ID, ctrl)
+        super(TimeLineChannelBox, self).__init__(parent, ID, ctrl, config)
         self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,)[0]
         
-    def create_elements(self):
+    def create_elements(self, config):
+
+        if config == None:
+            #Create default config
+            config = {"category": "", "key": "", "color": [0,0,0], "style": "-", "active": False}
+        
         self.activeCB = wx.CheckBox(self, -1, "Active")
-        self.activeCB.SetValue(self._isActive)
+        self.activeCB.SetValue(config["active"])
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)        
         
         box = wx.StaticBox(self, -1, "Add Channel")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         
         catLabel = wx.StaticText(self, -1, "Category: ")
-        self.catText = wx.TextCtrl(self, -1, "", size=(100,-1))
+        self.category = config["category"]
+        self.catText = wx.TextCtrl(self, -1, self.category, size=(100,-1))
 
         self.catText.Bind(wx.EVT_TEXT_ENTER, self.on_catText_enter)   
         self.catText.Bind(wx.EVT_KILL_FOCUS, self.on_catText_enter)
@@ -270,17 +283,20 @@ class TimeLineChannelBox(ChannelBox):
         category_box.Add(self.catText, flag=wx.ALIGN_CENTER_VERTICAL)
         
         keyLabel = wx.StaticText(self, -1, "Payload Key: ")
-        self.keyText = wx.TextCtrl(self, -1, "", size=(100,-1))
+        self.key = config["key"]
+        self.keyText = wx.TextCtrl(self, -1, self.key, size=(100,-1))
         
         self.keyText.Bind(wx.EVT_TEXT_ENTER, self.on_keyText_enter)         
         self.keyText.Bind(wx.EVT_KILL_FOCUS, self.on_keyText_enter)
+
         
         key_box = wx.BoxSizer(wx.HORIZONTAL)
         key_box.Add(keyLabel, flag=wx.ALIGN_CENTER_VERTICAL)
         key_box.Add(self.keyText, flag=wx.ALIGN_CENTER_VERTICAL)
 
         self.colourPicker = wx.ColourPickerCtrl(self, -1)
-        
+        self.colour = (float(config["color"][0])/255, float(config["color"][1])/255,float(config["color"][2])/255)
+        self.colourPicker.SetColour(config["color"])
         self.colourPicker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.on_colourChange)
         
         self.clear_button = wx.Button(self, -1, "Clear")
@@ -290,8 +306,10 @@ class TimeLineChannelBox(ChannelBox):
         self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
         
         styles = ['-','*','.','--', ':', 'd']
-        self.lineStyleCB = wx.ComboBox(self, value='-', size=(60, 30), choices=styles, 
+        self.style = config["style"]
+        self.lineStyleCB = wx.ComboBox(self, value=self.style, size=(60, 30), choices=styles, 
             style=wx.CB_READONLY)
+        
         self.lineStyleCB.Bind(wx.EVT_COMBOBOX, self.on_StyleSelect)
         
         sizer.Add(category_box, 0, wx.ALL, 10)
@@ -312,6 +330,7 @@ class TimeLineChannelBox(ChannelBox):
         self.SetSizer(sizer)
         sizer.Fit(self)
         self.catText.SetFocus()
+        
         
     def updatePlotData(self):
         if self._isActive:
@@ -386,12 +405,22 @@ class GraphFrame(wx.Frame):
         menu_file = wx.Menu()
         m_expt = menu_file.Append(-1, "&Save plot\tCtrl-S", "Save plot to file")
         self.Bind(wx.EVT_MENU, self.on_save_plot, m_expt)
+
+        m_loadConfig = menu_file.Append(-1, "Load configuration")        
+        self.Bind(wx.EVT_MENU, self.on_load_config, m_loadConfig)
+        
+        m_saveConfig = menu_file.Append(-1, "Save configuration")        
+        self.Bind(wx.EVT_MENU, self.on_save_config, m_saveConfig)
+        
         menu_file.AppendSeparator()
         m_exit = menu_file.Append(-1, "E&xit\tCtrl-Q", "Exit")
         self.Bind(wx.EVT_MENU, self.on_exit, m_exit)
+        
                 
         self.menubar.Append(menu_file, "&File")
         self.SetMenuBar(self.menubar)
+        
+    
 
     def create_main_panel(self):
         self.panel = wx.Panel(self)
@@ -428,7 +457,7 @@ class GraphFrame(wx.Frame):
         self.cb_y_window.SetValue(False)   
         
         self.addChannel_button = wx.Button(self.panel, -1, "Add Channel")
-        self.Bind(wx.EVT_BUTTON, self.on_addChannel_button, self.addChannel_button)
+        self.Bind(wx.EVT_BUTTON, self.on_addTimelineChannel_button, self.addChannel_button)
         
         self.addDistChannel_button = wx.Button(self.panel, -1, "Add Distribution Channel")
         self.Bind(wx.EVT_BUTTON, self.on_addDistChannel_button, self.addDistChannel_button)
@@ -577,19 +606,16 @@ class GraphFrame(wx.Frame):
         
     def on_addDistChannel_button(self, event):
         newDistChannelBox = DistributionChannelBox(self.panel, -1, self)
-        self.hbox2.Add(newDistChannelBox, 0, wx.ALL, 5)
-        self.channels.append(newDistChannelBox)
-        self.vbox.Layout()
-        self.vbox.Fit(self)
-        self.Layout()
+        self._add_channelBox(newDistChannelBox)
     
-    def on_addChannel_button(self, event):
+    def on_addTimelineChannel_button(self, event):
         newChannelBox = TimeLineChannelBox(self.panel, -1, self)
-        self.hbox2.Add(newChannelBox, 0, wx.ALL, 5)
-        #self.hbox2.Add(self.xmin_control, border=5, flag=wx.ALL)
-        self.channels.append(newChannelBox)
+        self._add_channelBox(newChannelBox)
+        
+    def _add_channelBox(self, channelBox):
+        self.hbox2.Add(channelBox, 0, wx.ALL, 5)
+        self.channels.append(channelBox)
         self.vbox.Layout()
-        #self.hbox2.Fit(self)
         self.vbox.Fit(self)
         self.Layout()
         
@@ -648,6 +674,47 @@ class GraphFrame(wx.Frame):
     
     def on_exit(self, event):
         self.Destroy()
+        
+    def on_load_config(self, event):
+        print "hey"
+        openFileDialog = wx.FileDialog(self, 
+                                       message="Open plot config", 
+                                       defaultDir=os.getcwd(), 
+                                       defaultFile="", 
+                                       wildcard="Plot config files (*.pconf)|*.pconf", 
+                                       style=wx.FD_OPEN | wx.FILE_MUST_EXIST)
+        if openFileDialog.ShowModal() == wx.ID_OK:
+            path = openFileDialog.GetPath()
+            
+            o = json.load(open(path))
+            for channel in o["channels"]:
+                if channel["channeltype"] == "Timeline":
+                    newChannelBox = TimeLineChannelBox(self.panel, -1, self, channel["config"])
+                    self._add_channelBox(newChannelBox)
+                    newChannelBox._update_style() #Needs to be done after it was created.
+                    newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
+                
+    def on_save_config(self, event):
+        saveFileDialog = wx.FileDialog(
+            self, 
+            message="Save plot config",
+            defaultDir=os.getcwd(),
+            defaultFile="config.pconf",
+            wildcard="Plot config files (*.pconf)|*.pconf", 
+            style=wx.SAVE)
+        if saveFileDialog.ShowModal() == wx.ID_OK:
+            path = saveFileDialog.GetPath()
+            config = {"channels":[]}
+            for channel in self.channels:
+                if isinstance(channel, TimeLineChannelBox):
+                    channelObject = {"channeltype": "Timeline", "config" : {"category": channel.category,
+                                                                            "key": channel.key,
+                                                                            "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
+                                                                            "style":channel.style,
+                                                                            "active":channel.isActive}}
+                config["channels"].append(channelObject)
+            json.dump(config, open(path,"w"))
+                    
     
     def flash_status_message(self, msg, flash_len_ms=1500):
         self.statusbar.SetStatusText(msg)
