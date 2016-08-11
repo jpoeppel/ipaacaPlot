@@ -13,6 +13,7 @@ Fixed a bug that caused ipaaca to crash
 """
 import os
 import wx
+import wx.lib.scrolledpanel as scrolled
 import sys
 import ipaacaHandler
 import time
@@ -39,18 +40,194 @@ class ParameterChangerBox(wx.Panel):
     self.value = initVal
     
     
-    
-class ChannelBox(wx.Panel):
+class DistributionChannelBox(wx.Panel):
     """
-        A static box that allows to add another ipaaca categorie and key where from
-        where data can be recieved. Will also be used to store 
+        A static box taht allows to add another ipaaca category over which a distribution
+        is send.
     """
     
     def __init__(self, parent, ID, ctrl):
         wx.Panel.__init__(self, parent, ID)
+        
+        self.ctrl = ctrl
+        self.category = ""
+        self.xKey = "x"
+        self.yKey = "y"
+        self.xData = []
+        self.yData = []
+        self.minVal = 0.0
+        self.maxVal = 0.0
+        self.xMin = -1
+        self._isActive = False
+        self.colour = (0,0,0)
+        self.dataLock = threading.Lock()
+        self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,marker="*", linestyle="")[0]
+        
         self.activeCB = wx.CheckBox(self, -1, "Active")
-        self.activeCB.SetValue(False)
+        self.activeCB.SetValue(self._isActive)
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)
+        
+        box = wx.StaticBox(self, -1, "Add Distribution Channel")
+        sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
+        
+        catLabel = wx.StaticText(self, -1, "Category: ")
+        self.catText = wx.TextCtrl(self, -1, "", size=(100,-1))
+
+        self.catText.Bind(wx.EVT_TEXT_ENTER, self.on_catText_enter)   
+        self.catText.Bind(wx.EVT_KILL_FOCUS, self.on_catText_enter)
+        
+        category_box = wx.BoxSizer(wx.HORIZONTAL)
+        category_box.Add(catLabel, flag=wx.ALIGN_CENTER_VERTICAL)
+        category_box.Add(self.catText, flag=wx.ALIGN_CENTER_VERTICAL)
+        
+        keyLabel = wx.StaticText(self, -1, "X Key: ")
+        self.xKeyText = wx.TextCtrl(self, -1, self.xKey, size=(100,-1))
+        
+        self.xKeyText.Bind(wx.EVT_TEXT_ENTER, self.on_xKeyText_enter)         
+        self.xKeyText.Bind(wx.EVT_KILL_FOCUS, self.on_xKeyText_enter)
+        
+        x_key_box = wx.BoxSizer(wx.HORIZONTAL)
+        x_key_box.Add(keyLabel, flag=wx.ALIGN_CENTER_VERTICAL)
+        x_key_box.Add(self.xKeyText, flag=wx.ALIGN_CENTER_VERTICAL)
+        
+        keyLabel = wx.StaticText(self, -1, "Y Key: ")
+        self.yKeyText = wx.TextCtrl(self, -1, self.yKey, size=(100,-1))
+        
+        self.yKeyText.Bind(wx.EVT_TEXT_ENTER, self.on_yKeyText_enter)         
+        self.yKeyText.Bind(wx.EVT_KILL_FOCUS, self.on_yKeyText_enter)
+        
+        y_key_box = wx.BoxSizer(wx.HORIZONTAL)
+        y_key_box.Add(keyLabel, flag=wx.ALIGN_CENTER_VERTICAL)
+        y_key_box.Add(self.yKeyText, flag=wx.ALIGN_CENTER_VERTICAL)
+
+        self.colourPicker = wx.ColourPickerCtrl(self, -1)
+        
+        self.colourPicker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.on_colourChange)
+        
+#        self.clear_button = wx.Button(self, -1, "Clear")
+#        self.Bind(wx.EVT_BUTTON, self.on_clear_button, self.clear_button)
+        
+        self.remove_button = wx.Button(self, -1, "Remove")
+        self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
+        
+        styles = ['-','*','.','--', ':', 'd']
+        self.lineStyleCB = wx.ComboBox(self, value='*', size=(60, 30), choices=styles, 
+            style=wx.CB_READONLY)
+        self.lineStyleCB.Bind(wx.EVT_COMBOBOX, self.on_StyleSelect)
+        
+        sizer.Add(category_box, 0, wx.ALL, 10)
+        sizer.Add(x_key_box, 0, wx.ALL, 10)
+        sizer.Add(y_key_box, 0, wx.ALL, 10)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(self.colourPicker, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        hbox.Add(self.lineStyleCB, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        
+        
+        sizer.Add(hbox, 0, wx.ALL, 10)
+
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+#        hbox2.Add(self.clear_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        hbox2.Add(self.remove_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)        
+        sizer.Add(hbox2, 0, wx.ALL, 10)
+        sizer.Add(self.activeCB, 0, wx.ALL, 10)
+        
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+        self.catText.SetFocus()
+        
+    @property
+    def isActive(self):
+      return (self._isActive and len(self.yData) > 0)
+        
+        
+    @isActive.setter
+    def isActive(self, value):
+      self._isActive = value
+      self.activeCB.SetValue(value)
+        
+    def on_StyleSelect(self, event):
+        style = event.GetString()
+        if style in ['*','.','d']:
+            pylab.setp(self.plot_data, linestyle= '')
+            pylab.setp(self.plot_data, marker= style)
+        else:
+            pylab.setp(self.plot_data, linestyle= style)
+            pylab.setp(self.plot_data, marker= '')
+      
+    def on_catText_enter(self, event):
+        self.category = self.catText.GetValue()
+        
+    def on_colourChange(self, event):
+        col=self.colourPicker.GetColour()
+        self.colour = (float(col[0])/255,float(col[1])/255,float(col[2])/255)
+        pylab.setp(self.plot_data, color=self.colour)
+   
+    def on_xKeyText_enter(self, event):
+        self.xKey = self.xKeyText.GetValue()
+        
+    def on_yKeyText_enter(self, event):
+        self.yKey = self.yKeyText.GetValue()
+        
+    def on_remove_button(self,event):
+        self.remove_button.Unbind(wx.EVT_BUTTON)
+        if self.plot_data in self.ctrl.axes.lines:
+            self.ctrl.axes.lines.remove(self.plot_data)
+            self.ctrl.removeChannel(self)
+    
+    def updatePlotData(self):
+        if self._isActive:
+            with self.dataLock:
+#              self.plot_data.set_xdata(np.array(self.xData)) 
+              self.plot_data.set_xdata(np.arange(len(self.xData)))  
+              self.plot_data.set_ydata(np.array(self.yData))      
+              self.ctrl.axes.set_xticks(np.arange(len(self.xData)))
+              self.ctrl.axes.set_xticklabels(self.xData)
+#              self.plot_data.set_xdata(np.array([1])) 
+#              self.plot_data.set_ydata(np.array([1]))  
+        
+    def on_checkActive(self, event):       
+        sender = event.GetEventObject()
+        isChecked = sender.GetValue()
+        self.isActive = isChecked
+        if self._isActive:
+            self.ctrl.ih.addInputCategory(self.category)
+            if self.plot_data not in self.ctrl.axes.lines:
+                self.ctrl.axes.lines.append(self.plot_data)
+        else:
+            if self.plot_data in self.ctrl.axes.lines:
+                self.ctrl.axes.lines.remove(self.plot_data)
+          #self.ctrl.canvas.draw()
+            
+#    def addData(self, timestamp, data):
+#        self.lastData = timestamp
+#        with self.dataLock:
+#            self.times.append(timestamp)
+#            self.data.append(data)
+            
+    def updateData(self, firstTimestamp, payload):
+        
+        try:
+            xData = list(payload[self.xKey])
+            yData = list(payload[self.yKey])
+            self.maxVal = max(yData)
+            self.minVal = min(yData)
+            with self.dataLock:
+                self.xData = xData
+                self.yData = yData
+            self.lastData = len(self.xData)
+        except KeyError:
+            self.ctrl.prepFlashMessage = "Invalid key(s) (xKey: {}, yKey: {}) for category: {}. Channel will be disabled".format(self.xKey, self.yKey, self.category)
+            self.ctrl.disableChannelBuffer = self
+        
+    
+class ChannelBox(wx.Panel):
+    """
+        A static box that allows to add another ipaaca categorie and key where from
+        where data can be recieved. Will also be used to store the data belonging to that channel.
+    """
+    
+    def __init__(self, parent, ID, ctrl):
+        wx.Panel.__init__(self, parent, ID)
         self.ctrl = ctrl
         self.category = ""
         self.key = ""
@@ -61,8 +238,13 @@ class ChannelBox(wx.Panel):
         self._isActive = False
         self.minVal = 0.0
         self.maxVal = 0.0
+        self.xMin = 0
         self.dataLock = threading.Lock()
         self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,)[0]
+        
+        self.activeCB = wx.CheckBox(self, -1, "Active")
+        self.activeCB.SetValue(self._isActive)
+        self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)        
         
         box = wx.StaticBox(self, -1, "Add Channel")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
@@ -193,6 +375,15 @@ class ChannelBox(wx.Panel):
       with self.dataLock:
         self.times.append(timestamp)
         self.data.append(data)
+        
+    def updateData(self, firstTimestamp, payload):
+        timestamp = time.time()-firstTimestamp
+        try:
+            data = payload[self.key]
+            self.addData(timestamp, data)
+        except KeyError:
+            self.ctrl.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(self.key, self.category)
+            self.ctrl.disableChannelBuffer = self
       
 
 
@@ -227,22 +418,21 @@ class GraphFrame(wx.Frame):
       sys.exit(0)
         
     def updateData(self, iu, event_type, local):
+      print "got iu: ", iu
       if self.firstTime == None:
         self.firstTime = time.time()
       if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
           category = iu.category
           for channel in self.channels:
-            if channel._isActive and channel.category == category:
-              try:
-                  payload = iu.payload[channel.key]
-                  #print "Adding payload %s to category %s at time %f" % (payload, category, time.time())
-                  channel.addData(time.time()-self.firstTime, float(payload))
-              except KeyError:
-                  self.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(channel.key, channel.category)
-                  self.disableChannelBuffer = channel
-#                  self.flash_status_message()
-#                  channel.isActive = False
-        
+                if channel._isActive and channel.category == category:
+#                  try:
+                      channel.updateData(self.firstTime, iu.payload)
+#                      payload = iu.payload[channel.key]
+                      #print "Adding payload %s to category %s at time %f" % (payload, category, time.time())
+#                      channel.addData(time.time()-self.firstTime, float(payload))
+#                  except KeyError:
+#                      self.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(channel.key, channel.category)
+#                      self.disableChannelBuffer = channel
 
     def create_menu(self):
         self.menubar = wx.MenuBar()
@@ -283,12 +473,19 @@ class GraphFrame(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.on_cb_xlab, self.cb_xlab)        
         self.cb_xlab.SetValue(True)
 
-        self.cb_window = wx.CheckBox(self.panel, -1, "Fixed X window", style=wx.ALIGN_RIGHT)
-        self.Bind(wx.EVT_CHECKBOX, self.on_cb_window, self.cb_window)        
-        self.cb_window.SetValue(False)        
+        self.cb_x_window = wx.CheckBox(self.panel, -1, "Fixed X window", style=wx.ALIGN_RIGHT)
+        self.Bind(wx.EVT_CHECKBOX, self.on_cb_window, self.cb_x_window)        
+        self.cb_x_window.SetValue(False)        
+        
+        self.cb_y_window = wx.CheckBox(self.panel, -1, "Fixed Y window", style=wx.ALIGN_RIGHT)
+        self.Bind(wx.EVT_CHECKBOX, self.on_cb_window, self.cb_y_window)        
+        self.cb_y_window.SetValue(False)   
         
         self.addChannel_button = wx.Button(self.panel, -1, "Add Channel")
         self.Bind(wx.EVT_BUTTON, self.on_addChannel_button, self.addChannel_button)
+        
+        self.addDistChannel_button = wx.Button(self.panel, -1, "Add Distribution Channel")
+        self.Bind(wx.EVT_BUTTON, self.on_addDistChannel_button, self.addDistChannel_button)
         
         self.clearAll_button = wx.Button(self.panel, -1, "Clear all")
         self.Bind(wx.EVT_BUTTON, self.on_clearAll_button, self.clearAll_button)
@@ -301,12 +498,20 @@ class GraphFrame(wx.Frame):
         self.hbox1.AddSpacer(10)
         self.hbox1.Add(self.cb_xlab, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         self.hbox1.AddSpacer(10)
-        self.hbox1.Add(self.cb_window, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        self.hbox1.Add(self.cb_x_window, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        self.hbox1.AddSpacer(10)
+        self.hbox1.Add(self.cb_y_window, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         self.hbox1.AddSpacer(10)
         self.hbox1.Add(self.addChannel_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        self.hbox1.Add(self.addDistChannel_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         self.hbox1.Add(self.clearAll_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         
         self.hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        
+#        self.scrolled_panel = scrolled.ScrolledPanel(self.panel, -1, style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER, name="panel1")
+#        self.scrolled_panel.SetAutoLayout(1)
+#        self.scrolled_panel.SetupScrolling()
+#        self.scrolled_panel.SetSizer(self.hbox2)
         
         self.hbox3 = wx.BoxSizer(wx.HORIZONTAL)
         
@@ -336,6 +541,7 @@ class GraphFrame(wx.Frame):
         self.vbox.Add(self.toolbar, 0, flag=wx.ALIGN_LEFT | wx.TOP | wx.GROW)
         self.vbox.Add(self.hbox1, 0, flag=wx.ALIGN_LEFT | wx.TOP)
         self.vbox.Add(self.hbox2, 0, flag=wx.ALIGN_LEFT | wx.TOP)
+#        self.vbox.Add(self.scrolled_panel, 0, flag=wx.ALIGN_LEFT | wx.TOP)
 
         self.vbox.Add(wx.StaticLine(self.panel), 0, wx.ALL|wx.EXPAND, 5)
         self.vbox.Add(self.hbox3, 0, flag=wx.ALIGN_LEFT | wx.TOP)
@@ -367,20 +573,23 @@ class GraphFrame(wx.Frame):
         maxSize = 0
         ymin = 0
         ymax = 0
+        xmin = 0
         for channel in self.channels:
             if channel.isActive:
                 maxSize = max(maxSize, channel.lastData)
                 ymin = round(min(channel.minVal,ymin),0)
                 ymax = round(max(channel.maxVal,ymax),1)
+                xmin = min(xmin, channel.xMin)
       
         xmax = maxSize if maxSize > 5 else 5
-        if self.cb_window.IsChecked():
-          xmin = 0 if maxSize - 5 < 0 else maxSize - 5
+        if self.cb_x_window.IsChecked():
+          xmin = xmin if maxSize - 5 < 0 else maxSize - 5
+
+        if self.cb_y_window.IsChecked():
+            ymin = -0.1
+            ymax = 1.1
         else:
-          xmin = 0
-
-        ymax *= 2
-
+            ymax *= 2
         #if self.toolbar._active == None:
         self.axes.set_xbound(lower=xmin, upper=xmax)
         self.axes.set_ybound(lower=ymin, upper=ymax)
@@ -423,6 +632,14 @@ class GraphFrame(wx.Frame):
     
     def on_pause_button(self, event):
         self.paused = not self.paused
+        
+    def on_addDistChannel_button(self, event):
+        newDistChannelBox = DistributionChannelBox(self.panel, -1, self)
+        self.hbox2.Add(newDistChannelBox, 0, wx.ALL, 5)
+        self.channels.append(newDistChannelBox)
+        self.vbox.Layout()
+        self.vbox.Fit(self)
+        self.Layout()
     
     def on_addChannel_button(self, event):
         newChannelBox = ChannelBox(self.panel, -1, self)
@@ -437,7 +654,6 @@ class GraphFrame(wx.Frame):
     def removeChannel(self, channel):
       self.ih.removeInputCategory(channel.category)
       self.channels.remove(channel)
-      
       self.hbox2.Remove(channel)
       channel.Destroy()
       self.vbox.Layout()
