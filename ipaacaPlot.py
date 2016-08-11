@@ -99,6 +99,8 @@ class DistributionChannelBox(wx.Panel):
         y_key_box = wx.BoxSizer(wx.HORIZONTAL)
         y_key_box.Add(keyLabel, flag=wx.ALIGN_CENTER_VERTICAL)
         y_key_box.Add(self.yKeyText, flag=wx.ALIGN_CENTER_VERTICAL)
+        
+        self.keyText = self.yKeyText #Make it so the ctrl can focus this one
 
         self.colourPicker = wx.ColourPickerCtrl(self, -1)
         
@@ -424,6 +426,7 @@ class GraphFrame(wx.Frame):
         sys.exit(0)
         
     def updateData(self, iu, event_type, local):
+        print "got iu: ", iu
         if self.firstTime == None:
             self.firstTime = time.time()
         if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
@@ -439,7 +442,7 @@ class GraphFrame(wx.Frame):
         m_expt = menu_file.Append(-1, "&Save plot\tCtrl-S", "Save plot to file")
         self.Bind(wx.EVT_MENU, self.on_save_plot, m_expt)
         menu_file.AppendSeparator()
-        m_exit = menu_file.Append(-1, "E&xit\tCtrl-X", "Exit")
+        m_exit = menu_file.Append(-1, "E&xit\tCtrl-Q", "Exit")
         self.Bind(wx.EVT_MENU, self.on_exit, m_exit)
                 
         self.menubar.Append(menu_file, "&File")
@@ -655,9 +658,12 @@ class GraphFrame(wx.Frame):
         self.hbox2.Remove(channel)
         pylab.setp(self.axes, title="")
         channel.Destroy()
+        if len(self.channels) == 0:
+            self.firstTime = None
         self.vbox.Layout()
         self.vbox.Fit(self)
         self.Layout()
+        
       
     def on_update_pause_button(self, event):
         label = "Resume" if self.paused else "Pause"
