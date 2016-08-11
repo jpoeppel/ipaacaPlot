@@ -39,30 +39,106 @@ class ParameterChangerBox(wx.Panel):
       self.value = initVal
     
     
-class DistributionChannelBox(wx.Panel):
+class ChannelBox(wx.Panel):
+    """
+        A static box that allows to add another ipaaca categorie and key where from
+        where data can be recieved. Will also be used to store the data belonging to that channel.
+    """
+    
+    def __init__(self, parent, ID, ctrl):
+        wx.Panel.__init__(self, parent, ID)
+        self.ctrl = ctrl
+        self.xData = []
+        self.yData = []
+        self.lastData = 0
+        self.colour = (0,0,0)
+        self._isActive = False
+        self.minVal = 0.0
+        self.maxVal = 0.0
+        self.dataLock = threading.Lock()
+        self.category = ""
+        
+        self.create_elements()
+        
+    def create_elements(self):
+        raise NotImplementedError
+        
+    @property
+    def isActive(self):
+        return (self._isActive and len(self.yData) > 0)
+        
+        
+    @isActive.setter
+    def isActive(self, value):
+        self._isActive = value
+        self.activeCB.SetValue(value)
+      
+      
+    def on_StyleSelect(self, event):
+        style = event.GetString()
+        if style in ['*','.','d']:
+            pylab.setp(self.plot_data, linestyle= '')
+            pylab.setp(self.plot_data, marker= style)
+        else:
+            pylab.setp(self.plot_data, linestyle= style)
+            pylab.setp(self.plot_data, marker= '')
+      
+    def on_catText_enter(self, event):
+        self.category = self.catText.GetValue()
+        
+    def on_colourChange(self, event):
+        col=self.colourPicker.GetColour()
+        self.colour = (float(col[0])/255,float(col[1])/255,float(col[2])/255)
+        pylab.setp(self.plot_data, color=self.colour)
+   
+    def on_clear_button(self, event):
+        self.xData = []
+        self.yData= []
+        self.lastData = 0
+        self.maxVal = 0.0
+        self.minVal = 0.0
+      
+    def on_remove_button(self,event):
+        self.remove_button.Unbind(wx.EVT_BUTTON)
+        if self.plot_data in self.ctrl.axes.lines:
+            self.ctrl.axes.lines.remove(self.plot_data)
+        self.ctrl.removeChannel(self)
+        
+    def updatePlotData(self):
+        raise NotImplementedError   
+        
+    def on_checkActive(self, event):       
+        sender = event.GetEventObject()
+        isChecked = sender.GetValue()
+        self.isActive = isChecked
+        if self._isActive:
+            self.ctrl.ih.addInputCategory(self.category)
+            if self.plot_data not in self.ctrl.axes.lines:
+                self.ctrl.axes.lines.append(self.plot_data)
+        else:
+            if self.plot_data in self.ctrl.axes.lines:
+                self.ctrl.axes.lines.remove(self.plot_data)
+            
+            
+    def update_data(self, firstTimestep, payload):
+        raise NotImplementedError
+    
+class DistributionChannelBox(ChannelBox):
     """
         A static box taht allows to add another ipaaca category over which a distribution
         is send.
     """
     
     def __init__(self, parent, ID, ctrl):
-        wx.Panel.__init__(self, parent, ID)
-        
-        self.ctrl = ctrl
-        self.category = ""
         self.xKey = "x"
         self.yKey = "y"
-        self.xData = []
-        self.yData = []
         self.title = ""
-        self.minVal = 0.0
-        self.maxVal = 0.0
         self.xMin = -1
-        self._isActive = False
-        self.colour = (0,0,0)
-        self.dataLock = threading.Lock()
+        
+        super(DistributionChannelBox, self).__init__(parent, ID, ctrl)
         self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,marker="*", linestyle="")[0]
         
+    def create_elements(self):
         self.activeCB = wx.CheckBox(self, -1, "Active")
         self.activeCB.SetValue(self._isActive)
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)
@@ -106,9 +182,6 @@ class DistributionChannelBox(wx.Panel):
         
         self.colourPicker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.on_colourChange)
         
-#        self.clear_button = wx.Button(self, -1, "Clear")
-#        self.Bind(wx.EVT_BUTTON, self.on_clear_button, self.clear_button)
-        
         self.remove_button = wx.Button(self, -1, "Remove")
         self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
         
@@ -136,33 +209,6 @@ class DistributionChannelBox(wx.Panel):
         self.SetSizer(sizer)
         sizer.Fit(self)
         self.catText.SetFocus()
-        
-    @property
-    def isActive(self):
-        return (self._isActive and len(self.yData) > 0)
-        
-        
-    @isActive.setter
-    def isActive(self, value):
-        self._isActive = value
-        self.activeCB.SetValue(value)
-        
-    def on_StyleSelect(self, event):
-        style = event.GetString()
-        if style in ['*','.','d']:
-            pylab.setp(self.plot_data, linestyle= '')
-            pylab.setp(self.plot_data, marker= style)
-        else:
-            pylab.setp(self.plot_data, linestyle= style)
-            pylab.setp(self.plot_data, marker= '')
-      
-    def on_catText_enter(self, event):
-        self.category = self.catText.GetValue()
-        
-    def on_colourChange(self, event):
-        col=self.colourPicker.GetColour()
-        self.colour = (float(col[0])/255,float(col[1])/255,float(col[2])/255)
-        pylab.setp(self.plot_data, color=self.colour)
    
     def on_xKeyText_enter(self, event):
         self.xKey = self.xKeyText.GetValue()
@@ -170,45 +216,15 @@ class DistributionChannelBox(wx.Panel):
     def on_yKeyText_enter(self, event):
         self.yKey = self.yKeyText.GetValue()
         
-    def on_remove_button(self,event):
-        self.remove_button.Unbind(wx.EVT_BUTTON)
-        
-        if self.plot_data in self.ctrl.axes.lines:
-            self.ctrl.axes.lines.remove(self.plot_data)
-            self.ctrl.removeChannel(self)
-    
     def updatePlotData(self):
         if self._isActive:
             with self.dataLock:
-#              self.plot_data.set_xdata(np.array(self.xData)) 
               self.plot_data.set_xdata(np.arange(len(self.xData)))  
               self.plot_data.set_ydata(np.array(self.yData))      
               self.ctrl.axes.set_xticks(np.arange(len(self.xData)))
               self.ctrl.axes.set_xticklabels(self.xData)
-#              self.plot_data.set_xdata(np.array([1])) 
-#              self.plot_data.set_ydata(np.array([1]))  
 
             pylab.setp(self.ctrl.axes, title=self.title)
-        
-    def on_checkActive(self, event):       
-        sender = event.GetEventObject()
-        isChecked = sender.GetValue()
-        self.isActive = isChecked
-        if self._isActive:
-            self.ctrl.ih.addInputCategory(self.category)
-            if self.plot_data not in self.ctrl.axes.lines:
-                self.ctrl.axes.lines.append(self.plot_data)
-            
-        else:
-            if self.plot_data in self.ctrl.axes.lines:
-                self.ctrl.axes.lines.remove(self.plot_data)
-          #self.ctrl.canvas.draw()
-            
-#    def addData(self, timestamp, data):
-#        self.lastData = timestamp
-#        with self.dataLock:
-#            self.times.append(timestamp)
-#            self.data.append(data)
             
     def updateData(self, firstTimestamp, payload):
         
@@ -227,29 +243,16 @@ class DistributionChannelBox(wx.Panel):
         if "title" in payload:
             self.title = payload["title"]
         
-    
-class ChannelBox(wx.Panel):
-    """
-        A static box that allows to add another ipaaca categorie and key where from
-        where data can be recieved. Will also be used to store the data belonging to that channel.
-    """
+        
+class TimeLineChannelBox(ChannelBox):
     
     def __init__(self, parent, ID, ctrl):
-        wx.Panel.__init__(self, parent, ID)
-        self.ctrl = ctrl
-        self.category = ""
         self.key = ""
-        self.data = []
-        self.times = []
-        self.lastData = 0
-        self.colour = (0,0,0)
-        self._isActive = False
-        self.minVal = 0.0
-        self.maxVal = 0.0
         self.xMin = 0
-        self.dataLock = threading.Lock()
+        super(TimeLineChannelBox, self).__init__(parent, ID, ctrl)
         self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,)[0]
         
+    def create_elements(self):
         self.activeCB = wx.CheckBox(self, -1, "Active")
         self.activeCB.SetValue(self._isActive)
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)        
@@ -311,84 +314,28 @@ class ChannelBox(wx.Panel):
         sizer.Fit(self)
         self.catText.SetFocus()
         
-        
-    @property
-    def isActive(self):
-        return (self._isActive and len(self.data) > 0)
-        
-        
-    @isActive.setter
-    def isActive(self, value):
-        self._isActive = value
-        self.activeCB.SetValue(value)
-      
-      
-    def on_StyleSelect(self, event):
-        style = event.GetString()
-        if style in ['*','.','d']:
-            pylab.setp(self.plot_data, linestyle= '')
-            pylab.setp(self.plot_data, marker= style)
-        else:
-            pylab.setp(self.plot_data, linestyle= style)
-            pylab.setp(self.plot_data, marker= '')
-      
-    def on_catText_enter(self, event):
-        self.category = self.catText.GetValue()
-        
-    def on_colourChange(self, event):
-        col=self.colourPicker.GetColour()
-        self.colour = (float(col[0])/255,float(col[1])/255,float(col[2])/255)
-        pylab.setp(self.plot_data, color=self.colour)
-   
-    def on_keyText_enter(self, event):
-        self.key = self.keyText.GetValue()
-        
-    def on_clear_button(self, event):
-        self.data = []
-        self.times = []
-        self.lastData = 0
-        self.maxVal = 0.0
-        self.minVal = 0.0
-      
-    def on_remove_button(self,event):
-        self.remove_button.Unbind(wx.EVT_BUTTON)
-        if self.plot_data in self.ctrl.axes.lines:
-            self.ctrl.axes.lines.remove(self.plot_data)
-        self.ctrl.removeChannel(self)
-        
     def updatePlotData(self):
         if self._isActive:
             with self.dataLock:
-              self.plot_data.set_xdata(np.array(self.times)) 
-              self.plot_data.set_ydata(np.array(self.data))        
+              self.plot_data.set_xdata(np.array(self.xData)) 
+              self.plot_data.set_ydata(np.array(self.yData))   
         
-    def on_checkActive(self, event):       
-        sender = event.GetEventObject()
-        isChecked = sender.GetValue()
-        self.isActive = isChecked
-        if self._isActive:
-            self.ctrl.ih.addInputCategory(self.category)
-            if self.plot_data not in self.ctrl.axes.lines:
-                self.ctrl.axes.lines.append(self.plot_data)
-        else:
-            if self.plot_data in self.ctrl.axes.lines:
-                self.ctrl.axes.lines.remove(self.plot_data)
-          #self.ctrl.canvas.draw()
-            
-            
-    def addData(self, timestamp, data):
-      self.lastData = timestamp
-      self.maxVal = max(self.maxVal, data)
-      self.minVal = min(self.minVal, data)
-      with self.dataLock:
-          self.times.append(timestamp)
-          self.data.append(data)
+    def on_keyText_enter(self, event):
+        self.key = self.keyText.GetValue()
+        
+    def _addData(self, timestamp, data):
+        self.lastData = timestamp
+        self.maxVal = max(self.maxVal, data)
+        self.minVal = min(self.minVal, data)
+        with self.dataLock:
+            self.xData.append(timestamp)
+            self.yData.append(data)
         
     def updateData(self, firstTimestamp, payload):
         timestamp = time.time()-firstTimestamp
         try:
             data = payload[self.key]
-            self.addData(timestamp, data)
+            self._addData(timestamp, data)
         except KeyError:
             self.ctrl.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(self.key, self.category)
             self.ctrl.disableChannelBuffer = self
@@ -562,10 +509,6 @@ class GraphFrame(wx.Frame):
         pylab.setp(self.axes.get_xticklabels(), fontsize=8)
         pylab.setp(self.axes.get_yticklabels(), fontsize=8)
         
-        # plot the data as a line series, and save the reference 
-        # to the plotted line series
-        #
-        #self.plot_data = self.axes.plot([], linewidth=1,color=(0, 0, 0),)[0]
 
     def draw_plot(self):
         """ Redraws the plot
@@ -590,7 +533,7 @@ class GraphFrame(wx.Frame):
             ymax = 1.1
         else:
             ymax *= 2
-        #if self.toolbar._active == None:
+
         self.axes.set_xbound(lower=xmin, upper=xmax)
         self.axes.set_ybound(lower=ymin, upper=ymax)
         
@@ -642,7 +585,7 @@ class GraphFrame(wx.Frame):
         self.Layout()
     
     def on_addChannel_button(self, event):
-        newChannelBox = ChannelBox(self.panel, -1, self)
+        newChannelBox = TimeLineChannelBox(self.panel, -1, self)
         self.hbox2.Add(newChannelBox, 0, wx.ALL, 5)
         #self.hbox2.Add(self.xmin_control, border=5, flag=wx.ALL)
         self.channels.append(newChannelBox)
