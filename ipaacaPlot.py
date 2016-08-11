@@ -426,7 +426,6 @@ class GraphFrame(wx.Frame):
         sys.exit(0)
         
     def updateData(self, iu, event_type, local):
-        print "got iu: ", iu
         if self.firstTime == None:
             self.firstTime = time.time()
         if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
