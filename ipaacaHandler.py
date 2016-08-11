@@ -14,7 +14,7 @@ class IpaacaHandler(object):
     """ Ipaaca interface that allows the publishing and recieving of data via ipaaca.
     """
 
-    def __init__(self, component, inputCategories=[], callback = None):
+    def __init__(self, component, inputCategories=None, callback = None):
       """
         Contructor for the ipaaca interface
         
@@ -23,6 +23,8 @@ class IpaacaHandler(object):
         @param callbackHandler: (Optional) Handler function that is to be called when interesting messages are recieved.
                           Needs to have the following interface: updateHandler(iu, event_type, local):
       """
+      if inputCategories == None:
+          inputCategories = []
       self.inputCategories = inputCategories
       self.callback = callback
       self.component = component
@@ -74,8 +76,10 @@ class IpaacaHandler(object):
         self.inputCategories.append(category)
       if len(self.inputCategories) > 0:
         if self.inBuffer != None:
-          self.inBuffer.add_category_interests([category])
+          print "adding single"
+          self.inBuffer.add_category_interests(category)
         else:
+          print "creating new"  
           self.inBuffer = ipaaca.InputBuffer(self.component, self.inputCategories)
         # register this module's update handler, so that received IUs can be processed
         if self.callback != None and not self.callbackSet:
@@ -94,8 +98,10 @@ class IpaacaHandler(object):
       print "Removing category", category
       if category in self.inputCategories:
         self.inputCategories.remove(category)
-        del self.inBuffer._listener_store[category]
-        self.inBuffer._category_interests.remove(category)
+#        del self.inBuffer._listener_store[category] # Not needed anymore since remove
+#        self.inBuffer._category_interests.remove(category)
+        if not category in self.inputCategories:
+            self.inBuffer.remove_category_interests(category)
       if len(self.inputCategories) == 0:
         self.inBuffer = None
 
