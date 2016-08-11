@@ -77,7 +77,7 @@ class IpaacaHandler(object):
             if self.inBuffer != None:
                 self.inBuffer.add_category_interests(category)
             else:
-                self.inBuffer = ipaaca.InputBuffer(self.component, self.inputCategories)
+                self.inBuffer = ipaaca.InputBuffer(self.component, set(self.inputCategories))
         # register this module's update handler, so that received IUs can be processed
         if self.callback != None and not self.callbackSet:
             self.inBuffer.register_handler(self.callback)  
