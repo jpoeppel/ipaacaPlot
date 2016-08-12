@@ -699,7 +699,6 @@ class GraphFrame(wx.Frame):
         self.Destroy()
         
     def on_load_config(self, event):
-        print "hey"
         openFileDialog = wx.FileDialog(self, 
                                        message="Open plot config", 
                                        defaultDir=os.getcwd(), 
