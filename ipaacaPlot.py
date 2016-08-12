@@ -54,9 +54,9 @@ class ChannelBox(wx.Panel):
         self.dataLock = threading.Lock()
         self.category = ""
         
-        self.create_elements(config)
+        self._create_elements(config)
         
-    def create_elements(self):
+    def _create_elements(self):
         raise NotImplementedError
         
     @property
@@ -115,7 +115,6 @@ class ChannelBox(wx.Panel):
         self.isActive = activity
         if self._isActive:
             self.ctrl.activate_channel(self)
-#            self.ctrl.ih.addInputCategory(self.category)
             if self.plot_data not in self.ctrl.axes.lines:
                 self.ctrl.axes.lines.append(self.plot_data)
         else:
@@ -132,25 +131,31 @@ class DistributionChannelBox(ChannelBox):
         the y values. x and y values MUST have identical dimensions!
     """
     
-    def __init__(self, parent, ID, ctrl):
+    def __init__(self, parent, ID, ctrl, config=None):
         self.xKey = "x"
         self.yKey = "y"
         self.title = ""
         self.xMin = -1
         
-        super(DistributionChannelBox, self).__init__(parent, ID, ctrl)
+        super(DistributionChannelBox, self).__init__(parent, ID, ctrl, config)
         self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,marker="*", linestyle="")[0]
         
-    def create_elements(self):
+    def _create_elements(self, config):
+        
+        if config == None:
+            #Create default config
+            config = {"category": "", "xKey": "x", "yKey":"y", "color": [0,0,0], "style": "*", "active": False}
+            
         self.activeCB = wx.CheckBox(self, -1, "Active")
-        self.activeCB.SetValue(self._isActive)
+        self.activeCB.SetValue(config["active"])
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)
         
         box = wx.StaticBox(self, -1, "Add Distribution Channel")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         
         catLabel = wx.StaticText(self, -1, "Category: ")
-        self.catText = wx.TextCtrl(self, -1, "", size=(100,-1))
+        self.category = config["category"]
+        self.catText = wx.TextCtrl(self, -1, self.category, size=(100,-1))
 
         self.catText.Bind(wx.EVT_TEXT_ENTER, self.on_catText_enter)   
         self.catText.Bind(wx.EVT_KILL_FOCUS, self.on_catText_enter)
@@ -160,6 +165,7 @@ class DistributionChannelBox(ChannelBox):
         category_box.Add(self.catText, flag=wx.ALIGN_CENTER_VERTICAL)
         
         keyLabel = wx.StaticText(self, -1, "X Key: ")
+        self.xKey = config["xKey"]
         self.xKeyText = wx.TextCtrl(self, -1, self.xKey, size=(100,-1))
         
         self.xKeyText.Bind(wx.EVT_TEXT_ENTER, self.on_xKeyText_enter)         
@@ -170,6 +176,7 @@ class DistributionChannelBox(ChannelBox):
         x_key_box.Add(self.xKeyText, flag=wx.ALIGN_CENTER_VERTICAL)
         
         keyLabel = wx.StaticText(self, -1, "Y Key: ")
+        self.yKey = config["yKey"]
         self.yKeyText = wx.TextCtrl(self, -1, self.yKey, size=(100,-1))
         
         self.yKeyText.Bind(wx.EVT_TEXT_ENTER, self.on_yKeyText_enter)         
@@ -182,14 +189,16 @@ class DistributionChannelBox(ChannelBox):
         self.keyText = self.yKeyText #Make it so the ctrl can focus this one
 
         self.colourPicker = wx.ColourPickerCtrl(self, -1)
-        
+        self.colour = (float(config["color"][0])/255, float(config["color"][1])/255,float(config["color"][2])/255)
+        self.colourPicker.SetColour(config["color"])
         self.colourPicker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.on_colourChange)
         
         self.remove_button = wx.Button(self, -1, "Remove")
         self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
         
         styles = ['-','*','.','--', ':', 'd']
-        self.lineStyleCB = wx.ComboBox(self, value='*', size=(60, 30), choices=styles, 
+        self.style = config["style"]
+        self.lineStyleCB = wx.ComboBox(self, value=self.style, size=(60, 30), choices=styles, 
             style=wx.CB_READONLY)
         self.lineStyleCB.Bind(wx.EVT_COMBOBOX, self.on_StyleSelect)
         
@@ -259,7 +268,7 @@ class TimeLineChannelBox(ChannelBox):
         super(TimeLineChannelBox, self).__init__(parent, ID, ctrl, config)
         self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,)[0]
         
-    def create_elements(self, config):
+    def _create_elements(self, config):
 
         if config == None:
             #Create default config
@@ -368,8 +377,6 @@ class GraphFrame(wx.Frame):
     
     def __init__(self):
         wx.Frame.__init__(self, None, -1, self.title)
-#        self.ih = ipaacaHandler
-#        self.ih.setCallback(self.update_data)
         self.outputBuffer = ipaaca.OutputBuffer("Ipaaca_Plot")
         self.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
         self.inputBuffer.register_handler(self.update_data)
@@ -403,7 +410,6 @@ class GraphFrame(wx.Frame):
     def update_data(self, iu, event_type, local):
         if self.firstTime == None:
             self.firstTime = time.time()
-        print "First timestemp: ", self.firstTime
         if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
             category = iu.category
             for channel in self.channels:
@@ -612,7 +618,6 @@ class GraphFrame(wx.Frame):
       msg = ipaaca.Message(cat)
       msg.payload = {key:payload}
       self.outputBuffer.add(msg)
-#      self.ih.publish(cat, {key:payload})
 
     
     def on_pause_button(self, event):
@@ -634,7 +639,6 @@ class GraphFrame(wx.Frame):
         self.Layout()
         
     def removeChannel(self, channel):
-#        self.ih.removeInputCategory(channel.category)
         for c in self.channels:
             if c != channel and c.category == channel.category:
                 break
@@ -709,9 +713,13 @@ class GraphFrame(wx.Frame):
             for channel in o["channels"]:
                 if channel["channeltype"] == "Timeline":
                     newChannelBox = TimeLineChannelBox(self.panel, -1, self, channel["config"])
-                    self._add_channelBox(newChannelBox)
-                    newChannelBox._update_style() #Needs to be done after it was created.
-                    newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
+                    
+                elif channel["channeltype"] == "Distribution":
+                    newChannelBox = DistributionChannelBox(self.panel, -1, self, channel["config"])
+                    
+                self._add_channelBox(newChannelBox)
+                newChannelBox._update_style() #Needs to be done after it was created.
+                newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
                 
     def on_save_config(self, event):
         saveFileDialog = wx.FileDialog(
@@ -731,6 +739,13 @@ class GraphFrame(wx.Frame):
                                                                             "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
                                                                             "style":channel.style,
                                                                             "active":channel.isActive}}
+                elif isinstance(channel, DistributionChannelBox):
+                    channelObject = {"channeltype": "Distribution", "config": {"category": channel.category,
+                                                                               "xKey": channel.xKey,
+                                                                               "yKey": channel.yKey,
+                                                                               "color":[int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
+                                                                               "style": channel.style,
+                                                                               "active": channel.isActive}}
                 config["channels"].append(channelObject)
             json.dump(config, open(path,"w"))
                     
@@ -751,7 +766,6 @@ class GraphFrame(wx.Frame):
 if __name__ == '__main__':
   
 #    component = "PredictionPlot"
-#    ih = ipaacaHandler.IpaacaHandler(component, [], None)  
      
     app = wx.PySimpleApp()
     app.frame = GraphFrame()
