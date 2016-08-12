@@ -131,6 +131,13 @@ class DistributionChannelBox(ChannelBox):
         the y values. x and y values MUST have identical dimensions!
     """
     
+    defaults = {"category": "", 
+                "xKey": "x", 
+                "yKey":"y", 
+                "color": [0,0,0], 
+                "style": "*", 
+                "active": False}
+    
     def __init__(self, parent, ID, ctrl, config=None):
         self.xKey = "x"
         self.yKey = "y"
@@ -143,9 +150,12 @@ class DistributionChannelBox(ChannelBox):
     def _create_elements(self, config):
         
         if config == None:
-            #Create default config
-            config = {"category": "", "xKey": "x", "yKey":"y", "color": [0,0,0], "style": "*", "active": False}
-            
+            #Create empty config, since it will be filled with defaults afterwards anyways
+            config = {}
+        # Fill potentially missing defaults:
+        for k,v in self.defaults.items():
+            if not k in config:
+                config[k] = v
         self.activeCB = wx.CheckBox(self, -1, "Active")
         self.activeCB.SetValue(config["active"])
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)
@@ -262,21 +272,38 @@ class TimeLineChannelBox(ChannelBox):
         designated by the specified key which is added to the timeline that is being drawn.
     """
     
+    defaults= {"category": "", 
+               "key": "", 
+               "color": [0,0,0], 
+               "style": "-", 
+               "active": False, 
+               "useTime": True}
+    
     def __init__(self, parent, ID, ctrl, config=None):
         self.key = ""
         self.xMin = 0
+        self.useTime = True
         super(TimeLineChannelBox, self).__init__(parent, ID, ctrl, config)
         self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,)[0]
         
     def _create_elements(self, config):
 
         if config == None:
-            #Create default config
-            config = {"category": "", "key": "", "color": [0,0,0], "style": "-", "active": False}
+            #Create empty config, since it will be filled with defaults afterwards anyways
+            config = {}
+        # Fill potentially missing defaults:
+        for k,v in self.defaults.items():
+            if not k in config:
+                config[k] = v
         
         self.activeCB = wx.CheckBox(self, -1, "Active")
         self.activeCB.SetValue(config["active"])
-        self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)        
+        self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)    
+        
+        self.useTimeCB = wx.CheckBox(self, -1, "Use Time")
+        self.useTime = config["useTime"]
+        self.useTimeCB.SetValue(self.useTime)
+        self.useTimeCB.Bind(wx.EVT_CHECKBOX, self.on_checkUseTime)
         
         box = wx.StaticBox(self, -1, "Add Channel")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
@@ -328,14 +355,17 @@ class TimeLineChannelBox(ChannelBox):
         hbox.Add(self.colourPicker, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         hbox.Add(self.lineStyleCB, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         
-        
         sizer.Add(hbox, 0, wx.ALL, 10)
 
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         hbox2.Add(self.clear_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         hbox2.Add(self.remove_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)        
         sizer.Add(hbox2, 0, wx.ALL, 10)
-        sizer.Add(self.activeCB, 0, wx.ALL, 10)
+        
+        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox3.Add(self.activeCB,border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        hbox3.Add(self.useTimeCB,border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(hbox3, 0, wx.ALL, 10)
         
         self.SetSizer(sizer)
         sizer.Fit(self)
@@ -345,14 +375,23 @@ class TimeLineChannelBox(ChannelBox):
     def updatePlotData(self):
         if self._isActive:
             with self.dataLock:
-              self.plot_data.set_xdata(np.array(self.xData)) 
-              self.plot_data.set_ydata(np.array(self.yData))   
+                if self.useTime:
+                    self.plot_data.set_xdata(np.array(self.xData)) 
+                else:
+                    self.plot_data.set_xdata(np.arange(len(self.yData))) 
+                self.plot_data.set_ydata(np.array(self.yData))   
         
     def on_keyText_enter(self, event):
         self.key = self.keyText.GetValue()
         
+    def on_checkUseTime(self, event):
+        self.useTime = self.useTimeCB.GetValue()
+        
     def _addData(self, timestamp, data):
-        self.lastData = timestamp
+        if self.useTime:
+            self.lastData = timestamp
+        else:
+            self.lastData= len(self.yData)+1
         self.maxVal = max(self.maxVal, data)
         self.minVal = min(self.minVal, data)
         with self.dataLock:
@@ -737,7 +776,8 @@ class GraphFrame(wx.Frame):
                                                                             "key": channel.key,
                                                                             "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
                                                                             "style":channel.style,
-                                                                            "active":channel.isActive}}
+                                                                            "active":channel.isActive,
+                                                                            "useTime": channel.useTime}}
                 elif isinstance(channel, DistributionChannelBox):
                     channelObject = {"channeltype": "Distribution", "config": {"category": channel.category,
                                                                                "xKey": channel.xKey,
