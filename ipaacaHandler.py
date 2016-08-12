@@ -32,13 +32,10 @@ class IpaacaHandler(object):
       # output and input buffers with ipaaca module name
       self.outBuffer = ipaaca.OutputBuffer(self.component)
       # input buffer with a list of categories that this module is listening for
-      if len(self.inputCategories) > 0:
-          self.inBuffer = ipaaca.InputBuffer(self.component, self.inputCategories)
-          # register this module's update handler, so that received IUs can be processed
-          if self.callback != None:
-              self.inBuffer.register_handler(self.callback)      
-      else:
-          self.inBuffer = None
+      self.inBuffer = ipaaca.InputBuffer(self.component, self.inputCategories)
+      # register this module's update handler, so that received IUs can be processed
+      if self.callback != None:
+          self.inBuffer.register_handler(self.callback)      
         
     def publish(self, category, payload):
         """
@@ -58,9 +55,8 @@ class IpaacaHandler(object):
             @param callback: Function handle that is used for the callbacks.
         """
         self.callback = callback
-        if len(self.inputCategories) > 0:
-            if self.callback != None:
-                self.inBuffer.register_handler(self.callback)  
+        if self.callback != None:
+            self.inBuffer.register_handler(self.callback)  
           
         
     def addInputCategory(self, category):
@@ -71,17 +67,8 @@ class IpaacaHandler(object):
             @param category: The category name that is to be added.
         """
         print "adding category", category
-#        if category not in self.inputCategories:
         self.inputCategories.append(category)
-        if len(self.inputCategories) > 0:
-            if self.inBuffer != None:
-                self.inBuffer.add_category_interests(category)
-            else:
-                self.inBuffer = ipaaca.InputBuffer(self.component, set(self.inputCategories))
-        # register this module's update handler, so that received IUs can be processed
-        if self.callback != None and not self.callbackSet:
-            self.inBuffer.register_handler(self.callback)  
-            self.callbackSet =  True
+        self.inBuffer.add_category_interests(category)
           
     def removeInputCategory(self, category):
         """
@@ -97,11 +84,6 @@ class IpaacaHandler(object):
             self.inputCategories.remove(category)
             if not category in self.inputCategories:
                 self.inBuffer.remove_category_interests(category)
-    #            del self.inBuffer._listener_store[category] # Not needed anymore since remove
-    #            self.inBuffer._category_interests.remove(category)
-                self.callbackSet = False
-        if len(self.inputCategories) == 0:
-            self.inBuffer = None
 
 
 if __name__ == "__main__":
