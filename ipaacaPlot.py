@@ -18,7 +18,7 @@ Also refactored back to 4 spaces=1 tab, to be more consitent with the python sta
 import os
 import wx
 import sys
-import ipaacaHandler
+import ipaaca
 import time
 import threading
 # The recommended way to use wx with mpl is with the WXAgg
@@ -114,7 +114,8 @@ class ChannelBox(wx.Panel):
     def _change_activity(self, activity):
         self.isActive = activity
         if self._isActive:
-            self.ctrl.ih.addInputCategory(self.category)
+            self.ctrl.activate_channel(self)
+#            self.ctrl.ih.addInputCategory(self.category)
             if self.plot_data not in self.ctrl.axes.lines:
                 self.ctrl.axes.lines.append(self.plot_data)
         else:
@@ -228,7 +229,7 @@ class DistributionChannelBox(ChannelBox):
 
             pylab.setp(self.ctrl.axes, title=self.title)
             
-    def updateData(self, firstTimestamp, payload):
+    def update_data(self, firstTimestamp, payload):
         
         try:
             xData = list(payload[self.xKey])
@@ -349,10 +350,10 @@ class TimeLineChannelBox(ChannelBox):
             self.xData.append(timestamp)
             self.yData.append(data)
         
-    def updateData(self, firstTimestamp, payload):
+    def update_data(self, firstTimestamp, payload):
         timestamp = time.time()-firstTimestamp
         try:
-            data = payload[self.key]
+            data = float(payload[self.key])
             self._addData(timestamp, data)
         except KeyError:
             self.ctrl.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(self.key, self.category)
@@ -365,10 +366,13 @@ class GraphFrame(wx.Frame):
     """
     title = 'Ipaaca Plot Visualisation.'
     
-    def __init__(self, ipaacaHandler):
+    def __init__(self):
         wx.Frame.__init__(self, None, -1, self.title)
-        self.ih = ipaacaHandler
-        self.ih.setCallback(self.updateData)
+#        self.ih = ipaacaHandler
+#        self.ih.setCallback(self.update_data)
+        self.outputBuffer = ipaaca.OutputBuffer("Ipaaca_Plot")
+        self.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
+        self.inputBuffer.register_handler(self.update_data)
         #self.data = [1]
         self.channels = []
         self.paused = False
@@ -390,30 +394,37 @@ class GraphFrame(wx.Frame):
         self.redraw_timer.Destroy()
         sys.exit(0)
         
-    def updateData(self, iu, event_type, local):
+
+    def activate_channel(self, channel):
+        if not channel.category in self.inputBuffer._category_interests:
+            self.inputBuffer.add_category_interests(channel.category)
+        
+        
+    def update_data(self, iu, event_type, local):
         if self.firstTime == None:
             self.firstTime = time.time()
+        print "First timestemp: ", self.firstTime
         if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
             category = iu.category
             for channel in self.channels:
                 if channel._isActive and channel.category == category:
-                    channel.updateData(self.firstTime, iu.payload)
+                    channel.update_data(self.firstTime, iu.payload)
 
     def create_menu(self):
         self.menubar = wx.MenuBar()
         
         menu_file = wx.Menu()
-        m_expt = menu_file.Append(-1, "&Save plot\tCtrl-S", "Save plot to file")
+        m_expt = menu_file.Append(-1, "Export plot\tCtrl-E", "Save plot to file")
         self.Bind(wx.EVT_MENU, self.on_save_plot, m_expt)
+        
+        m_saveConfig = menu_file.Append(-1, "Save configuration\tCtrl-S", "Save plot configuration")        
+        self.Bind(wx.EVT_MENU, self.on_save_config, m_saveConfig)
 
-        m_loadConfig = menu_file.Append(-1, "Load configuration")        
+        m_loadConfig = menu_file.Append(-1, "Load configuration\tCtrl-O", "Load plot configuration")        
         self.Bind(wx.EVT_MENU, self.on_load_config, m_loadConfig)
         
-        m_saveConfig = menu_file.Append(-1, "Save configuration")        
-        self.Bind(wx.EVT_MENU, self.on_save_config, m_saveConfig)
-        
         menu_file.AppendSeparator()
-        m_exit = menu_file.Append(-1, "E&xit\tCtrl-Q", "Exit")
+        m_exit = menu_file.Append(-1, "Exit\tCtrl-Q", "Exit")
         self.Bind(wx.EVT_MENU, self.on_exit, m_exit)
         
                 
@@ -598,7 +609,10 @@ class GraphFrame(wx.Frame):
       key = self.keyText.GetValue()
       payload = self.payloadText.GetValue()
       print "Sending %s to category %s" % ({key:payload}, cat)
-      self.ih.publish(cat, {key:payload})
+      msg = ipaaca.Message(cat)
+      msg.payload = {key:payload}
+      self.outputBuffer.add(msg)
+#      self.ih.publish(cat, {key:payload})
 
     
     def on_pause_button(self, event):
@@ -620,7 +634,12 @@ class GraphFrame(wx.Frame):
         self.Layout()
         
     def removeChannel(self, channel):
-        self.ih.removeInputCategory(channel.category)
+#        self.ih.removeInputCategory(channel.category)
+        for c in self.channels:
+            if c != channel and c.category == channel.category:
+                break
+        else:
+            self.inputBuffer.remove_category_interests(channel.category)
         self.channels.remove(channel)
         self.hbox2.Remove(channel)
         pylab.setp(self.axes, title="")
@@ -731,11 +750,11 @@ class GraphFrame(wx.Frame):
 
 if __name__ == '__main__':
   
-    component = "PredictionPlot"
-    ih = ipaacaHandler.IpaacaHandler(component, [], None)  
+#    component = "PredictionPlot"
+#    ih = ipaacaHandler.IpaacaHandler(component, [], None)  
      
     app = wx.PySimpleApp()
-    app.frame = GraphFrame(ih)
+    app.frame = GraphFrame()
 
     app.frame.Show()
     app.MainLoop()
