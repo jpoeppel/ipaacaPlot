@@ -432,11 +432,12 @@ class GraphFrame(wx.Frame):
         
         self.redraw_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)        
-        self.redraw_timer.Start(500)
+        self.redraw_timer.Start(100)
         self.Bind(wx.EVT_CLOSE, self._when_closed)
         
         self.prepFlashMessage = None
         self.disableChannelBuffer = None
+        self.newData = False
         if configPath:
             self._handle_config(configPath)
         
@@ -451,6 +452,7 @@ class GraphFrame(wx.Frame):
         
         
     def update_data(self, iu, event_type, local):
+        self.newData = True
         if self.firstTime == None:
             self.firstTime = time.time()
         if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
@@ -498,7 +500,6 @@ class GraphFrame(wx.Frame):
         
         self.pause_button = wx.Button(self.panel, -1, "Pause")
         self.Bind(wx.EVT_BUTTON, self.on_pause_button, self.pause_button)
-#        self.Bind(wx.EVT_UPDATE_UI, self.on_update_pause_button, self.pause_button)
 #        
         self.cb_grid = wx.CheckBox(self.panel, -1, "Show Grid", style=wx.ALIGN_RIGHT)
         self.Bind(wx.EVT_CHECKBOX, self.on_cb_grid, self.cb_grid)
@@ -646,6 +647,7 @@ class GraphFrame(wx.Frame):
             channel.updatePlotData()
 
         self.canvas.draw()
+        self.newData = False
       
     def on_clearAll_button(self, event):
         for channel in self.channels:
@@ -665,6 +667,8 @@ class GraphFrame(wx.Frame):
     
     def on_pause_button(self, event):
         self.paused = not self.paused
+        label = "Resume" if self.paused else "Pause"
+        self.pause_button.SetLabel(label)
         
     def on_addDistChannel_button(self, event):
         newDistChannelBox = DistributionChannelBox(self.panel, -1, self)
@@ -697,11 +701,6 @@ class GraphFrame(wx.Frame):
         self.vbox.Fit(self)
         self.Layout()
         
-      
-    def on_update_pause_button(self, event):
-        label = "Resume" if self.paused else "Pause"
-        self.pause_button.SetLabel(label)
-    
     def on_cb_grid(self, event):
         self.draw_plot()
     
@@ -728,7 +727,7 @@ class GraphFrame(wx.Frame):
             self.flash_status_message("Saved to %s" % path)
     
     def on_redraw_timer(self, event):
-        if not self.paused:      
+        if not self.paused and self.newData:      
             self.draw_plot()
         if self.prepFlashMessage != None:
             self.flash_status_message(self.prepFlashMessage)
