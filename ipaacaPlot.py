@@ -14,6 +14,11 @@ Fixed a bug that caused ipaaca to crash
 Added distribution plots as alternative (still early testing) and refactored channelBoxes
 accordingly.
 Also refactored back to 4 spaces=1 tab, to be more consitent with the python standard.
+12.08.2016
+Finished saving and loading of channel configurations.
+15.08.2016
+- Huge performance improvement by removing EVT_UPDATE_UI 
+- Allow to specify a positional argument to immediately load a given config file.
 """
 import os
 import wx
@@ -53,6 +58,7 @@ class ChannelBox(wx.Panel):
         self.style= "-"
         self.dataLock = threading.Lock()
         self.category = ""
+        self.isDetached = False
         
         self._create_elements(config)
         
@@ -206,6 +212,19 @@ class DistributionChannelBox(ChannelBox):
         self.remove_button = wx.Button(self, -1, "Remove")
         self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
         
+        figureLabel = wx.StaticText(self, -1, "Show in figure: ")
+        self.figureCB = wx.ComboBox(self, value=self.style, size=(80, 30), choices=self.ctrl.get_figures(), 
+            style=wx.CB_READONLY)
+        self.figureCB.SetValue("Main")
+        self.figureCB.Bind(wx.EVT_COMBOBOX, self.on_figure_select)
+        
+        figureBox = wx.BoxSizer(wx.HORIZONTAL)
+        figureBox.Add(figureLabel, flag=wx.ALIGN_CENTER_VERTICAL)
+        figureBox.Add(self.figureCB, flag=wx.ALIGN_CENTER_VERTICAL)
+        
+#        self.detach_button = wx.Button(self, -1, "Detach")
+#        self.Bind(wx.EVT_BUTTON, self.on_detach_button, self.detach_button)
+        
         styles = ['-','*','.','--', ':', 'd']
         self.style = config["style"]
         self.lineStyleCB = wx.ComboBox(self, value=self.style, size=(60, 30), choices=styles, 
@@ -224,7 +243,9 @@ class DistributionChannelBox(ChannelBox):
 
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
 #        hbox2.Add(self.clear_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-        hbox2.Add(self.remove_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)        
+#        hbox2.Add(self.detach_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        hbox2.Add(self.remove_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)   
+        sizer.Add(figureBox, 0, wx.ALL, 10)
         sizer.Add(hbox2, 0, wx.ALL, 10)
         sizer.Add(self.activeCB, 0, wx.ALL, 10)
         
@@ -238,14 +259,25 @@ class DistributionChannelBox(ChannelBox):
     def on_yKeyText_enter(self, event):
         self.yKey = self.yKeyText.GetValue()
         
+#    def on_detach_button(self, event):
+#        self.plot_data = self.ctrl.create_child_figure(self)
+#        self.isDetached = True
+        
+    def on_figure_select(self, event):
+        figure = event.GetString()
+        self.ctrl.change_figure(self, figure)
+        
     def updatePlotData(self):
         if self._isActive:
             with self.dataLock:
               self.plot_data.set_xdata(np.arange(len(self.xData)))  
               self.plot_data.set_ydata(np.array(self.yData))      
+              
+              #TODO: Wrong when detached
               self.ctrl.axes.set_xticks(np.arange(len(self.xData)))
               self.ctrl.axes.set_xticklabels(self.xData)
 
+            
             pylab.setp(self.ctrl.axes, title=self.title)
             
     def update_data(self, firstTimestamp, payload):
@@ -409,7 +441,73 @@ class TimeLineChannelBox(ChannelBox):
             pass
       
       
+class ChildFrame(wx.Frame):
+    
+    def __init__(self, parent, name, channel):
+        super(ChildFrame, self).__init__(parent, -1, size=(400,200), title="Detached Figure")
+        self.parent = parent
+        self.dpi = 100
+        self.fig = Figure((3.0, 3.0), dpi=self.dpi)
+        self.axes = self.fig.add_subplot(111)
+        pylab.setp(self.axes.get_xticklabels(), fontsize=8)
+        pylab.setp(self.axes.get_yticklabels(), fontsize=8)
+        self.channels = [channel]
 
+        self.panel = wx.Panel(self)
+        self.canvas = FigCanvas(self.panel, -1, self.fig)
+        self.toolbar = NavigationToolbar(self.canvas)
+        self.toolbar.Realize()
+        self.toolbar.DeleteToolByPos(7) #Deletes the adjust subplots button
+        self.toolbar.DeleteToolByPos(2) #Deletes the forward button
+        self.toolbar.DeleteToolByPos(1) #Deletes the backward button
+        self.toolbar.DeleteToolByPos(0) #Deletes the home button
+        
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.vbox.Add(self.canvas, 1, flag=wx.LEFT | wx.TOP | wx.GROW)    
+        self.vbox.Add(self.toolbar, 0, flag=wx.ALIGN_LEFT | wx.TOP | wx.GROW)
+        
+        
+        self.panel.SetSizer(self.vbox)
+        self.vbox.Fit(self)
+        
+    def draw_plot(self):
+        """ Redraws the plot
+        """
+        print "drawing!"
+        maxSize = 0
+        ymin = 0
+        ymax = 0
+        xmin = 0
+        for channel in self.channels:
+            if channel.isActive:
+                maxSize = max(maxSize, channel.lastData)
+                ymin = round(min(channel.minVal,ymin),0)
+                ymax = round(max(channel.maxVal,ymax),1)
+                xmin = min(xmin, channel.xMin)
+      
+        xmax = maxSize if maxSize > 5 else 5
+
+        ymax *= 2
+
+        self.axes.set_xbound(lower=xmin, upper=xmax)
+        self.axes.set_ybound(lower=ymin, upper=ymax)
+        
+        # anecdote: axes.grid assumes b=True if any other flag is
+        # given even if b is set to False.
+        # so just passing the flag into the first statement won't
+        # work.
+        #
+
+        # Using setp here is convenient, because get_xticklabels
+        # returns a list over which one needs to explicitly 
+        # iterate, and setp already handles this.
+        #  
+
+        for channel in self.channels:
+            channel.updatePlotData()
+
+        self.canvas.draw()
+        
 
 class GraphFrame(wx.Frame):
     """ The main frame of the application
@@ -441,10 +539,20 @@ class GraphFrame(wx.Frame):
         if configPath:
             self._handle_config(configPath)
         
+        self.detachedChilds = []
+        self.detached_child = None
+        
     def _when_closed(self, event):
         self.redraw_timer.Destroy()
         sys.exit(0)
         
+        
+    def get_figures(self):
+        res = ["Main"]
+        for dc in self.detachedChilds:
+            res.append(dc.name)
+        res.append("New")
+        return res
 
     def activate_channel(self, channel):
         if not channel.category in self.inputBuffer._category_interests:
@@ -586,6 +694,30 @@ class GraphFrame(wx.Frame):
         self.panel.SetSizer(self.vbox)
         self.vbox.Fit(self)
         
+
+    def change_figure(self, channel, figure):
+        if figure == "Main":
+            channel.isDetached = False
+            channel.plot_data = self.axes.plot([], linewidth=1,color=channel.colour,marker="*", linestyle="")[0]
+        else:
+            channel.isDetached = True
+            
+        if figure == "New":
+            newFrame = ChildFrame(self, "Figure"+str(len(self.detachedChilds)), channel)
+            newFrame.Show()
+            self.detachedChilds.append(newFrame)
+        else:
+            for dc in self.detachedChilds:
+                if dc.name == figure:
+                    newFrame = dc
+                    break
+        channel.plot_data = newFrame.axes.plot([], linewidth=1,color=channel.colour,marker="*", linestyle="")[0]
+        
+    def create_child_figure(self, channel):
+        self.detached_child = ChildFrame(self, channel)
+        self.detached_child.Show()
+        return self.detached_child.axes.plot([], linewidth=1,color=channel.colour,marker="*", linestyle="")[0]
+        
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()
 
@@ -607,7 +739,7 @@ class GraphFrame(wx.Frame):
         ymax = 0
         xmin = 0
         for channel in self.channels:
-            if channel.isActive:
+            if channel.isActive and not channel.isDetached:
                 maxSize = max(maxSize, channel.lastData)
                 ymin = round(min(channel.minVal,ymin),0)
                 ymax = round(max(channel.maxVal,ymax),1)
@@ -647,12 +779,15 @@ class GraphFrame(wx.Frame):
             channel.updatePlotData()
 
         self.canvas.draw()
+        for dc in self.detachedChilds:
+            dc.draw_plot()
         self.newData = False
       
     def on_clearAll_button(self, event):
         for channel in self.channels:
             channel.on_clear_button(event)
         self.firstTime = None
+        self.newData = True
         
 
     def on_send_button(self, event):
