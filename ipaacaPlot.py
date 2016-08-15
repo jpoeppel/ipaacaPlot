@@ -812,7 +812,6 @@ if __name__ == '__main__':
   
 #    component = "PredictionPlot"
      
-    print sys.argv
     configPath = None
     if len(sys.argv) > 1:
         configPath = sys.argv[1]
