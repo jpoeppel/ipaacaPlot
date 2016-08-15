@@ -404,8 +404,9 @@ class TimeLineChannelBox(ChannelBox):
             data = float(payload[self.key])
             self._addData(timestamp, data)
         except KeyError:
-            self.ctrl.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(self.key, self.category)
-            self.ctrl.disableChannelBuffer = self
+#            self.ctrl.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(self.key, self.category)
+#            self.ctrl.disableChannelBuffer = self
+            pass
       
 
 
@@ -414,7 +415,7 @@ class GraphFrame(wx.Frame):
     """
     title = 'Ipaaca Plot Visualisation.'
     
-    def __init__(self):
+    def __init__(self, configPath=None):
         wx.Frame.__init__(self, None, -1, self.title)
         self.outputBuffer = ipaaca.OutputBuffer("Ipaaca_Plot")
         self.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
@@ -435,6 +436,8 @@ class GraphFrame(wx.Frame):
         
         self.prepFlashMessage = None
         self.disableChannelBuffer = None
+        if configPath:
+            self._handle_config(configPath)
         
     def _when_closed(self, event):
         self.redraw_timer.Destroy()
@@ -747,17 +750,20 @@ class GraphFrame(wx.Frame):
         if openFileDialog.ShowModal() == wx.ID_OK:
             path = openFileDialog.GetPath()
             
-            o = json.load(open(path))
-            for channel in o["channels"]:
-                if channel["channeltype"] == "Timeline":
-                    newChannelBox = TimeLineChannelBox(self.panel, -1, self, channel["config"])
-                    
-                elif channel["channeltype"] == "Distribution":
-                    newChannelBox = DistributionChannelBox(self.panel, -1, self, channel["config"])
-                    
-                self._add_channelBox(newChannelBox)
-                newChannelBox._update_style() #Needs to be done after it was created.
-                newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
+            self._handle_config(path)
+            
+    def _handle_config(self, configPath):
+        config = json.load(open(configPath))
+        for channel in config["channels"]:
+            if channel["channeltype"] == "Timeline":
+                newChannelBox = TimeLineChannelBox(self.panel, -1, self, channel["config"])
+                
+            elif channel["channeltype"] == "Distribution":
+                newChannelBox = DistributionChannelBox(self.panel, -1, self, channel["config"])
+                
+            self._add_channelBox(newChannelBox)
+            newChannelBox._update_style() #Needs to be done after it was created.
+            newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
                 
     def on_save_config(self, event):
         saveFileDialog = wx.FileDialog(
@@ -806,8 +812,13 @@ if __name__ == '__main__':
   
 #    component = "PredictionPlot"
      
+    print sys.argv
+    configPath = None
+    if len(sys.argv) > 1:
+        configPath = sys.argv[1]
+    
     app = wx.PySimpleApp()
-    app.frame = GraphFrame()
+    app.frame = GraphFrame(configPath = configPath)
 
     app.frame.Show()
     app.MainLoop()
