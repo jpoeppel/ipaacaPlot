@@ -408,6 +408,7 @@ class TimeLineChannelBox(ChannelBox):
 #            self.ctrl.disableChannelBuffer = self
             pass
       
+      
 
 
 class GraphFrame(wx.Frame):
@@ -431,7 +432,7 @@ class GraphFrame(wx.Frame):
         
         self.redraw_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)        
-        self.redraw_timer.Start(100)
+        self.redraw_timer.Start(500)
         self.Bind(wx.EVT_CLOSE, self._when_closed)
         
         self.prepFlashMessage = None
@@ -497,8 +498,8 @@ class GraphFrame(wx.Frame):
         
         self.pause_button = wx.Button(self.panel, -1, "Pause")
         self.Bind(wx.EVT_BUTTON, self.on_pause_button, self.pause_button)
-        self.Bind(wx.EVT_UPDATE_UI, self.on_update_pause_button, self.pause_button)
-        
+#        self.Bind(wx.EVT_UPDATE_UI, self.on_update_pause_button, self.pause_button)
+#        
         self.cb_grid = wx.CheckBox(self.panel, -1, "Show Grid", style=wx.ALIGN_RIGHT)
         self.Bind(wx.EVT_CHECKBOX, self.on_cb_grid, self.cb_grid)
         self.cb_grid.SetValue(True)
@@ -548,7 +549,7 @@ class GraphFrame(wx.Frame):
 #        self.scrolled_panel.SetSizer(self.hbox2)
         
         self.hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        
+#        
         catLabel = wx.StaticText(self.panel, -1, "Category: ")
         self.catText = wx.TextCtrl(self.panel, -1, "", size=(100,-1))
 
