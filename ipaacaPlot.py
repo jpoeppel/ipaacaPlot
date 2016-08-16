@@ -91,6 +91,7 @@ class ChannelBox(wx.Panel):
         else:
             pylab.setp(self.plot_data, linestyle= self.style)
             pylab.setp(self.plot_data, marker= '')
+        self.figurePanel.canvas.draw()
       
     def on_catText_enter(self, event):
         self.category = self.catText.GetValue()
@@ -469,12 +470,14 @@ class TimeLineChannelBox(ChannelBox):
       
 class ChildFrame(wx.Frame):
     
-    def __init__(self, parent, name, channel):
+    def __init__(self, parent, name, channel, position=None):
         super(ChildFrame, self).__init__(parent, -1, size=(400,200), title=name)
         self.parent = parent
         self.panel = FigurePanel(self, name, parent, channel)
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
+        if position:
+            self.SetPosition(position)
 
         
     def on_close(self, event):
@@ -490,18 +493,18 @@ class FigurePanel(wx.Panel):
         self.parent = parent
         self.name = name
         self.dpi = 100
-        self.fig = Figure((3.0, 3.0), dpi=self.dpi)
+        self.fig = Figure((3.0, 3.0), dpi=self.dpi, )
         self.axes = self.fig.add_subplot(111)
         self.newData = False
         pylab.setp(self.axes.get_xticklabels(), fontsize=8)
         pylab.setp(self.axes.get_yticklabels(), fontsize=8)
+        self.axes.grid(True, color='gray')
 #        self.Bind(wx.EVT_CLOSE, self.on_close)
         self.channels = []
+        self.paused = False
+        self.canvas = FigCanvas(self, -1, self.fig)
         if channel:
             self.add_channel(channel)
-        self.paused = False
-
-        self.canvas = FigCanvas(self, -1, self.fig)
         self.toolbar = NavigationToolbar(self.canvas)
         self.toolbar.Realize()
         self.toolbar.DeleteToolByPos(7) #Deletes the adjust subplots button
@@ -595,17 +598,17 @@ class FigurePanel(wx.Panel):
         # so just passing the flag into the first statement won't
         # work.
         #
-        if self.cb_grid.IsChecked():
-            self.axes.grid(True, color='gray')
-        else:
-            self.axes.grid(False)
+#        if self.cb_grid.IsChecked():
+#            self.axes.grid(True, color='gray')
+#        else:
+#            self.axes.grid(False)
         
 
         # Using setp here is convenient, because get_xticklabels
         # returns a list over which one needs to explicitly 
         # iterate, and setp already handles this.
-        pylab.setp(self.axes.get_xticklabels(), 
-            visible=self.cb_xlab.IsChecked())
+#        pylab.setp(self.axes.get_xticklabels(), 
+#            visible=self.cb_xlab.IsChecked())
 
         for channel in self.channels:
             channel.updatePlotData()
@@ -619,13 +622,22 @@ class FigurePanel(wx.Panel):
         self.pause_button.SetLabel(label)
         
     def on_cb_grid(self, event):
-        self.draw_plot()
-    
+        if self.cb_grid.IsChecked():
+            self.axes.grid(True, color='gray')
+        else:
+            self.axes.grid(False)
+        self.canvas.draw()
+        
     def on_cb_xlab(self, event):
-        self.draw_plot()
+#        self.newData = True
+        pylab.setp(self.axes.get_xticklabels(), 
+            visible=self.cb_xlab.IsChecked())
+        self.canvas.draw()
+#        self.draw_plot()
         
     def on_cb_window(self, event):
-        self.draw_plot()
+        self.newData = True
+#        self.draw_plot()
 
 class GraphFrame(wx.Frame):
     """ The main frame of the application
@@ -716,6 +728,10 @@ class GraphFrame(wx.Frame):
 
     def create_main_panel(self):
         self.panel = wx.Panel(self)
+        #Hack panel position getter and setter to allow treating the control
+        #window the same as the child windows when loading and saving configs
+        self.panel.SetPosition = self.SetPosition
+        self.panel.GetPosition = self.GetPosition
         self.figurePanel = FigurePanel(self.panel, "Main", self)
         self.figurePlots.append(self.figurePanel)
         
@@ -772,55 +788,38 @@ class GraphFrame(wx.Frame):
     def child_closed(self, child):
         for c in child.panel.channels:
             self.change_figure(c, "Main")
-#        self.figurePlots.remove(child.panel)
-#        child.Destroy()
         
 
-    def change_figure(self, channel, figure):
+    def change_figure(self, channel, figure, position=None):
+#        print "changing figure to: ", figure
         oldFigure = channel.figurePanel
         oldFigure.remove_channel(channel)
         
-#        if figure == "Main":
-##            channel.isDetached = False
-#            channel.plot_data = self.axes.plot([], linewidth=1,color=channel.colour,marker="*", linestyle="")[0]
-#        else:
-#            channel.isDetached = True
     
         if len(oldFigure.channels) == 0 and oldFigure.name != "Main":
             self.figurePlots.remove(oldFigure)
             self.update_available_figures()
             oldFigure.parent.Destroy()
             
-        if figure == "New":
-            newFrame = ChildFrame(self, "Figure"+str(len(self.detachedChilds)), channel)
+        for f in self.figurePlots:
+            if f.name == figure:
+                f.add_channel(channel)
+                if position:
+                    f.parent.SetPosition(position)
+                break
+        else:
+            #Figure not found -> Create new one
+            newFrame = ChildFrame(self, "Figure"+str(len(self.detachedChilds)), channel, position=position)
             newFrame.Show()
             self.figurePlots.append(newFrame.panel)
             self.detachedChilds.append(newFrame)
             self.update_available_figures()
-        else:
-            for f in self.figurePlots:
-                if f.name == figure:
-                    f.add_channel(channel)
-#            for dc in self.detachedChilds:
-#                if dc.name == figure:
-#                    newFrame = dc
-#                    break
-#        channel.change_figureFrame(newFrame.panel)
-#        self.update_available_figures()
         
     def update_available_figures(self):
         for c in self.channels:
             c.figureCB.Clear()
             for f in self.get_figures():
                 c.figureCB.Append(f)
-        
-#    def remove_available_figure(self, figure):
-#        for c in self.channels:
-#            c.figureCB.Remove(figure.name)
-#        
-#    def add_available_figure(self, figure):
-#        for c in self.channels:
-#            c.figureCB.Append(figure.name)
         
         
     def create_child_figure(self, channel):
@@ -842,67 +841,16 @@ class GraphFrame(wx.Frame):
         
 
     def draw_plots(self):
-        """ Redraws the plot
+        """ Trigger redraw in all figures
         """
         for f in self.figurePlots:
-#            print "drawing on: ", f.name
             f.draw_plot()
-#        return
-#        maxSize = 0
-#        ymin = 0
-#        ymax = 0
-#        xmin = 0
-#        for channel in self.channels:
-#            if channel.isActive and not channel.isDetached:
-#                maxSize = max(maxSize, channel.lastData)
-#                ymin = round(min(channel.minVal,ymin),0)
-#                ymax = round(max(channel.maxVal,ymax),1)
-#                xmin = min(xmin, channel.xMin)
-#      
-#        xmax = maxSize if maxSize > 5 else 5
-#        if self.cb_x_window.IsChecked():
-#            xmin = xmin if maxSize - 5 < 0 else maxSize - 5
-#
-#        if self.cb_y_window.IsChecked():
-#            ymin = -0.1
-#            ymax = 1.1
-#        else:
-#            ymax *= 2
-#
-#        self.axes.set_xbound(lower=xmin, upper=xmax)
-#        self.axes.set_ybound(lower=ymin, upper=ymax)
-#        
-#        # anecdote: axes.grid assumes b=True if any other flag is
-#        # given even if b is set to False.
-#        # so just passing the flag into the first statement won't
-#        # work.
-#        #
-#        if self.cb_grid.IsChecked():
-#            self.axes.grid(True, color='gray')
-#        else:
-#            self.axes.grid(False)
-#
-#        # Using setp here is convenient, because get_xticklabels
-#        # returns a list over which one needs to explicitly 
-#        # iterate, and setp already handles this.
-#        #  
-#        pylab.setp(self.axes.get_xticklabels(), 
-#            visible=self.cb_xlab.IsChecked())
-#
-#        for channel in self.channels:
-#            channel.updatePlotData()
-#
-#        self.canvas.draw()
-#        for dc in self.detachedChilds:
-#            dc.panel.draw_plot()
-#        self.newData = False
       
     def on_clearAll_button(self, event):
         for channel in self.channels:
             channel.on_clear_button(event)
         self.firstTime = None
         self.newData = True
-        
 
     def on_send_button(self, event):
       cat = self.catText.GetValue()
@@ -974,7 +922,7 @@ class GraphFrame(wx.Frame):
         
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            self.canvas.print_figure(path, dpi=self.dpi)
+            self.figurePanel.canvas.print_figure(path, dpi=self.figurePanel.dpi)
             self.flash_status_message("Saved to %s" % path)
     
     def on_redraw_timer(self, event):
@@ -1006,14 +954,15 @@ class GraphFrame(wx.Frame):
         config = json.load(open(configPath))
         for channel in config["channels"]:
             if channel["channeltype"] == "Timeline":
-                newChannelBox = TimeLineChannelBox(self.panel, -1, self, channel["config"])
+                newChannelBox = TimeLineChannelBox(self.panel, -1, self, config=channel["config"])
                 
             elif channel["channeltype"] == "Distribution":
-                newChannelBox = DistributionChannelBox(self.panel, -1, self, channel["config"])
+                newChannelBox = DistributionChannelBox(self.panel, -1, self, config=channel["config"])
                 
             self._add_channelBox(newChannelBox)
             newChannelBox._update_style() #Needs to be done after it was created.
             newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
+            self.change_figure(newChannelBox, channel["config"]["figure"], position= channel["config"]["figurePos"])
                 
     def on_save_config(self, event):
         saveFileDialog = wx.FileDialog(
@@ -1031,6 +980,8 @@ class GraphFrame(wx.Frame):
                     channelObject = {"channeltype": "Timeline", "config" : {"category": channel.category,
                                                                             "key": channel.key,
                                                                             "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
+                                                                            "figure": channel.figurePanel.name,          
+                                                                            "figurePos": list(channel.figurePanel.parent.GetPosition()),
                                                                             "style":channel.style,
                                                                             "active":channel.isActive,
                                                                             "useTime": channel.useTime}}
@@ -1039,6 +990,8 @@ class GraphFrame(wx.Frame):
                                                                                "xKey": channel.xKey,
                                                                                "yKey": channel.yKey,
                                                                                "color":[int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
+                                                                               "figure": channel.figurePanel.name,    
+                                                                               "figurePos": list(channel.figurePanel.parent.GetPosition()),                                                                                             
                                                                                "style": channel.style,
                                                                                "active": channel.isActive}}
                 config["channels"].append(channelObject)
