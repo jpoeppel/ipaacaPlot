@@ -19,6 +19,10 @@ Finished saving and loading of channel configurations.
 15.08.2016
 - Huge performance improvement by removing EVT_UPDATE_UI 
 - Allow to specify a positional argument to immediately load a given config file.
+16.08.2016
+Channels can now be shown in detached figures(windows)
+Additional windows and their position are also stored in the config file
+Now another optional argument can be given to specify the update rate.
 """
 import os
 import wx
@@ -647,7 +651,7 @@ class GraphFrame(wx.Frame):
     """
     title = 'Ipaaca Plot Visualisation.'
     
-    def __init__(self, configPath=None):
+    def __init__(self, updateRate=100, configPath=None):
         wx.Frame.__init__(self, None, -1, self.title)
         self.outputBuffer = ipaaca.OutputBuffer("Ipaaca_Plot")
         self.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
@@ -664,18 +668,18 @@ class GraphFrame(wx.Frame):
         self.create_main_panel()
         
         self.redraw_timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)        
-        self.redraw_timer.Start(100)
+        self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)  
+        self.redraw_timer.Start(updateRate)
         self.Bind(wx.EVT_CLOSE, self._when_closed)
         
         self.prepFlashMessage = None
         self.disableChannelBuffer = None
         self.newData = False
-        if configPath:
-            self._handle_config(configPath)
-        
         self.detachedChilds = []
         self.detached_child = None
+
+        if configPath:
+            self._handle_config(configPath)
         
         
     def _when_closed(self, event):
@@ -1022,15 +1026,15 @@ class GraphFrame(wx.Frame):
 
 
 if __name__ == '__main__':
-  
-#    component = "PredictionPlot"
-     
-    configPath = None
-    if len(sys.argv) > 1:
-        configPath = sys.argv[1]
+    import argparse
     
+    parser = argparse.ArgumentParser(description="Plots timelines and distributions send via Ipaaca")
+    parser.add_argument("config", nargs="?", default=None, help="Path to config file that should be loaded directly.")
+    parser.add_argument("-u", "--updateRate", default=100, type=int, help="Update rate in ms that should be used. Default 100ms.")
+  
+    args = parser.parse_args()
     app = wx.PySimpleApp()
-    app.frame = GraphFrame(configPath = configPath)
+    app.frame = GraphFrame(updateRate=args.updateRate, configPath = args.config)
 
     app.frame.Show()
     app.MainLoop()
