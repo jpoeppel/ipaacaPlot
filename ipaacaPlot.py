@@ -454,7 +454,7 @@ class TimeLineChannelBox(ChannelBox):
 class ChildFrame(wx.Frame):
     
     def __init__(self, parent, name, channel):
-        super(ChildFrame, self).__init__(parent, -1, size=(400,200), title="Detached Figure")
+        super(ChildFrame, self).__init__(parent, -1, size=(400,200), title=name)
         self.parent = parent
         self.panel = FigurePanel(self, name, parent, channel)
 
