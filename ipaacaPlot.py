@@ -114,8 +114,6 @@ class ChannelBox(wx.Panel):
     def on_remove_button(self,event):
         self.remove_button.Unbind(wx.EVT_BUTTON)
         self.figurePanel.remove_channel(self)
-#        if self.plot_data in self.figurePanel.axes.lines:
-#            self.figurePanel.axes.lines.remove(self.plot_data)
         self.ctrl.removeChannel(self)
         
     def updatePlotData(self):
@@ -131,7 +129,6 @@ class ChannelBox(wx.Panel):
         if self._isActive:
             self.ctrl.activate_channel(self)
             if self.plot_data not in self.figurePanel.axes.lines:
-#                self.figurePanel.
                 self.figurePanel.axes.lines.append(self.plot_data)
         else:
             if self.plot_data in self.figurePanel.axes.lines:
@@ -232,9 +229,6 @@ class DistributionChannelBox(ChannelBox):
         figureBox.Add(figureLabel, flag=wx.ALIGN_CENTER_VERTICAL)
         figureBox.Add(self.figureCB, flag=wx.ALIGN_CENTER_VERTICAL)
         
-#        self.detach_button = wx.Button(self, -1, "Detach")
-#        self.Bind(wx.EVT_BUTTON, self.on_detach_button, self.detach_button)
-        
         styles = ['-','*','.','--', ':', 'd']
         self.style = config["style"]
         self.lineStyleCB = wx.ComboBox(self, value=self.style, size=(60, 30), choices=styles, 
@@ -252,8 +246,6 @@ class DistributionChannelBox(ChannelBox):
         sizer.Add(hbox, 0, wx.ALL, 10)
         sizer.Add(figureBox, 0, wx.ALL, 10)
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-#        hbox2.Add(self.clear_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-#        hbox2.Add(self.detach_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         hbox2.Add(self.remove_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)   
         
         sizer.Add(hbox2, 0, wx.ALL, 10)
@@ -269,10 +261,6 @@ class DistributionChannelBox(ChannelBox):
     def on_yKeyText_enter(self, event):
         self.yKey = self.yKeyText.GetValue()
         
-#    def on_detach_button(self, event):
-#        self.plot_data = self.ctrl.create_child_figure(self)
-#        self.isDetached = True
-        
     def on_figure_select(self, event):
         figure = event.GetString()
         self.ctrl.change_figure(self, figure)
@@ -283,10 +271,8 @@ class DistributionChannelBox(ChannelBox):
               self.plot_data.set_xdata(np.arange(len(self.xData)))  
               self.plot_data.set_ydata(np.array(self.yData))      
               
-              #TODO: Wrong when detached
               self.figurePanel.axes.set_xticks(np.arange(len(self.xData)))
               self.figurePanel.axes.set_xticklabels(self.xData)
-
             
             pylab.setp(self.figurePanel.axes, title=self.title)
             
@@ -307,11 +293,6 @@ class DistributionChannelBox(ChannelBox):
         if "title" in payload:
             self.title = payload["title"]
             
-#    def change_figureFrame(self, newFigure):
-#        self.figurePanel = newFigure
-#        self.plot_data = newFigure.axes.plot([], linewidth=1, color=self.colour, marker="*", linestyle="")[0]
-#        self._update_style()
-        
         
 class TimeLineChannelBox(ChannelBox):
     """
@@ -467,9 +448,8 @@ class TimeLineChannelBox(ChannelBox):
             data = float(payload[self.key])
             self._addData(timestamp, data)
         except KeyError:
-#            self.ctrl.prepFlashMessage = "Invalid key ({}) for category: {}. Channel will be disabled".format(self.key, self.category)
+            self.ctrl.prepFlashMessage = "Key {} for category: {} not found. Will be ignored".format(self.key, self.category)
 #            self.ctrl.disableChannelBuffer = self
-            pass
       
       
 class ChildFrame(wx.Frame):
@@ -482,11 +462,9 @@ class ChildFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.on_close)
         if position:
             self.SetPosition(position)
-
         
     def on_close(self, event):
         self.parent.child_closed(self)
-        
 
         
         
@@ -550,7 +528,6 @@ class FigurePanel(wx.Panel):
         
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(self.canvas, 1, flag=wx.LEFT | wx.TOP | wx.GROW)    
-#        self.vbox.Add(self.toolbar, 0, flag=wx.ALIGN_LEFT | wx.TOP | wx.GROW)
         self.vbox.Add(self.hboxCtrl, 0, flag=wx.ALIGN_LEFT | wx.TOP)
         
         self.SetSizer(self.vbox)
@@ -581,11 +558,10 @@ class FigurePanel(wx.Panel):
         xmin = 0
 #     
         for channel in self.channels:
-#            if channel.isActive:
-                maxSize = max(maxSize, channel.lastData)
-                ymin = round(min(channel.minVal,ymin),0)
-                ymax = round(max(channel.maxVal,ymax),1)
-                xmin = min(xmin, channel.xMin)
+            maxSize = max(maxSize, channel.lastData)
+            ymin = round(min(channel.minVal,ymin),0)
+            ymax = round(max(channel.maxVal,ymax),1)
+            xmin = min(xmin, channel.xMin)
 #      
         xmax = maxSize if maxSize > 5 else 5
         if self.cb_x_window.IsChecked():
@@ -600,27 +576,10 @@ class FigurePanel(wx.Panel):
         self.axes.set_xbound(lower=xmin, upper=xmax)
         self.axes.set_ybound(lower=ymin, upper=ymax)
         
-        # anecdote: axes.grid assumes b=True if any other flag is
-        # given even if b is set to False.
-        # so just passing the flag into the first statement won't
-        # work.
-        #
-#        if self.cb_grid.IsChecked():
-#            self.axes.grid(True, color='gray')
-#        else:
-#            self.axes.grid(False)
-        
-
-        # Using setp here is convenient, because get_xticklabels
-        # returns a list over which one needs to explicitly 
-        # iterate, and setp already handles this.
-#        pylab.setp(self.axes.get_xticklabels(), 
-#            visible=self.cb_xlab.IsChecked())
-
         for channel in self.channels:
             channel.updatePlotData()
 
-        self.canvas.draw()
+        self.canvas.draw() #Costs a lot of CPU performance :-(
         self.newData = False
         
     def on_pause_button(self, event):
@@ -629,6 +588,10 @@ class FigurePanel(wx.Panel):
         self.pause_button.SetLabel(label)
         
     def on_cb_grid(self, event):
+        # anecdote: axes.grid assumes b=True if any other flag is
+        # given even if b is set to False.
+        # so just passing the flag into the first statement won't
+        # work.
         if self.cb_grid.IsChecked():
             self.axes.grid(True, color='gray')
         else:
@@ -636,15 +599,15 @@ class FigurePanel(wx.Panel):
         self.canvas.draw()
         
     def on_cb_xlab(self, event):
-#        self.newData = True
+        # Using setp here is convenient, because get_xticklabels
+        # returns a list over which one needs to explicitly 
+        # iterate, and setp already handles this.
         pylab.setp(self.axes.get_xticklabels(), 
             visible=self.cb_xlab.IsChecked())
         self.canvas.draw()
-#        self.draw_plot()
         
     def on_cb_window(self, event):
-        self.newData = True
-#        self.draw_plot()
+        self.canvas.draw()
 
 class GraphFrame(wx.Frame):
     """ The main frame of the application
@@ -675,12 +638,10 @@ class GraphFrame(wx.Frame):
         self.prepFlashMessage = None
         self.disableChannelBuffer = None
         self.newData = False
-        self.detachedChilds = []
-        self.detached_child = None
+        self.figureCounter = 0
 
         if configPath:
             self._handle_config(configPath)
-        
         
     def _when_closed(self, event):
         self.redraw_timer.Destroy()
@@ -689,8 +650,6 @@ class GraphFrame(wx.Frame):
         
     def get_figures(self):
         res = []
-#        for dc in self.detachedChilds:
-#            res.append(dc.name)
         for f in self.figurePlots:
             res.append(f.name)
         res.append("New")
@@ -714,7 +673,7 @@ class GraphFrame(wx.Frame):
         self.menubar = wx.MenuBar()
         
         menu_file = wx.Menu()
-        m_expt = menu_file.Append(-1, "Export plot\tCtrl-E", "Save plot to file")
+        m_expt = menu_file.Append(-1, "Export plot\tCtrl-E", "Save main plot to file")
         self.Bind(wx.EVT_MENU, self.on_save_plot, m_expt)
         
         m_saveConfig = menu_file.Append(-1, "Save configuration\tCtrl-S", "Save plot configuration")        
@@ -732,16 +691,12 @@ class GraphFrame(wx.Frame):
         self.SetMenuBar(self.menubar)
         
 
-    def on_panel_close(self, event):
-        pass
-
     def create_main_panel(self):
         self.panel = wx.Panel(self)
         #Hack panel position getter and setter to allow treating the control
         #window the same as the child windows when loading and saving configs
         self.panel.SetPosition = self.SetPosition
         self.panel.GetPosition = self.GetPosition
-        self.panel.on_close = self.on_panel_close
         
         self.figurePanel = FigurePanel(self.panel, "Main", self)
         self.figurePlots.append(self.figurePanel)
@@ -810,9 +765,6 @@ class GraphFrame(wx.Frame):
         oldFigure = channel.figurePanel
         oldFigure.remove_channel(channel)
     
-        if len(oldFigure.channels) == 0:
-            self.remove_figure(oldFigure)
-            
         for f in self.figurePlots:
             if f.name == figure:
                 f.add_channel(channel)
@@ -822,11 +774,11 @@ class GraphFrame(wx.Frame):
         else:
             #Figure not found -> Create new one
             if figure == "New":
-                figure =  "Figure"+str(len(self.figurePlots))
+                figure =  "Figure"+str(self.figureCounter)
             newFrame = ChildFrame(self, figure, channel, position=position)
             newFrame.Show()
+            self.figureCounter += 1
             self.figurePlots.append(newFrame.panel)
-            self.detachedChilds.append(newFrame)
             self.update_available_figures()
         
     def update_available_figures(self):
@@ -834,12 +786,6 @@ class GraphFrame(wx.Frame):
             c.figureCB.Clear()
             for f in self.get_figures():
                 c.figureCB.Append(f)
-        
-        
-    def create_child_figure(self, channel):
-        self.detached_child = ChildFrame(self, channel)
-        self.detached_child.Show()
-        return self.detached_child.axes.plot([], linewidth=1,color=channel.colour,marker="*", linestyle="")[0]
         
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()
@@ -874,12 +820,6 @@ class GraphFrame(wx.Frame):
         msg = ipaaca.Message(cat)
         msg.payload = {key:payload}
         self.outputBuffer.add(msg)
-
-    
-    def on_pause_button(self, event):
-        self.paused = not self.paused
-        label = "Resume" if self.paused else "Pause"
-        self.pause_button.SetLabel(label)
         
     def on_addDistChannel_button(self, event):
         newDistChannelBox = DistributionChannelBox(self.panel, -1, self)
@@ -914,14 +854,6 @@ class GraphFrame(wx.Frame):
         self.vbox.Fit(self)
         self.Layout()
         
-#    def on_cb_grid(self, event):
-#        self.draw_plot()
-#    
-#    def on_cb_xlab(self, event):
-#        self.draw_plot()
-#        
-#    def on_cb_window(self, event):
-#        self.draw_plot()
     
     def on_save_plot(self, event):
         file_choices = "PNG (*.png)|*.png"
