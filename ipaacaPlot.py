@@ -60,7 +60,6 @@ class ChannelBox(wx.Panel):
         self.category = ""
         self.isDetached = False
         if figurePanel == None:
-            print "was none"
             figurePanel = ctrl.figurePanel
         self.figurePanel = figurePanel
         
@@ -110,8 +109,9 @@ class ChannelBox(wx.Panel):
       
     def on_remove_button(self,event):
         self.remove_button.Unbind(wx.EVT_BUTTON)
-        if self.plot_data in self.ctrl.axes.lines:
-            self.figurePanel.axes.lines.remove(self.plot_data)
+        self.figurePanel.remove_channel(self)
+#        if self.plot_data in self.figurePanel.axes.lines:
+#            self.figurePanel.axes.lines.remove(self.plot_data)
         self.ctrl.removeChannel(self)
         
     def updatePlotData(self):
@@ -496,6 +496,7 @@ class FigurePanel(wx.Panel):
         self.fig = Figure((3.0, 3.0), dpi=self.dpi, )
         self.axes = self.fig.add_subplot(111)
         self.newData = False
+        self.ctrl = ctrl
         pylab.setp(self.axes.get_xticklabels(), fontsize=8)
         pylab.setp(self.axes.get_yticklabels(), fontsize=8)
         self.axes.grid(True, color='gray')
@@ -562,6 +563,8 @@ class FigurePanel(wx.Panel):
         self.channels.remove(channel)
         if channel.isActive:
             self.axes.lines.remove(channel.plot_data)
+        if len(self.channels) == 0:
+            self.ctrl.remove_figure(self)
         
     def draw_plot(self):
         """ Redraws the plot
@@ -724,7 +727,9 @@ class GraphFrame(wx.Frame):
         self.menubar.Append(menu_file, "&File")
         self.SetMenuBar(self.menubar)
         
-    
+
+    def on_panel_close(self, event):
+        pass
 
     def create_main_panel(self):
         self.panel = wx.Panel(self)
@@ -732,6 +737,8 @@ class GraphFrame(wx.Frame):
         #window the same as the child windows when loading and saving configs
         self.panel.SetPosition = self.SetPosition
         self.panel.GetPosition = self.GetPosition
+        self.panel.on_close = self.on_panel_close
+        
         self.figurePanel = FigurePanel(self.panel, "Main", self)
         self.figurePlots.append(self.figurePanel)
         
@@ -789,17 +796,18 @@ class GraphFrame(wx.Frame):
         for c in child.panel.channels:
             self.change_figure(c, "Main")
         
+    def remove_figure(self, figure):
+        if figure.name != "Main":
+            self.figurePlots.remove(figure)
+            self.update_available_figures()
+            figure.parent.Destroy()
 
     def change_figure(self, channel, figure, position=None):
-#        print "changing figure to: ", figure
         oldFigure = channel.figurePanel
         oldFigure.remove_channel(channel)
-        
     
-        if len(oldFigure.channels) == 0 and oldFigure.name != "Main":
-            self.figurePlots.remove(oldFigure)
-            self.update_available_figures()
-            oldFigure.parent.Destroy()
+        if len(oldFigure.channels) == 0:
+            self.remove_figure(oldFigure)
             
         for f in self.figurePlots:
             if f.name == figure:
@@ -809,7 +817,9 @@ class GraphFrame(wx.Frame):
                 break
         else:
             #Figure not found -> Create new one
-            newFrame = ChildFrame(self, "Figure"+str(len(self.detachedChilds)), channel, position=position)
+            if figure == "New":
+                figure =  "Figure"+str(len(self.figurePlots))
+            newFrame = ChildFrame(self, figure, channel, position=position)
             newFrame.Show()
             self.figurePlots.append(newFrame.panel)
             self.detachedChilds.append(newFrame)
@@ -853,13 +863,13 @@ class GraphFrame(wx.Frame):
         self.newData = True
 
     def on_send_button(self, event):
-      cat = self.catText.GetValue()
-      key = self.keyText.GetValue()
-      payload = self.payloadText.GetValue()
-      print "Sending %s to category %s" % ({key:payload}, cat)
-      msg = ipaaca.Message(cat)
-      msg.payload = {key:payload}
-      self.outputBuffer.add(msg)
+        cat = self.catText.GetValue()
+        key = self.keyText.GetValue()
+        payload = self.payloadText.GetValue()
+        print "Sending %s to category %s" % ({key:payload}, cat)
+        msg = ipaaca.Message(cat)
+        msg.payload = {key:payload}
+        self.outputBuffer.add(msg)
 
     
     def on_pause_button(self, event):
@@ -891,8 +901,8 @@ class GraphFrame(wx.Frame):
         else:
             self.inputBuffer.remove_category_interests(channel.category)
         self.channels.remove(channel)
-        self.hbox2.Remove(channel)
-        pylab.setp(self.axes, title="")
+        self.hboxChannels.Remove(channel)
+        pylab.setp(self.figurePanel.axes, title="")
         channel.Destroy()
         if len(self.channels) == 0:
             self.firstTime = None
@@ -900,14 +910,14 @@ class GraphFrame(wx.Frame):
         self.vbox.Fit(self)
         self.Layout()
         
-    def on_cb_grid(self, event):
-        self.draw_plot()
-    
-    def on_cb_xlab(self, event):
-        self.draw_plot()
-        
-    def on_cb_window(self, event):
-        self.draw_plot()
+#    def on_cb_grid(self, event):
+#        self.draw_plot()
+#    
+#    def on_cb_xlab(self, event):
+#        self.draw_plot()
+#        
+#    def on_cb_window(self, event):
+#        self.draw_plot()
     
     def on_save_plot(self, event):
         file_choices = "PNG (*.png)|*.png"
@@ -983,7 +993,7 @@ class GraphFrame(wx.Frame):
                                                                             "figure": channel.figurePanel.name,          
                                                                             "figurePos": list(channel.figurePanel.parent.GetPosition()),
                                                                             "style":channel.style,
-                                                                            "active":channel.isActive,
+                                                                            "active":channel._isActive,
                                                                             "useTime": channel.useTime}}
                 elif isinstance(channel, DistributionChannelBox):
                     channelObject = {"channeltype": "Distribution", "config": {"category": channel.category,
@@ -993,7 +1003,7 @@ class GraphFrame(wx.Frame):
                                                                                "figure": channel.figurePanel.name,    
                                                                                "figurePos": list(channel.figurePanel.parent.GetPosition()),                                                                                             
                                                                                "style": channel.style,
-                                                                               "active": channel.isActive}}
+                                                                               "active": channel._isActive}}
                 config["channels"].append(channelObject)
             json.dump(config, open(path,"w"))
                     
@@ -1023,6 +1033,5 @@ if __name__ == '__main__':
     app.frame = GraphFrame(configPath = configPath)
 
     app.frame.Show()
-    print "show"
     app.MainLoop()
 
