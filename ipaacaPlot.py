@@ -156,7 +156,7 @@ class DistributionChannelBox(ChannelBox):
         self.xMin = -1
         
         super(DistributionChannelBox, self).__init__(parent, ID, ctrl, figurePanel, config)
-        self.plot_data = ctrl.figurePanel.axes.plot([], linewidth=1,color=self.colour,marker="*", linestyle="")[0]
+        self.plot_data = self.figurePanel.axes.plot([], linewidth=1,color=self.colour,marker="*", linestyle="")[0]
         
     def _create_elements(self, config):
         
@@ -245,12 +245,12 @@ class DistributionChannelBox(ChannelBox):
         
         
         sizer.Add(hbox, 0, wx.ALL, 10)
-
+        sizer.Add(figureBox, 0, wx.ALL, 10)
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
 #        hbox2.Add(self.clear_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
 #        hbox2.Add(self.detach_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         hbox2.Add(self.remove_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)   
-        sizer.Add(figureBox, 0, wx.ALL, 10)
+        
         sizer.Add(hbox2, 0, wx.ALL, 10)
         sizer.Add(self.activeCB, 0, wx.ALL, 10)
         
@@ -286,7 +286,7 @@ class DistributionChannelBox(ChannelBox):
             pylab.setp(self.figurePanel.axes, title=self.title)
             
     def update_data(self, firstTimestamp, payload):
-        
+        self.figurePanel.newData = True
         try:
             xData = list(payload[self.xKey])
             yData = list(payload[self.yKey])
@@ -321,12 +321,12 @@ class TimeLineChannelBox(ChannelBox):
                "active": False, 
                "useTime": True}
     
-    def __init__(self, parent, ID, ctrl, figureFrame=None, config=None):
+    def __init__(self, parent, ID, ctrl, figurePanel=None, config=None):
         self.key = ""
         self.xMin = 0
         self.useTime = True
-        super(TimeLineChannelBox, self).__init__(parent, ID, ctrl, figureFrame, config)
-        self.plot_data = ctrl.axes.plot([], linewidth=1,color=self.colour,)[0]
+        super(TimeLineChannelBox, self).__init__(parent, ID, ctrl, figurePanel, config)
+        self.plot_data = self.figurePanel.axes.plot([], linewidth=1,color=self.colour,)[0]
         
     def _create_elements(self, config):
 
@@ -384,6 +384,16 @@ class TimeLineChannelBox(ChannelBox):
         self.remove_button = wx.Button(self, -1, "Remove")
         self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
         
+        figureLabel = wx.StaticText(self, -1, "Show in figure: ")
+        self.figureCB = wx.ComboBox(self, value=self.style, size=(80, 30), choices=self.ctrl.get_figures(), 
+            style=wx.CB_READONLY)
+        self.figureCB.SetValue("Main")
+        self.figureCB.Bind(wx.EVT_COMBOBOX, self.on_figure_select)
+        
+        figureBox = wx.BoxSizer(wx.HORIZONTAL)
+        figureBox.Add(figureLabel, flag=wx.ALIGN_CENTER_VERTICAL)
+        figureBox.Add(self.figureCB, flag=wx.ALIGN_CENTER_VERTICAL)
+        
         styles = ['-','*','.','--', ':', 'd']
         self.style = config["style"]
         self.lineStyleCB = wx.ComboBox(self, value=self.style, size=(60, 30), choices=styles, 
@@ -398,10 +408,11 @@ class TimeLineChannelBox(ChannelBox):
         hbox.Add(self.lineStyleCB, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         
         sizer.Add(hbox, 0, wx.ALL, 10)
-
+        sizer.Add(figureBox, 0, wx.ALL, 10)
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         hbox2.Add(self.clear_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         hbox2.Add(self.remove_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)        
+        
         sizer.Add(hbox2, 0, wx.ALL, 10)
         
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
@@ -426,6 +437,10 @@ class TimeLineChannelBox(ChannelBox):
     def on_keyText_enter(self, event):
         self.key = self.keyText.GetValue()
         
+    def on_figure_select(self, event):
+        figure = event.GetString()
+        self.ctrl.change_figure(self, figure)
+        
     def on_checkUseTime(self, event):
         self.useTime = self.useTimeCB.GetValue()
         
@@ -441,6 +456,7 @@ class TimeLineChannelBox(ChannelBox):
             self.yData.append(data)
         
     def update_data(self, firstTimestamp, payload):
+        self.figurePanel.newData = True
         timestamp = time.time()-firstTimestamp
         try:
             data = float(payload[self.key])
@@ -476,6 +492,7 @@ class FigurePanel(wx.Panel):
         self.dpi = 100
         self.fig = Figure((3.0, 3.0), dpi=self.dpi)
         self.axes = self.fig.add_subplot(111)
+        self.newData = False
         pylab.setp(self.axes.get_xticklabels(), fontsize=8)
         pylab.setp(self.axes.get_yticklabels(), fontsize=8)
 #        self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -546,20 +563,20 @@ class FigurePanel(wx.Panel):
     def draw_plot(self):
         """ Redraws the plot
         """
-        if self.paused:
+        if self.paused or not self.newData:
             return
         maxSize = 0
         ymin = 0
         ymax = 0
         xmin = 0
-     
+#     
         for channel in self.channels:
 #            if channel.isActive:
                 maxSize = max(maxSize, channel.lastData)
                 ymin = round(min(channel.minVal,ymin),0)
                 ymax = round(max(channel.maxVal,ymax),1)
                 xmin = min(xmin, channel.xMin)
-      
+#      
         xmax = maxSize if maxSize > 5 else 5
         if self.cb_x_window.IsChecked():
             xmin = xmin if maxSize - 5 < 0 else maxSize - 5
@@ -594,6 +611,7 @@ class FigurePanel(wx.Panel):
             channel.updatePlotData()
 
         self.canvas.draw()
+        self.newData = False
         
     def on_pause_button(self, event):
         self.paused = not self.paused
@@ -665,7 +683,6 @@ class GraphFrame(wx.Frame):
         
         
     def update_data(self, iu, event_type, local):
-        self.newData = True
         if self.firstTime == None:
             self.firstTime = time.time()
         if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
@@ -824,11 +841,11 @@ class GraphFrame(wx.Frame):
         pylab.setp(self.axes.get_yticklabels(), fontsize=8)
         
 
-    def draw_plot(self):
+    def draw_plots(self):
         """ Redraws the plot
         """
         for f in self.figurePlots:
-            print "drawing on: ", f.name
+#            print "drawing on: ", f.name
             f.draw_plot()
 #        return
 #        maxSize = 0
@@ -961,8 +978,7 @@ class GraphFrame(wx.Frame):
             self.flash_status_message("Saved to %s" % path)
     
     def on_redraw_timer(self, event):
-        if not self.paused and self.newData:      
-            self.draw_plot()
+        self.draw_plots()
         if self.prepFlashMessage != None:
             self.flash_status_message(self.prepFlashMessage)
             self.prepFlashMessage = None
