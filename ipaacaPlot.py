@@ -495,7 +495,7 @@ class FigurePanel(wx.Panel):
         if channel:
             self.add_channel(channel)
             
-        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
+#        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
         self.toolbar = NavigationToolbar(self.canvas)
 #        self.toolbar = NavigationToolbar(self.canvas, )
         self.toolbar.Realize()
