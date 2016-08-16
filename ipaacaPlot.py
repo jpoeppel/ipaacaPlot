@@ -273,6 +273,11 @@ class DistributionChannelBox(ChannelBox):
               
               self.figurePanel.axes.set_xticks(np.arange(len(self.xData)))
               self.figurePanel.axes.set_xticklabels(self.xData)
+              
+              self.figurePanel.axes.draw_artist(self.figurePanel.axes.patch)
+              self.figurePanel.axes.draw_artist(self.plot_data)
+#              self.figurePanel.fig.canvas.update()
+#              self.figurePanel.fig.flush_events()
             
             pylab.setp(self.figurePanel.axes, title=self.title)
             
@@ -465,7 +470,6 @@ class ChildFrame(wx.Frame):
         
     def on_close(self, event):
         self.parent.child_closed(self)
-
         
         
 class FigurePanel(wx.Panel):
@@ -486,9 +490,14 @@ class FigurePanel(wx.Panel):
         self.channels = []
         self.paused = False
         self.canvas = FigCanvas(self, -1, self.fig)
+        
+#        self.canvas = FigCanvas(self.fig)
         if channel:
             self.add_channel(channel)
+            
+        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
         self.toolbar = NavigationToolbar(self.canvas)
+#        self.toolbar = NavigationToolbar(self.canvas, )
         self.toolbar.Realize()
         self.toolbar.DeleteToolByPos(7) #Deletes the adjust subplots button
         self.toolbar.DeleteToolByPos(2) #Deletes the forward button
@@ -578,7 +587,19 @@ class FigurePanel(wx.Panel):
         
         for channel in self.channels:
             channel.updatePlotData()
-
+            
+#        self.canvas.restore_region(self.background)
+#        self.axes.draw_artist(self.axes.patch)
+#        for line in self.axes.lines:
+#            self.axes.draw_artist(line)
+        
+#        for spine in self.axes.spines.values(): 
+#            self.axes.draw_artist(spine)
+#        self.axes.draw_artist(self.axes.xaxis)    
+#        self.axes.draw_artist(self.axes.yaxis)   
+#        print self.axes.labels
+#        self.axes.draw_artist(self.axes.xticks)
+#        self.canvas.blit(self.axes.bbox)
         self.canvas.draw() #Costs a lot of CPU performance :-(
         self.newData = False
         
@@ -596,7 +617,12 @@ class FigurePanel(wx.Panel):
             self.axes.grid(True, color='gray')
         else:
             self.axes.grid(False)
+#        self.canvas.draw()
+#        lines = self.axes.lines
+#        self.axes.lines = []
         self.canvas.draw()
+#        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
+#        self.axes.lines = lines
         
     def on_cb_xlab(self, event):
         # Using setp here is convenient, because get_xticklabels
@@ -604,10 +630,19 @@ class FigurePanel(wx.Panel):
         # iterate, and setp already handles this.
         pylab.setp(self.axes.get_xticklabels(), 
             visible=self.cb_xlab.IsChecked())
+#        lines = self.axes.lines
+#        self.axes.lines = []
         self.canvas.draw()
+#        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
+#        self.axes.lines = lines
         
     def on_cb_window(self, event):
+#        self.axes.set_ybound(lower=-0.1, upper=1.1)
+#        lines = self.axes.lines
+#        self.axes.lines = []
         self.canvas.draw()
+#        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
+#        self.axes.lines = lines
 
 class GraphFrame(wx.Frame):
     """ The main frame of the application
