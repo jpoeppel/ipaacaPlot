@@ -110,6 +110,7 @@ class ChannelBox(wx.Panel):
         self.lastData = 0
         self.maxVal = 0.0
         self.minVal = 0.0
+        self.figurePanel.canvas.draw()
       
     def on_remove_button(self,event):
         self.remove_button.Unbind(wx.EVT_BUTTON)
@@ -851,7 +852,7 @@ class GraphFrame(wx.Frame):
         cat = self.catText.GetValue()
         key = self.keyText.GetValue()
         payload = self.payloadText.GetValue()
-        print "Sending %s to category %s" % ({key:payload}, cat)
+        print("Sending %s to category %s" % ({key:payload}, cat))
         msg = ipaaca.Message(cat)
         msg.payload = {key:payload}
         self.outputBuffer.add(msg)
