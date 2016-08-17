@@ -7,4 +7,14 @@ Uses wx and matplotlib to plot either timedate or distriputions that are send vi
 ```
 python ipaacaPlot [path_to_config]
 ```
+
+### Requirements
+
+ipaacaPlot is build upon the following 3rd party dependencies:
+
+* wxpython (GUI elements)
+* matplotlib (actual plotting)
+* ipaaca (to receive the messages that are being plottet)
+
+
 [1] http://asap-project.ewi.utwente.nl/wiki/Ipaaca
