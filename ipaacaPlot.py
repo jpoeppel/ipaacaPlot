@@ -39,7 +39,6 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas, \
     NavigationToolbar2WxAgg as NavigationToolbar
-import numpy as np
 import pylab
 import json #For config  files
 
@@ -269,10 +268,10 @@ class DistributionChannelBox(ChannelBox):
     def updatePlotData(self):
         if self._isActive:
             with self.dataLock:
-              self.plot_data.set_xdata(np.arange(len(self.xData)))  
-              self.plot_data.set_ydata(np.array(self.yData))      
+              self.plot_data.set_xdata(range(len(self.xData)))  
+              self.plot_data.set_ydata(self.yData)
               
-              self.figurePanel.axes.set_xticks(np.arange(len(self.xData)))
+              self.figurePanel.axes.set_xticks(range(len(self.xData)))
               self.figurePanel.axes.set_xticklabels(self.xData)
               
               self.figurePanel.axes.draw_artist(self.figurePanel.axes.patch)
@@ -421,10 +420,10 @@ class TimeLineChannelBox(ChannelBox):
         if self._isActive:
             with self.dataLock:
                 if self.useTime:
-                    self.plot_data.set_xdata(np.array(self.xData)) 
+                    self.plot_data.set_xdata(self.xData)
                 else:
-                    self.plot_data.set_xdata(np.arange(len(self.yData))) 
-                self.plot_data.set_ydata(np.array(self.yData))   
+                    self.plot_data.set_xdata(range(len(self.yData))) 
+                self.plot_data.set_ydata(self.yData)
         
     def on_keyText_enter(self, event):
         self.key = self.keyText.GetValue()
@@ -600,7 +599,7 @@ class FigurePanel(wx.Panel):
 #        self.axes.draw_artist(self.axes.yaxis)   
 #        print self.axes.labels
 #        self.axes.draw_artist(self.axes.xticks)
-#        self.canvas.blit(self.axes.bbox)
+#        num
         self.canvas.draw() #Costs a lot of CPU performance :-(
         self.newData = False
         
