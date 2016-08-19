@@ -109,6 +109,8 @@ class ChannelBox(wx.Panel):
         self.lastData = 0
         self.maxVal = 0.0
         self.minVal = 0.0
+        self.plot_data.set_xdata([])  
+        self.plot_data.set_ydata([])
         self.figurePanel.canvas.draw()
       
     def on_remove_button(self,event):
@@ -173,7 +175,7 @@ class DistributionChannelBox(ChannelBox):
         self.activeCB.SetValue(config["active"])
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)
         
-        box = wx.StaticBox(self, -1, "Add Distribution Channel")
+        box = wx.StaticBox(self, -1, "Distribution Channel")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         
         catLabel = wx.StaticText(self, -1, "Category: ")
@@ -338,7 +340,7 @@ class TimeLineChannelBox(ChannelBox):
         self.useTimeCB.SetValue(self.useTime)
         self.useTimeCB.Bind(wx.EVT_CHECKBOX, self.on_checkUseTime)
         
-        box = wx.StaticBox(self, -1, "Add Channel")
+        box = wx.StaticBox(self, -1, "Timeline Channel")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         
         catLabel = wx.StaticText(self, -1, "Category: ")
@@ -454,6 +456,7 @@ class TimeLineChannelBox(ChannelBox):
             self._addData(timestamp, data)
         except KeyError:
             self.ctrl.prepFlashMessage = "Key {} for category: {} not found. Will be ignored".format(self.key, self.category)
+#            self._addData(timestamp, -0.1)
 #            self.ctrl.disableChannelBuffer = self
       
       
