@@ -26,6 +26,7 @@ Now another optional argument can be given to specify the update rate.
 """
 import os
 import wx
+from wx.lib.agw.pycollapsiblepane import PyCollapsiblePane
 import sys
 import ipaaca
 import time
@@ -42,14 +43,17 @@ from matplotlib.backends.backend_wxagg import \
 import pylab
 import json #For config  files
 
-class ChannelBox(wx.Panel):
+class ChannelBox(PyCollapsiblePane):
+#class ChannelBox(wx.CollapsiblePane):
     """
         Abstract class for a channel box, which provides the commong functionality for both timelines
         and distribution plots.
     """
     
-    def __init__(self, parent, ID, ctrl, figurePanel=None, config=None):
-        wx.Panel.__init__(self, parent, ID)
+    def __init__(self, parent, ID, ctrl, name="Channel", figurePanel=None, config=None):
+#        wx.Panel.__init__(self, parent, ID)
+        super(ChannelBox, self).__init__(parent, ID, name, agwStyle=wx.CP_GTK_EXPANDER)
+        self.name = name
         self.ctrl = ctrl
         self.xData = []
         self.yData = []
@@ -67,6 +71,27 @@ class ChannelBox(wx.Panel):
         self.figurePanel = figurePanel
         
         self._create_elements(config)
+        self.Expand()
+        self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.on_change)
+        
+        
+    def OnButton(self, event):
+        """
+            Intercept on Button pressin order to set the labels correctly!
+        """
+
+        if self.IsCollapsed():
+            self.SetLabel(self.name)
+        else:
+            self.SetLabel(self.name + "({})".format(self.category))
+            
+        #Call original method
+        super(ChannelBox,self).OnButton(event)
+    
+        
+    def on_change(self, event):
+        "Notify control to resize accordingly"
+        self.ctrl.update_layout()
         
     def _create_elements(self):
         raise NotImplementedError
@@ -159,7 +184,7 @@ class DistributionChannelBox(ChannelBox):
         self.title = ""
         self.xMin = -1
         
-        super(DistributionChannelBox, self).__init__(parent, ID, ctrl, figurePanel, config)
+        super(DistributionChannelBox, self).__init__(parent, ID, ctrl, name="Distribution", figurePanel=figurePanel, config=config)
         self.plot_data = self.figurePanel.axes.plot([], linewidth=1,color=self.colour,marker="*", linestyle="")[0]
         
     def _create_elements(self, config):
@@ -171,16 +196,17 @@ class DistributionChannelBox(ChannelBox):
         for k,v in self.defaults.items():
             if not k in config:
                 config[k] = v
-        self.activeCB = wx.CheckBox(self, -1, "Active")
+        parent = self.GetPane()
+        self.activeCB = wx.CheckBox(parent, -1, "Active")
         self.activeCB.SetValue(config["active"])
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)
         
-        box = wx.StaticBox(self, -1, "Distribution Channel")
+        box = wx.StaticBox(parent, -1, "")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         
-        catLabel = wx.StaticText(self, -1, "Category: ")
+        catLabel = wx.StaticText(parent, -1, "Category: ")
         self.category = config["category"]
-        self.catText = wx.TextCtrl(self, -1, self.category, size=(100,-1))
+        self.catText = wx.TextCtrl(parent, -1, self.category, size=(100,-1))
 
         self.catText.Bind(wx.EVT_TEXT_ENTER, self.on_catText_enter)   
         self.catText.Bind(wx.EVT_KILL_FOCUS, self.on_catText_enter)
@@ -189,9 +215,9 @@ class DistributionChannelBox(ChannelBox):
         category_box.Add(catLabel, flag=wx.ALIGN_CENTER_VERTICAL)
         category_box.Add(self.catText, flag=wx.ALIGN_CENTER_VERTICAL)
         
-        keyLabel = wx.StaticText(self, -1, "X Key: ")
+        keyLabel = wx.StaticText(parent, -1, "X Key: ")
         self.xKey = config["xKey"]
-        self.xKeyText = wx.TextCtrl(self, -1, self.xKey, size=(100,-1))
+        self.xKeyText = wx.TextCtrl(parent, -1, self.xKey, size=(100,-1))
         
         self.xKeyText.Bind(wx.EVT_TEXT_ENTER, self.on_xKeyText_enter)         
         self.xKeyText.Bind(wx.EVT_KILL_FOCUS, self.on_xKeyText_enter)
@@ -200,9 +226,9 @@ class DistributionChannelBox(ChannelBox):
         x_key_box.Add(keyLabel, flag=wx.ALIGN_CENTER_VERTICAL)
         x_key_box.Add(self.xKeyText, flag=wx.ALIGN_CENTER_VERTICAL)
         
-        keyLabel = wx.StaticText(self, -1, "Y Key: ")
+        keyLabel = wx.StaticText(parent, -1, "Y Key: ")
         self.yKey = config["yKey"]
-        self.yKeyText = wx.TextCtrl(self, -1, self.yKey, size=(100,-1))
+        self.yKeyText = wx.TextCtrl(parent, -1, self.yKey, size=(100,-1))
         
         self.yKeyText.Bind(wx.EVT_TEXT_ENTER, self.on_yKeyText_enter)         
         self.yKeyText.Bind(wx.EVT_KILL_FOCUS, self.on_yKeyText_enter)
@@ -213,16 +239,16 @@ class DistributionChannelBox(ChannelBox):
         
         self.keyText = self.yKeyText #Make it so the ctrl can focus this one
 
-        self.colourPicker = wx.ColourPickerCtrl(self, -1)
+        self.colourPicker = wx.ColourPickerCtrl(parent, -1)
         self.colour = (float(config["color"][0])/255, float(config["color"][1])/255,float(config["color"][2])/255)
         self.colourPicker.SetColour(config["color"])
         self.colourPicker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.on_colourChange)
         
-        self.remove_button = wx.Button(self, -1, "Remove")
+        self.remove_button = wx.Button(parent, -1, "Remove")
         self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
         
-        figureLabel = wx.StaticText(self, -1, "Show in figure: ")
-        self.figureCB = wx.ComboBox(self, value=self.style, size=(80, 30), choices=self.ctrl.get_figures(), 
+        figureLabel = wx.StaticText(parent, -1, "Show in figure: ")
+        self.figureCB = wx.ComboBox(parent, value=self.style, size=(80, 30), choices=self.ctrl.get_figures(), 
             style=wx.CB_READONLY)
         self.figureCB.SetValue("Main")
         self.figureCB.Bind(wx.EVT_COMBOBOX, self.on_figure_select)
@@ -233,7 +259,7 @@ class DistributionChannelBox(ChannelBox):
         
         styles = ['-','*','.','--', ':', 'd']
         self.style = config["style"]
-        self.lineStyleCB = wx.ComboBox(self, value=self.style, size=(60, 30), choices=styles, 
+        self.lineStyleCB = wx.ComboBox(parent, value=self.style, size=(60, 30), choices=styles, 
             style=wx.CB_READONLY)
         self.lineStyleCB.Bind(wx.EVT_COMBOBOX, self.on_StyleSelect)
         
@@ -253,8 +279,8 @@ class DistributionChannelBox(ChannelBox):
         sizer.Add(hbox2, 0, wx.ALL, 10)
         sizer.Add(self.activeCB, 0, wx.ALL, 10)
         
-        self.SetSizer(sizer)
-        sizer.Fit(self)
+        parent.SetSizer(sizer)
+        sizer.Fit(parent)
         self.catText.SetFocus()
    
     def on_xKeyText_enter(self, event):
@@ -318,7 +344,8 @@ class TimeLineChannelBox(ChannelBox):
         self.key = ""
         self.xMin = 0
         self.useTime = True
-        super(TimeLineChannelBox, self).__init__(parent, ID, ctrl, figurePanel, config)
+        super(TimeLineChannelBox, self).__init__(parent, ID, ctrl, 
+                            name="Timeline", figurePanel=figurePanel, config=config)
         self.plot_data = self.figurePanel.axes.plot([], linewidth=1,color=self.colour,)[0]
         
     def _create_elements(self, config):
@@ -331,21 +358,22 @@ class TimeLineChannelBox(ChannelBox):
             if not k in config:
                 config[k] = v
         
-        self.activeCB = wx.CheckBox(self, -1, "Active")
+        parent = self.GetPane()
+        self.activeCB = wx.CheckBox(parent, -1, "Active")
         self.activeCB.SetValue(config["active"])
         self.activeCB.Bind(wx.EVT_CHECKBOX, self.on_checkActive)    
         
-        self.useTimeCB = wx.CheckBox(self, -1, "Use Time")
+        self.useTimeCB = wx.CheckBox(parent, -1, "Use Time")
         self.useTime = config["useTime"]
         self.useTimeCB.SetValue(self.useTime)
         self.useTimeCB.Bind(wx.EVT_CHECKBOX, self.on_checkUseTime)
         
-        box = wx.StaticBox(self, -1, "Timeline Channel")
+        box = wx.StaticBox(parent, -1, "")
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         
-        catLabel = wx.StaticText(self, -1, "Category: ")
+        catLabel = wx.StaticText(parent, -1, "Category: ")
         self.category = config["category"]
-        self.catText = wx.TextCtrl(self, -1, self.category, size=(100,-1))
+        self.catText = wx.TextCtrl(parent, -1, self.category, size=(100,-1))
 
         self.catText.Bind(wx.EVT_TEXT_ENTER, self.on_catText_enter)   
         self.catText.Bind(wx.EVT_KILL_FOCUS, self.on_catText_enter)
@@ -354,9 +382,9 @@ class TimeLineChannelBox(ChannelBox):
         category_box.Add(catLabel, flag=wx.ALIGN_CENTER_VERTICAL)
         category_box.Add(self.catText, flag=wx.ALIGN_CENTER_VERTICAL)
         
-        keyLabel = wx.StaticText(self, -1, "Payload Key: ")
+        keyLabel = wx.StaticText(parent, -1, "Payload Key: ")
         self.key = config["key"]
-        self.keyText = wx.TextCtrl(self, -1, self.key, size=(100,-1))
+        self.keyText = wx.TextCtrl(parent, -1, self.key, size=(100,-1))
         
         self.keyText.Bind(wx.EVT_TEXT_ENTER, self.on_keyText_enter)         
         self.keyText.Bind(wx.EVT_KILL_FOCUS, self.on_keyText_enter)
@@ -366,19 +394,19 @@ class TimeLineChannelBox(ChannelBox):
         key_box.Add(keyLabel, flag=wx.ALIGN_CENTER_VERTICAL)
         key_box.Add(self.keyText, flag=wx.ALIGN_CENTER_VERTICAL)
 
-        self.colourPicker = wx.ColourPickerCtrl(self, -1)
+        self.colourPicker = wx.ColourPickerCtrl(parent, -1)
         self.colour = (float(config["color"][0])/255, float(config["color"][1])/255,float(config["color"][2])/255)
         self.colourPicker.SetColour(config["color"])
         self.colourPicker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.on_colourChange)
         
-        self.clear_button = wx.Button(self, -1, "Clear")
+        self.clear_button = wx.Button(parent, -1, "Clear")
         self.Bind(wx.EVT_BUTTON, self.on_clear_button, self.clear_button)
         
-        self.remove_button = wx.Button(self, -1, "Remove")
+        self.remove_button = wx.Button(parent, -1, "Remove")
         self.Bind(wx.EVT_BUTTON, self.on_remove_button, self.remove_button)
         
-        figureLabel = wx.StaticText(self, -1, "Show in figure: ")
-        self.figureCB = wx.ComboBox(self, value=self.style, size=(80, 30), choices=self.ctrl.get_figures(), 
+        figureLabel = wx.StaticText(parent, -1, "Show in figure: ")
+        self.figureCB = wx.ComboBox(parent, value=self.style, size=(80, 30), choices=self.ctrl.get_figures(), 
             style=wx.CB_READONLY)
         self.figureCB.SetValue("Main")
         self.figureCB.Bind(wx.EVT_COMBOBOX, self.on_figure_select)
@@ -389,7 +417,7 @@ class TimeLineChannelBox(ChannelBox):
         
         styles = ['-','*','.','--', ':', 'd']
         self.style = config["style"]
-        self.lineStyleCB = wx.ComboBox(self, value=self.style, size=(60, 30), choices=styles, 
+        self.lineStyleCB = wx.ComboBox(parent, value=self.style, size=(60, 30), choices=styles, 
             style=wx.CB_READONLY)
         
         self.lineStyleCB.Bind(wx.EVT_COMBOBOX, self.on_StyleSelect)
@@ -413,8 +441,9 @@ class TimeLineChannelBox(ChannelBox):
         hbox3.Add(self.useTimeCB,border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(hbox3, 0, wx.ALL, 10)
         
-        self.SetSizer(sizer)
-        sizer.Fit(self)
+        parent.SetSizer(sizer)
+        sizer.Fit(parent)
+#        sizer.SetSizeHints(parent)
         self.catText.SetFocus()
         
         
@@ -778,7 +807,7 @@ class GraphFrame(wx.Frame):
         self.hboxSend.Add(self.send_button, 0, wx.ALL, 5)
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
-        self.vbox.Add(self.figurePanel, 1, flag=wx.LEFT | wx.TOP | wx.GROW)  
+        self.vbox.Add(self.figurePanel, 1, flag=wx.ALL | wx.EXPAND)  
         self.vbox.Add(self.hboxChannelCtrl, 0, flag=wx.ALIGN_LEFT | wx.TOP)
         self.vbox.Add(self.hboxChannels, 0, flag=wx.ALIGN_LEFT | wx.TOP)
 
@@ -786,8 +815,9 @@ class GraphFrame(wx.Frame):
         self.vbox.Add(self.hboxSend, 0, flag=wx.ALIGN_LEFT | wx.TOP)
         
         
+        self.vbox.SetSizeHints(self)
         self.panel.SetSizer(self.vbox)
-        self.vbox.Fit(self)
+#        self.vbox.Fit(self)
         
     def child_closed(self, child):
         for c in child.panel.channels:
@@ -872,9 +902,12 @@ class GraphFrame(wx.Frame):
         self.hboxChannels.Add(channelBox, 0, wx.ALL, 5)
         self.channels.append(channelBox)
         self.figurePanel.channels.append(channelBox)
+        self.update_layout()
+        
+    def update_layout(self):
+        self.vbox.SetSizeHints(self)
         self.vbox.Layout()
-        self.vbox.Fit(self)
-        self.Layout()
+        self.Refresh()
         
     def removeChannel(self, channel):
         for c in self.channels:
