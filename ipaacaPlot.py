@@ -73,6 +73,8 @@ class ChannelBox(PyCollapsiblePane):
         try:
             if not config["collapsed"]:
                 self.Expand()
+            else:
+                self.SetLabel(self.name + "({})".format(self.category))
         except KeyError:
             #If collapsed not defined, also expand
             self.Expand()
@@ -489,7 +491,7 @@ class TimeLineChannelBox(ChannelBox):
             self._addData(timestamp, data)
         except KeyError:
             self.ctrl.prepFlashMessage = "Key {} for category: {} not found. Will be ignored".format(self.key, self.category)
-#            self._addData(timestamp, -0.1)
+            self._addData(timestamp, -0.1)
 #            self.ctrl.disableChannelBuffer = self
       
       
