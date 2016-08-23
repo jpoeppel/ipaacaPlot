@@ -490,8 +490,12 @@ class TimeLineChannelBox(ChannelBox):
             data = float(payload[self.key])
             self._addData(timestamp, data)
         except KeyError:
-            self.ctrl.prepFlashMessage = "Key {} for category: {} not found. Will be ignored".format(self.key, self.category)
-            self._addData(timestamp, -0.1)
+            if self.ctrl.missingKeyValue:
+                self.ctrl.prepFlashMessage = "Key {} for category: {} not found. Spezified default {} will be used".format(self.key, self.category, self.ctrl.missingKeyValue)
+                self._addData(timestamp, self.ctrl.missingKeyValue)
+            else:
+                self.ctrl.prepFlashMessage = "Key {} for category: {} not found. Will be ignored".format(self.key, self.category)
+            
 #            self.ctrl.disableChannelBuffer = self
       
       
@@ -687,7 +691,7 @@ class GraphFrame(wx.Frame):
     """
     title = 'Ipaaca Plot Visualisation.'
     
-    def __init__(self, updateRate=100, configPath=None):
+    def __init__(self, updateRate=100, configPath=None, missingKeyValue=None):
         wx.Frame.__init__(self, None, -1, self.title)
         self.outputBuffer = ipaaca.OutputBuffer("Ipaaca_Plot")
         self.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
@@ -712,6 +716,7 @@ class GraphFrame(wx.Frame):
         self.disableChannelBuffer = None
         self.newData = False
         self.figureCounter = 0
+        self.missingKeyValue = missingKeyValue
 
         if configPath:
             self._handle_config(configPath)
@@ -1045,10 +1050,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Plots timelines and distributions send via Ipaaca")
     parser.add_argument("config", nargs="?", default=None, help="Path to config file that should be loaded directly.")
     parser.add_argument("-u", "--updateRate", default=100, type=int, help="Update rate in ms that should be used. Default 100ms.")
+    parser.add_argument("-m", "--missingKeyValue", default=None, type=float, help="Defines what value should be used for " \
+                                "missing payload keys for timeline plots. If not given, the payload will be ignored " \
+                                "(i.e. the corresponding cannel will not be updated)")
   
     args = parser.parse_args()
     app = wx.PySimpleApp()
-    app.frame = GraphFrame(updateRate=args.updateRate, configPath = args.config)
+    app.frame = GraphFrame(updateRate=args.updateRate, configPath = args.config, missingKeyValue= args.missingKeyValue)
 
     app.frame.Show()
     app.MainLoop()
