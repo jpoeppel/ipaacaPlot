@@ -65,13 +65,17 @@ class ChannelBox(PyCollapsiblePane):
         self.style= "-"
         self.dataLock = threading.Lock()
         self.category = ""
-        self.isDetached = False
         if figurePanel == None:
             figurePanel = ctrl.figurePanel
         self.figurePanel = figurePanel
         
         self._create_elements(config)
-        self.Expand()
+        try:
+            if not config["collapsed"]:
+                self.Expand()
+        except KeyError:
+            #If collapsed not defined, also expand
+            self.Expand()
         self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.on_change)
         
         
@@ -921,9 +925,7 @@ class GraphFrame(wx.Frame):
         channel.Destroy()
         if len(self.channels) == 0:
             self.firstTime = None
-        self.vbox.Layout()
-        self.vbox.Fit(self)
-        self.Layout()
+        self.update_layout()
         
     
     def on_save_plot(self, event):
@@ -978,8 +980,16 @@ class GraphFrame(wx.Frame):
                 
             self._add_channelBox(newChannelBox)
             newChannelBox._update_style() #Needs to be done after it was created.
-            newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
-            self.change_figure(newChannelBox, channel["config"]["figure"], position= channel["config"]["figurePos"])
+            try:
+                newChannelBox._change_activity(channel["config"]["active"]) #To potentially start the recording
+            except KeyError:
+                #Ignore potentially missing active
+                pass
+            try:
+                self.change_figure(newChannelBox, channel["config"]["figure"], position= channel["config"]["figurePos"])
+            except KeyError:
+                #Ignore potentially missing figure or figurePos attribute
+                pass
                 
     def on_save_config(self, event):
         saveFileDialog = wx.FileDialog(
@@ -993,24 +1003,23 @@ class GraphFrame(wx.Frame):
             path = saveFileDialog.GetPath()
             config = {"channels":[]}
             for channel in self.channels:
+                channelObject = {"config": {"category": channel.category,
+                                            "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
+                                            "figure": channel.figurePanel.name,          
+                                            "figurePos": list(channel.figurePanel.parent.GetPosition()),
+                                            "style":channel.style,
+                                            "active":channel._isActive,
+                                            "collapsed": channel.IsCollapsed()}}
+
                 if isinstance(channel, TimeLineChannelBox):
-                    channelObject = {"channeltype": "Timeline", "config" : {"category": channel.category,
-                                                                            "key": channel.key,
-                                                                            "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
-                                                                            "figure": channel.figurePanel.name,          
-                                                                            "figurePos": list(channel.figurePanel.parent.GetPosition()),
-                                                                            "style":channel.style,
-                                                                            "active":channel._isActive,
-                                                                            "useTime": channel.useTime}}
+                    channelObject["channeltype"] =  "Timeline"
+                    channelObject["config"].update({"key": channel.key,
+                                                    "useTime": channel.useTime})
                 elif isinstance(channel, DistributionChannelBox):
-                    channelObject = {"channeltype": "Distribution", "config": {"category": channel.category,
-                                                                               "xKey": channel.xKey,
-                                                                               "yKey": channel.yKey,
-                                                                               "color":[int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
-                                                                               "figure": channel.figurePanel.name,    
-                                                                               "figurePos": list(channel.figurePanel.parent.GetPosition()),                                                                                             
-                                                                               "style": channel.style,
-                                                                               "active": channel._isActive}}
+                    channelObject["channeltype"] =  "Distribution"
+                    channelObject["config"].update({"xKey": channel.xKey,
+                                                    "yKey": channel.yKey})
+                    
                 config["channels"].append(channelObject)
             json.dump(config, open(path,"w"))
                     
