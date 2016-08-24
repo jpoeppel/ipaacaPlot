@@ -682,7 +682,8 @@ class FigurePanel(wx.Panel):
 #        self.axes.set_ybound(lower=-0.1, upper=1.1)
 #        lines = self.axes.lines
 #        self.axes.lines = []
-        self.canvas.draw()
+        self.newData = True
+        self.draw_plot()
 #        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
 #        self.axes.lines = lines
 
