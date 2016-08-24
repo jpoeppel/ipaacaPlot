@@ -65,6 +65,7 @@ class ChannelBox(PyCollapsiblePane):
         self.style= "-"
         self.dataLock = threading.Lock()
         self.category = ""
+        self.title = ""
         if figurePanel == None:
             figurePanel = ctrl.figurePanel
         self.figurePanel = figurePanel
@@ -187,7 +188,6 @@ class DistributionChannelBox(ChannelBox):
     def __init__(self, parent, ID, ctrl, figurePanel=None, config=None):
         self.xKey = "x"
         self.yKey = "y"
-        self.title = ""
         self.xMin = -1
         
         super(DistributionChannelBox, self).__init__(parent, ID, ctrl, name="Distribution", figurePanel=figurePanel, config=config)
@@ -462,6 +462,8 @@ class TimeLineChannelBox(ChannelBox):
                     self.plot_data.set_xdata(range(len(self.yData))) 
                 self.plot_data.set_ydata(self.yData)
         
+            pylab.setp(self.figurePanel.axes, title=self.title)
+            
     def on_keyText_enter(self, event):
         self.key = self.keyText.GetValue()
         
@@ -495,7 +497,8 @@ class TimeLineChannelBox(ChannelBox):
                 self._addData(timestamp, self.ctrl.missingKeyValue)
             else:
                 self.ctrl.prepFlashMessage = "Key {} for category: {} not found. Will be ignored".format(self.key, self.category)
-            
+        if "title" in payload:
+            self.title = payload["title"]
 #            self.ctrl.disableChannelBuffer = self
       
       
@@ -937,8 +940,8 @@ class GraphFrame(wx.Frame):
         
     
     def on_save_plot(self, event):
-        file_choices = "PNG (*.png)|*.png"
-        
+        file_choices = "PNG (*.png)|*.png|SVG (*.svg)|*.svg|PDF (*.pdf)|*.pdf"
+        fileFormats = ["png", "svg", "pdf"]
         dlg = wx.FileDialog(
             self, 
             message="Save plot as...",
@@ -949,7 +952,7 @@ class GraphFrame(wx.Frame):
         
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            self.figurePanel.canvas.print_figure(path, dpi=self.figurePanel.dpi)
+            self.figurePanel.canvas.print_figure(path, dpi=self.figurePanel.dpi, format=fileFormats[dlg.GetFilterIndex()])
             self.flash_status_message("Saved to %s" % path)
     
     def on_redraw_timer(self, event):
