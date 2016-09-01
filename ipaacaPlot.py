@@ -76,8 +76,8 @@ class ChannelBox(PyCollapsiblePane):
                 self.Expand()
             else:
                 self.SetLabel(self.name + "({})".format(self.category))
-        except KeyError:
-            #If collapsed not defined, also expand
+        except (KeyError, TypeError):
+            #If collapsed not defined or no config given, also expand
             self.Expand()
         self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.on_change)
         
