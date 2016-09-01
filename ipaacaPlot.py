@@ -775,7 +775,7 @@ class GraphFrame(wx.Frame):
 
     def create_main_panel(self):
         self.panel = wx.Panel(self)
-        #Hack panel position getter and setter to allow treating the control
+        #Monkey patch panel position getter and setter to allow treating the control
         #window the same as the child windows when loading and saving configs
         self.panel.SetPosition = self.SetPosition
         self.panel.GetPosition = self.GetPosition
