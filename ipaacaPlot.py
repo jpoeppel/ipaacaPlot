@@ -737,7 +737,7 @@ class GraphFrame(wx.Frame):
         self.redraw_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)  
         self.redraw_timer.Start(updateRate)
-        self.Bind(wx.EVT_CLOSE, self._when_closed)
+        self.Bind(wx.EVT_CLOSE, self.on_exit)
         
         self.prepFlashMessage = None
         self.disableChannelBuffer = None
@@ -751,9 +751,7 @@ class GraphFrame(wx.Frame):
         #Force another layout for strange laptop behaviour.
         self.panel.Layout()
         
-    def _when_closed(self, event):
-        self.redraw_timer.Destroy()
-        sys.exit(0)
+
         
         
     def get_figures(self):
@@ -993,6 +991,7 @@ class GraphFrame(wx.Frame):
             self.disableChannelBuffer = None
     
     def on_exit(self, event):
+        self.redraw_timer.Destroy()
         self.Destroy()
         
     def on_load_config(self, event):
