@@ -870,8 +870,6 @@ class GraphFrame(wx.Frame):
     def change_figure(self, channel, figure, position=None, options=None):
         oldFigure = channel.figurePanel
         oldFigure.remove_channel(channel)
-        print "change to figure: ", figure
-        print "Options: ", options
         for f in self.figurePlots:
             if f.name == figure:
                 f.add_channel(channel)
@@ -1076,7 +1074,6 @@ class GraphFrame(wx.Frame):
                 figureObject = {"position": list(fig.parent.GetPosition()),
                                 "options": fig.get_figure_options()}
                 config["figures"][fig.name] = figureObject
-            print "config figures: ", config["figures"]
             json.dump(config, open(path,"w"))
                     
     
@@ -1104,7 +1101,7 @@ if __name__ == '__main__':
                                 "(i.e. the corresponding cannel will not be updated)")
   
     args = parser.parse_args()
-    app = wx.PySimpleApp()
+    app = wx.App(False)
     app.frame = GraphFrame(updateRate=args.updateRate, configPath = args.config, missingKeyValue= args.missingKeyValue)
 
     app.frame.Show()
