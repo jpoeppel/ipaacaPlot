@@ -706,6 +706,12 @@ class FigurePanel(wx.Panel):
         res.append(self.cb_x_window.IsChecked())
         res.append(self.cb_y_window.IsChecked())
         return res
+        
+    def set_figure_options(self, options):
+        self.cb_grid.SetValue(options[0])
+        self.cb_xlab.SetValue(options[1])
+        self.cb_x_window.SetValue(options[2])
+        self.cb_y_window.SetValue(options[3])
 
 class GraphFrame(wx.Frame):
     """ The main frame of the application
@@ -864,13 +870,16 @@ class GraphFrame(wx.Frame):
     def change_figure(self, channel, figure, position=None, options=None):
         oldFigure = channel.figurePanel
         oldFigure.remove_channel(channel)
-    
+        print "change to figure: ", figure
+        print "Options: ", options
         for f in self.figurePlots:
             if f.name == figure:
                 f.add_channel(channel)
                 if position:
                     f.parent.SetPosition(position)
                 break
+                if options:
+                    f.set_figure_options(options)
         else:
             #Figure not found -> Create new one
             if figure == "New":
@@ -999,6 +1008,7 @@ class GraphFrame(wx.Frame):
             
     def _handle_config(self, configPath):
         config = json.load(open(configPath))
+        handledFigures = []
         for channel in config["channels"]:
             if channel["channeltype"] == "Timeline":
                 newChannelBox = TimeLineChannelBox(self.panel, -1, self, config=channel["config"])
@@ -1013,11 +1023,21 @@ class GraphFrame(wx.Frame):
             except KeyError:
                 #Ignore potentially missing active
                 pass
-            try:
-                self.change_figure(newChannelBox, channel["config"]["figure"], position= channel["config"]["figurePos"], options=channel["config"]["figureOptions"])
-            except KeyError:
-                #Ignore potentially missing figure, figurePos or figureOptions attribute
-                pass
+            if channel["config"].has_key("figure"):
+                figureName = channel["config"]["figure"]
+                try:
+                    self.change_figure(newChannelBox, figureName, 
+                                       position=config["figures"][figureName]["position"], 
+                                       options=config["figures"][figureName]["options"])
+                except KeyError:
+                    #Referenzed figure was not specified, will be ignored.
+                    print "There are no stored configurations for figure {}. Defaults will be used.".format(figureName)
+                    self.change_figure(newChannelBox, figureName)
+                handledFigures.append(figureName)
+        #Make sure main window options are set even if no channel used it!
+        if not "Main" in handledFigures and "Main" in config["figures"]:
+            self.figurePlots[0].parent.SetPosition(config["figures"]["Main"]["position"])
+            self.figurePlots[0].set_figure_options(config["figures"]["Main"]["options"])
                 
     def on_save_config(self, event):
         saveFileDialog = wx.FileDialog(
@@ -1034,8 +1054,8 @@ class GraphFrame(wx.Frame):
                 channelObject = {"config": {"category": channel.category,
                                             "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
                                             "figure": channel.figurePanel.name,          
-                                            "figurePos": list(channel.figurePanel.parent.GetPosition()),
-                                            "figureOptions": channel.figurePanel.get_figure_options(),
+#                                            "figurePos": list(channel.figurePanel.parent.GetPosition()),
+#                                            "figureOptions": channel.figurePanel.get_figure_options(),
                                             "style":channel.style,
                                             "active":channel._isActive,
                                             "collapsed": channel.IsCollapsed()}}
@@ -1050,6 +1070,13 @@ class GraphFrame(wx.Frame):
                                                     "yKey": channel.yKey})
                     
                 config["channels"].append(channelObject)
+            
+            config["figures"] = {}
+            for fig in self.figurePlots:
+                figureObject = {"position": list(fig.parent.GetPosition()),
+                                "options": fig.get_figure_options()}
+                config["figures"][fig.name] = figureObject
+            print "config figures: ", config["figures"]
             json.dump(config, open(path,"w"))
                     
     
