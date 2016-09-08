@@ -747,6 +747,9 @@ class GraphFrame(wx.Frame):
 
         if configPath:
             self._handle_config(configPath)
+            
+        #Force another layout for strange laptop behaviour.
+        self.panel.Layout()
         
     def _when_closed(self, event):
         self.redraw_timer.Destroy()
