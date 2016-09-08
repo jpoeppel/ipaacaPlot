@@ -504,10 +504,10 @@ class TimeLineChannelBox(ChannelBox):
       
 class ChildFrame(wx.Frame):
     
-    def __init__(self, parent, name, channel, position=None):
+    def __init__(self, parent, name, channel, position=None, options=None):
         super(ChildFrame, self).__init__(parent, -1, size=(400,200), title=name)
         self.parent = parent
-        self.panel = FigurePanel(self, name, parent, channel)
+        self.panel = FigurePanel(self, name, parent, channel, options)
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
         if position:
@@ -519,7 +519,7 @@ class ChildFrame(wx.Frame):
         
 class FigurePanel(wx.Panel):
     
-    def __init__(self, parent, name, ctrl, channel=None):
+    def __init__(self, parent, name, ctrl, channel=None, options=None):
         super(FigurePanel, self).__init__(parent)
         self.parent = parent
         self.name = name
@@ -551,21 +551,26 @@ class FigurePanel(wx.Panel):
         
         self.pause_button = wx.Button(self, -1, "Pause")
         self.Bind(wx.EVT_BUTTON, self.on_pause_button, self.pause_button)
+        
+        if not options:
+            options = [True, True, False, False]
 #        
         self.cb_grid = wx.CheckBox(self, -1, "Show Grid", style=wx.ALIGN_RIGHT)
         self.Bind(wx.EVT_CHECKBOX, self.on_cb_grid, self.cb_grid)
-        self.cb_grid.SetValue(True)
+        self.cb_grid.SetValue(options[0])
+            
         
         self.cb_xlab = wx.CheckBox(self, -1, "Show X labels", style=wx.ALIGN_RIGHT)
         self.Bind(wx.EVT_CHECKBOX, self.on_cb_xlab, self.cb_xlab)        
-        self.cb_xlab.SetValue(True)
+        self.cb_xlab.SetValue(options[1])
 
         self.cb_x_window = wx.CheckBox(self, -1, "Fixed X window", style=wx.ALIGN_RIGHT)
         self.Bind(wx.EVT_CHECKBOX, self.on_cb_window, self.cb_x_window)        
-        self.cb_x_window.SetValue(False)        
+        self.cb_x_window.SetValue(options[2])        
         
         self.cb_y_window = wx.CheckBox(self, -1, "Fixed Y window", style=wx.ALIGN_RIGHT)
-        self.Bind(wx.EVT_CHECKBOX, self.on_cb_window, self.cb_y_window)     
+        self.Bind(wx.EVT_CHECKBOX, self.on_cb_window, self.cb_y_window)  
+        self.cb_y_window.SetValue(options[3])
         
         
         self.hboxCtrl = wx.BoxSizer(wx.HORIZONTAL)
@@ -689,6 +694,18 @@ class FigurePanel(wx.Panel):
         self.draw_plot()
 #        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
 #        self.axes.lines = lines
+
+    def get_figure_options(self):
+        """
+            Returns a binary array, containing flags for the 4 options
+            "Show Grid", "Show X labels", "Fixed X window", "Fixed Y window"
+        """
+        res = []
+        res.append(self.cb_grid.IsChecked())
+        res.append(self.cb_xlab.IsChecked())
+        res.append(self.cb_x_window.IsChecked())
+        res.append(self.cb_y_window.IsChecked())
+        return res
 
 class GraphFrame(wx.Frame):
     """ The main frame of the application
@@ -844,7 +861,7 @@ class GraphFrame(wx.Frame):
             self.update_available_figures()
             figure.parent.Destroy()
 
-    def change_figure(self, channel, figure, position=None):
+    def change_figure(self, channel, figure, position=None, options=None):
         oldFigure = channel.figurePanel
         oldFigure.remove_channel(channel)
     
@@ -858,7 +875,7 @@ class GraphFrame(wx.Frame):
             #Figure not found -> Create new one
             if figure == "New":
                 figure =  "Figure"+str(self.figureCounter)
-            newFrame = ChildFrame(self, figure, channel, position=position)
+            newFrame = ChildFrame(self, figure, channel, position=position, options=options)
             newFrame.Show()
             self.figureCounter += 1
             self.figurePlots.append(newFrame.panel)
@@ -997,9 +1014,9 @@ class GraphFrame(wx.Frame):
                 #Ignore potentially missing active
                 pass
             try:
-                self.change_figure(newChannelBox, channel["config"]["figure"], position= channel["config"]["figurePos"])
+                self.change_figure(newChannelBox, channel["config"]["figure"], position= channel["config"]["figurePos"], options=channel["config"]["figureOptions"])
             except KeyError:
-                #Ignore potentially missing figure or figurePos attribute
+                #Ignore potentially missing figure, figurePos or figureOptions attribute
                 pass
                 
     def on_save_config(self, event):
@@ -1018,6 +1035,7 @@ class GraphFrame(wx.Frame):
                                             "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
                                             "figure": channel.figurePanel.name,          
                                             "figurePos": list(channel.figurePanel.parent.GetPosition()),
+                                            "figureOptions": channel.figurePanel.get_figure_options(),
                                             "style":channel.style,
                                             "active":channel._isActive,
                                             "collapsed": channel.IsCollapsed()}}
