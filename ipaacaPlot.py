@@ -27,7 +27,6 @@ Now another optional argument can be given to specify the update rate.
 import os
 import wx
 from wx.lib.agw.pycollapsiblepane import PyCollapsiblePane
-import sys
 import ipaaca
 import time
 import threading
@@ -1108,5 +1107,4 @@ if __name__ == '__main__':
 
     app.frame.Show()
     app.MainLoop()
-    import os
     os._exit(0)
