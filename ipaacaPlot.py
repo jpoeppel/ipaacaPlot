@@ -1108,4 +1108,5 @@ if __name__ == '__main__':
 
     app.frame.Show()
     app.MainLoop()
-
+    import os
+    os._exit(0)
