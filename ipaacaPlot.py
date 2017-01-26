@@ -741,7 +741,6 @@ class GraphFrame(wx.Frame):
         self.prepFlashMessage = None
         self.disableChannelBuffer = None
         self.newData = False
-        self.figureCounter = 0
         self.missingKeyValue = missingKeyValue
 
         if configPath:
@@ -875,18 +874,18 @@ class GraphFrame(wx.Frame):
                 f.add_channel(channel)
                 if position:
                     f.parent.SetPosition(position)
-                break
                 if options:
                     f.set_figure_options(options)
+                break
         else:
             #Figure not found -> Create new one
             if figure == "New":
-                figure =  "Figure"+str(self.figureCounter)
+                figure =  "Figure"+str(len(self.figurePlots))
             newFrame = ChildFrame(self, figure, channel, position=position, options=options)
             newFrame.Show()
-            self.figureCounter += 1
             self.figurePlots.append(newFrame.panel)
             self.update_available_figures()
+        channel.figureCB.SetValue(figure)
         
     def update_available_figures(self):
         for c in self.channels:
