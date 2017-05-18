@@ -637,18 +637,6 @@ class FigurePanel(wx.Panel):
         for channel in self.channels:
             channel.updatePlotData()
             
-#        self.canvas.restore_region(self.background)
-#        self.axes.draw_artist(self.axes.patch)
-#        for line in self.axes.lines:
-#            self.axes.draw_artist(line)
-        
-#        for spine in self.axes.spines.values(): 
-#            self.axes.draw_artist(spine)
-#        self.axes.draw_artist(self.axes.xaxis)    
-#        self.axes.draw_artist(self.axes.yaxis)   
-#        print self.axes.labels
-#        self.axes.draw_artist(self.axes.xticks)
-#        num
         self.canvas.draw() #Costs a lot of CPU performance :-(
         self.newData = False
         
@@ -666,12 +654,7 @@ class FigurePanel(wx.Panel):
             self.axes.grid(True, color='gray')
         else:
             self.axes.grid(False)
-#        self.canvas.draw()
-#        lines = self.axes.lines
-#        self.axes.lines = []
         self.canvas.draw()
-#        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
-#        self.axes.lines = lines
         
     def on_cb_xlab(self, event):
         # Using setp here is convenient, because get_xticklabels
@@ -679,20 +662,11 @@ class FigurePanel(wx.Panel):
         # iterate, and setp already handles this.
         pylab.setp(self.axes.get_xticklabels(), 
             visible=self.cb_xlab.IsChecked())
-#        lines = self.axes.lines
-#        self.axes.lines = []
         self.canvas.draw()
-#        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
-#        self.axes.lines = lines
         
     def on_cb_window(self, event):
-#        self.axes.set_ybound(lower=-0.1, upper=1.1)
-#        lines = self.axes.lines
-#        self.axes.lines = []
         self.newData = True
         self.draw_plot()
-#        self.background = self.canvas.copy_from_bbox(self.axes.bbox)
-#        self.axes.lines = lines
 
     def get_figure_options(self):
         """
@@ -1029,7 +1003,8 @@ class GraphFrame(wx.Frame):
                                        options=config["figures"][figureName]["options"])
                 except KeyError:
                     #Referenzed figure was not specified, will be ignored.
-                    print "There are no stored configurations for figure {}. Defaults will be used.".format(figureName)
+                    print("There are no stored configurations for figure {}. " \
+                          "Defaults will be used.".format(figureName))
                     self.change_figure(newChannelBox, figureName)
                 handledFigures.append(figureName)
         #Make sure main window options are set even if no channel used it!
@@ -1050,7 +1025,9 @@ class GraphFrame(wx.Frame):
             config = {"channels":[]}
             for channel in self.channels:
                 channelObject = {"config": {"category": channel.category,
-                                            "color": [int(channel.colour[0]*255),int(channel.colour[1]*255),int(channel.colour[2]*255)],
+                                            "color": [int(channel.colour[0]*255),
+                                                      int(channel.colour[1]*255),
+                                                      int(channel.colour[2]*255)],
                                             "figure": channel.figurePanel.name,          
 #                                            "figurePos": list(channel.figurePanel.parent.GetPosition()),
 #                                            "figureOptions": channel.figurePanel.get_figure_options(),
