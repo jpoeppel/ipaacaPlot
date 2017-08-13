@@ -10,7 +10,7 @@ from flask import Flask
 from flask_socketio import SocketIO
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static/dist", template_folder="static")
 app.config.from_object('config') #Will load config.py from root directory
 
 socketio = SocketIO(app)

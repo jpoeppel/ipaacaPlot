@@ -10,10 +10,11 @@ from flask import render_template
 
 from . import app
 from . import socketio
+from . import io
 
-import ipaaca
+#import ipaaca
 
-
+import json
 
 def update_data(iu, event_type, local):
     if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
@@ -21,8 +22,14 @@ def update_data(iu, event_type, local):
         socketio.emit("update_data", iu.payload)
 
 
-app.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
-app.inputBuffer.register_handler(update_data)
+def update_data_rsb(event):
+    js = json.loads(event.data)
+    socketio.emit("update_data", js)
+
+#app.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
+#app.inputBuffer.register_handler(update_data)
+
+app.connectionManager = io.ConnectionManager()
 
 
 @app.route('/')
@@ -34,14 +41,15 @@ def index():
 @socketio.on("add_channel")
 def add_channel(channel):
     app.logger.info("adding channel: {}".format(channel))
-    
-    app.inputBuffer.add_category_interests(channel)
+    app.connectionManager.add_connection(channel, update_data_rsb, "rsb")
+#    app.inputBuffer.add_category_interests(channel)
     
 
 @socketio.on("remove_channel")
 def remove_channel(channel):
     app.logger.info("removing channel: {}".format(channel))
-    app.inputBuffer.remove_category_interests(channel)
+    app.connectionManager.remove_connection(channel)
+#    app.inputBuffer.remove_category_interests(channel)
     
 @socketio.on('connect')
 def connect(): 

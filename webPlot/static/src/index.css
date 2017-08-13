@@ -1,0 +1,9 @@
+.tile-board {
+    display: flex;
+}
+
+.tile {
+    margin: 10px;
+    border: 1px solid;
+
+}
