@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import Axis from './axis';
+
 import * as d3 from "d3";
 
 
@@ -39,7 +41,7 @@ Bar.defaultProps = {
 
 class DataSeries extends Component {
     render() {
-        let {data, title, xScale, yScale, height} = this.props;
+        let {data, xScale, yScale, height} = this.props;
         
         let bars = data.map( point =>  {
             return (
@@ -74,18 +76,19 @@ class BarChart extends Component {
 
     render () {
     
-        let {data, width, height} = this.props;
+        let {data, width, height, padding} = this.props;
 
         let xScale = d3.scaleBand()
                 .domain(data.map( (p) => {return p.key}))
-                .range([0, width])
+                .range([0, width-2*padding])
                 .padding(0.1);
                 
         let yScale = d3.scaleLinear()
                 .domain([0, d3.max(data.map( (p) => {return p.val}))])
-                .range([0, height]);
+                .range([0, height-padding]);
         return (
-            <svg width={width} height={height}>
+            <svg width={width} height={height}
+                transform={`translate(${padding},-${padding})`} >
                     <DataSeries 
                         data={data}
                         width={width}
@@ -93,10 +96,25 @@ class BarChart extends Component {
                         xScale={xScale}
                         yScale={yScale}
                     />
+                    <Axis 
+                    orientation={"bottom"} 
+                    length={width-1.5*padding} 
+                    scale={xScale}  
+                    height={height}
+                    shift={xScale.bandwidth()/2}
+                />
+                <Axis 
+                    orientation={"left"} 
+                    length={height} 
+                    scale={yScale} 
+                    height={height}
+                    invert
+                />
             </svg>
         )
     
     }
+    
 
 }
 
@@ -109,7 +127,8 @@ BarChart.propTypes = {
 
 BarChart.defaultProps = {
     width:  600,
-    height: 300
+    height: 300,
+    padding: 30, /* padding around the figure which should remain clear, save for ticks */
 }
 
 

@@ -6,8 +6,29 @@ import BarChart from './components/bar';
 import './index.css';
 
 
-class Tile extends React.Component {
+class Tile extends Component {
 
+    constructor(props) {
+        super(props);
+        
+        if (props.plottype === "line") {
+            this.state = {
+                    data: [[5,10,1,3,6,20,0],
+                          [1,6,2,10,23,43]]
+                }
+        
+        } else {
+            this.state = {
+                data: [
+                        {key: "A", val: 0.5},
+                        {key: "B", val: 0.25},
+                        {key: "C", val: 1.5},
+                        {key: "D", val: 0.5},
+                        {key: "E", val: 0},
+                      ]
+            }
+        }
+    }
     
     render() {
         
@@ -17,18 +38,12 @@ class Tile extends React.Component {
         
             if (plottype === "line") {
                 return (
-                    <LineChart data={[[5,10,1,3,6,20],
-                                     [1,6,2,10,23,43]]} 
+                    <LineChart data={this.state.data}
                     />
                 )
             } else if (plottype === "bar") {
                 return (
-                    <BarChart data={[
-                                    {key: "A", val: 0.5},
-                                    {key: "B", val: 0.25},
-                                    {key: "C", val: 1.5},
-                                    {key: "D", val: 0.5},
-                                    ]} 
+                    <BarChart data={this.state.data} 
                      />
                 )
             } else {
@@ -43,9 +58,42 @@ class Tile extends React.Component {
                 <button onClick={() => this.props.removeChannel(this.props.id)} >
                     Remove Channel
                 </button>
+                <button onClick={() => this.addData()} >
+                    Add Data
+                </button>
             </div>
     );
   }
+  
+  addData() {
+     console.log("Add data");
+     if (this.props.plottype === "line") {
+            let data = this.state.data.slice();
+            let randint = Math.floor(Math.random() * (70));
+            console.log("Adding: ", randint);
+            data[0].push(randint);
+            this.setState({
+                    data: data
+                });
+        
+        } else {
+            this.setState({
+                data: [
+                        {key: "A", val: Math.random()},
+                        {key: "B", val: Math.random()},
+                        {key: "C", val: Math.random()},
+                        {key: "D", val: Math.random()},
+                        {key: "E", val: Math.random()},
+                      ]
+            });
+        }
+  }
+  
+
+}
+
+Tile.propTypes = {
+    plottype:   PropTypes.string
 }
 
 Tile.defaultProps = {
@@ -55,7 +103,7 @@ Tile.defaultProps = {
 }
 
 
-class ChannelCtrl extends React.Component {
+class ChannelCtrl extends Component {
 
 
     render() {
@@ -74,7 +122,7 @@ class ChannelCtrl extends React.Component {
     }
 }
 
-class Dashboard extends React.Component {
+class Dashboard extends Component {
 
     constructor(props) {
         super(props);
@@ -156,10 +204,11 @@ class Dashboard extends React.Component {
                             addChannel={this.addChannel} 
                         />
                     </div>
-                    <div className="tile-board">
-                        {tiles.map(this.createTile)}
-                    </div>
-              </div>
+                 </div>
+                 <div className="tile-board">
+                    {tiles.map(this.createTile)}
+                 </div>
+             
             </div>  
     );
   }

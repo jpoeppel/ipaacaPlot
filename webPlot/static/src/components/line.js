@@ -84,39 +84,52 @@ DataSeries.defaultProps = {
 }
 
 class LineChart extends Component {
+
+
     render() {
-        let { width, height, data } = this.props;
+        let { width, height, data, padding } = this.props;
         
         let maxValues = d3.max(data.map( (arr) => {return arr.length-1}));
         /* Create xScale with domain 0-number of elements */
         let xScale = d3.scaleLinear()
                     .domain([0, maxValues])
-                    .range([0, width]);    
+                    .range([0, width-2*padding]);    
                     
         /* Create yScale with domain 0-max entry */            
         let yScale = d3.scaleLinear()
-                    .range([height, 10])
+                    .range([height, padding])
                     .domain([0, d3.max(data.map( (arr) => {return d3.max(arr)}))]);
                     
         return (
-            <svg width={width} height={height}>
+            <svg width={width} 
+                height={height} 
+                transform={`translate(${padding},-${padding})`} >
                 <DataSeries 
                     data={data}
                     width={width}
                     height={height}
                     xScale={xScale}
                     yScale={yScale}
+                    
                 />
                 <Axis 
                     orientation={"bottom"} 
-                    length={width} 
-                    scale={xScale} 
-                    numTicks={maxValues} 
+                    length={width-1.5*padding} 
+                    scale={xScale}  
+                    height={height}
+                />
+                <Axis 
+                    orientation={"left"} 
+                    length={height} 
+                    scale={yScale} 
                     height={height}
                 />
             </svg>
         );
     }
+    
+    
+    
 }
 
 LineChart.propTypes = {
@@ -127,8 +140,9 @@ LineChart.propTypes = {
 }
 
 LineChart.defaultProps = {
-    width:  500,
-    height: 300
+    width:  600,
+    height: 300,
+    padding: 30, /* padding around the figure which should remain clear, save for ticks */
 }
 
 export default LineChart;

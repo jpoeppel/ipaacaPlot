@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import * as d3 from "d3";
 
 /* Axis component inspired largely by 
 https://gist.github.com/MrToph/49e564044e43a260cd44a35674d57ce7
@@ -9,55 +8,75 @@ https://gist.github.com/MrToph/49e564044e43a260cd44a35674d57ce7
 class Axis extends Component {
 
     render() {
-        let {orientation, length, scale, numTicks, height} = this.props;
+        let {orientation, length, scale, height, shift, invert} = this.props;
         let start = 0;
-        const TICKSIZE = length / 50;
+        const TICKSIZE = 6;
         let end = (orientation === "bottom") ? start + length : start-length;
         
-        let otherCoord = 0;
-        let x1,x2,y1,y2;
         
+        let otherCoord = 0;
+        let x1,x2,y1,y2,dx,dy = 0;
+        let ticksx,ticksy, ticksdif;
         if (orientation === "bottom") {
             x1 = start;
             x2 = end;
-            y1 = y2 = height - TICKSIZE - otherCoord;
+            y1 = y2 = height - otherCoord;
+            dy = 3 * TICKSIZE;
+            ticksx = (p) => { return scale(p) +shift };
+            ticksy = (p) => { return y1 };
+            ticksdif = (p) => {return y1+ TICKSIZE };
         } else {
             x1 = x2 = otherCoord;
-            y1 = start;
-            y2 = end;
+            y1 = height;
+            y2 = 0;
+            ticksx = (p) => { return x1 };
+            ticksy = (p) => { return invert ? height-(scale(p) + shift) : scale(p) + shift };
+            ticksdif = (p) => {return x1 - TICKSIZE };
+            dx = -1.5* TICKSIZE;
+            dy = 0.5 * TICKSIZE;
         }
         
-        let ticks = () => {
-            let res = [];
-            let pos = 0;
-            let step = Math.floor(length / (numTicks - 1));
-            for (let i=0; i<=numTicks; i++) {
-                pos = scale(i);
-                let l = <line
-                    key={pos}
+        let ticks = (scale.ticks ? scale.ticks() : scale.domain()).map( (p,i) => {
+            return ( 
+                <path
+                    key={p}
+                    d={`M${ticksx(p)},${ticksy(p)}${orientation === "bottom" ? "V" : "H"}${ticksdif(p)}`}
                     stroke='#000'
-                    strokeWidth='2'
-                    x1={pos}
-                    y1={y1}
-                    x2={pos}
-                    y2={y1 + TICKSIZE} />
-                res.push(l);
-            }
+                    fill='#000'
+                    strokeWidth='1'
+                />
+            )
+        });
             
-            return res
-        }
+        let labels = (scale.ticks ? scale.ticks : scale.domain)().map( (p,i) => {
+            return ( 
+                <text
+                    key={p}
+                    fill='#000'
+                    x={ticksx(p)}
+                    y={ticksy(p)}
+                    dx={dx}
+                    dy={dy}
+                    textAnchor={orientation ==="bottom" ? "middle" : "end"}
+                >
+                {(scale.tickFormat ? scale.tickFormat() : (p) => {return p})(p)}
+                </text>
+            )
+        });
+
         
         return (
-            <g fill="none">
+            <g className="axis" fill="none">
                 <line
                     x1={x1}
                     x2={x2}
                     y1={y1}
                     y2={y2}
                     stroke='#000'
-                    strokeWidth='3'
+                    strokeWidth='1'
                 />
-                {ticks()}
+                {ticks}
+                {labels}
             </g>
         )
         
@@ -72,6 +91,10 @@ Axis.propTypes = {
     scale:          PropTypes.func,
     numTicks:       PropTypes.number
     
+}
+
+Axis.defaultProps = {
+    shift:  0
 }
 
 export default Axis;
