@@ -1,3 +1,31 @@
+# WebPlot branch
+
+In this branch I am exploring the idea of getting rid of platform dependent native GUI-Frameworks (currently ipaacaPlot uses wx which is not easiliy installed across systems or Python-versions) in favor of web-based rendering. The plotting work will be done using a combination of react.js and d3.js while the Python-Flask-Backend handles communication with (potentially several) middlewares.
+
+While there exist a few frameworks for combining react and d3 (e.g. reactd3.org, rd3 https://github.com/yang-wei/rd3 and many small others), most of those use d3 v3 and/or are searching for new maintainers. On top of this, I wanted to get my hands dirty myself, to familiarize myself more with both react and d3 so I currently wrote the charts as they are now myself, taking inspiration from various projects I could find, usually conferting them to es2015 and d3 v4.
+
+I hope to be able to develop features on par with the native version of ipaacaPlot soon, i.e.:
+
+* specification of different channels for line- and barplots 
+    * This obviously includes updating the plots with streamed data
+* specifying in which panel to add a the plot
+* configuring colors and symbols/glyphs 
+* Showing sliding windows or entire plot for lineplots
+* Allowing to zoom and pan in plots
+* saving and loading configurations
+* hiding of the controls
+* Saving plots as png/svg/pdf
+
+As well as additional features:
+
+* Mouse-over tooltips
+* Syncronization between plots
+* Pause and step functions which allow to step through the data incrementally as they came (syncronized over all connected plots)
+* Custom canvases, e.g. my webblots maze as a special kind of "plot" which can be synchronized to the rest (TODO: Decide how to handle this programmatically, include webblocks code in this repository, or provide a way to load this dynamically)
+* ...
+
+
+
 # ipaacaPlot
 A simple visualization tool that plots realtime data received via the Ipaaca[1] middleware.
 
