@@ -14,6 +14,7 @@ I hope to be able to develop features on par with the native version of ipaacaPl
 * Allowing to zoom and pan in plots
 * saving and loading configurations
 * hiding of the controls
+* Saving plots as png/svg/pdf
 
 As well as additional features:
 
