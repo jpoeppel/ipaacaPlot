@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as d3 from "d3";
+import Axis from './axis';
 
 
 /* d3 v4 LineChart for react, inspired by 
@@ -86,9 +87,10 @@ class LineChart extends Component {
     render() {
         let { width, height, data } = this.props;
         
+        let maxValues = d3.max(data.map( (arr) => {return arr.length-1}));
         /* Create xScale with domain 0-number of elements */
         let xScale = d3.scaleLinear()
-                    .domain([0, d3.max(data.map( (arr) => {return arr.length-1}))])
+                    .domain([0, maxValues])
                     .range([0, width]);    
                     
         /* Create yScale with domain 0-max entry */            
@@ -105,6 +107,13 @@ class LineChart extends Component {
                     xScale={xScale}
                     yScale={yScale}
                 />
+                <Axis 
+                    orientation={"bottom"} 
+                    length={width} 
+                    scale={xScale} 
+                    numTicks={maxValues} 
+                    height={height}
+                />
             </svg>
         );
     }
@@ -118,7 +127,7 @@ LineChart.propTypes = {
 }
 
 LineChart.defaultProps = {
-    width:  600,
+    width:  500,
     height: 300
 }
 
