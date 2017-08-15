@@ -13,10 +13,13 @@ import json
 
 informer = rsb.createInformer("/test")
 
-while True:
+try:
+    while True:
     
-    data = {"y": list(np.random.rand(1))}
-    print("Sending data: ", data)
-    informer.publishData(json.dumps(data))
-    
-    time.sleep(0.2)
+        data = {"channel": "test", "y": list(np.random.rand(1))}
+        print("Sending data: ", data)
+        informer.publishData(json.dumps(data))
+        
+        time.sleep(0.5)
+except KeyboardInterrupt:
+    del informer
