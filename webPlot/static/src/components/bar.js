@@ -76,21 +76,23 @@ class BarChart extends Component {
 
     render () {
     
-        let {data, width, height, padding} = this.props;
+        let {data, width, height, padding, index} = this.props;
+
+        let dataSlice = index ? data[index] : data[data.length-1];
 
         let xScale = d3.scaleBand()
-                .domain(data.map( (p) => {return p.key}))
+                .domain(dataSlice.map( (p) => {return p.key}))
                 .range([0, width-2*padding])
                 .padding(0.1);
                 
         let yScale = d3.scaleLinear()
-                .domain([0, d3.max(data.map( (p) => {return p.val}))])
+                .domain([0, d3.max(dataSlice.map( (p) => {return p.val}))])
                 .range([0, height-padding]);
         return (
             <svg width={width} height={height}
                 transform={`translate(${padding},-${padding})`} >
                     <DataSeries 
-                        data={data}
+                        data={dataSlice}
                         width={width}
                         height={height}
                         xScale={xScale}
@@ -128,7 +130,7 @@ BarChart.propTypes = {
 BarChart.defaultProps = {
     width:  600,
     height: 300,
-    padding: 30, /* padding around the figure which should remain clear, save for ticks */
+    padding: 40, /* padding around the figure which should remain clear, save for ticks */
 }
 
 

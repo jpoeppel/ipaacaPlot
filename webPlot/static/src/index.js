@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import LineChart from './components/line';
 import BarChart from './components/bar';
+import io from "socket.io-client";
 import './index.css';
 
 
@@ -14,20 +15,24 @@ class Tile extends Component {
         if (props.plottype === "line") {
             this.state = {
                     data: [[5,10,1,3,6,20,0],
-                          [1,6,2,10,23,43]]
+                          [1,6,2,10,23,43]],
+                    index:  null /* null stands for last */
                 }
         
         } else {
             this.state = {
-                data: [
+                data: [[
                         {key: "A", val: 0.5},
                         {key: "B", val: 0.25},
                         {key: "C", val: 1.5},
                         {key: "D", val: 0.5},
                         {key: "E", val: 0},
-                      ]
+                      ]],
+                index:  null /* null stands for last */
             }
         }
+        
+   
     }
     
     render() {
@@ -38,12 +43,12 @@ class Tile extends Component {
         
             if (plottype === "line") {
                 return (
-                    <LineChart data={this.state.data}
+                    <LineChart data={this.state.data} index={this.state.index}
                     />
                 )
             } else if (plottype === "bar") {
                 return (
-                    <BarChart data={this.state.data} 
+                    <BarChart data={this.state.data} index={this.state.index}
                      />
                 )
             } else {
@@ -58,14 +63,14 @@ class Tile extends Component {
                 <button onClick={() => this.props.removeChannel(this.props.id)} >
                     Remove Channel
                 </button>
-                <button onClick={() => this.addData()} >
+                <button onClick={() => this.rndData()} >
                     Add Data
                 </button>
             </div>
     );
   }
   
-  addData() {
+  rndData() {
      console.log("Add data");
      if (this.props.plottype === "line") {
             let data = this.state.data.slice();
@@ -78,15 +83,30 @@ class Tile extends Component {
         
         } else {
             this.setState({
-                data: [
+                data: [[
                         {key: "A", val: Math.random()},
                         {key: "B", val: Math.random()},
                         {key: "C", val: Math.random()},
                         {key: "D", val: Math.random()},
                         {key: "E", val: Math.random()},
-                      ]
+                      ]]
             });
         }
+  }
+  
+  
+  componentWillReceiveProps(nextProps) {
+      if (nextProps.nextDatum) {
+          console.log("received new datum: ", nextProps.nextDatum);
+          let data = this.state.data.slice();
+          data[0].push(nextProps.nextDatum);
+          console.log("new data: ", data);
+          this.setState( {
+              data: data
+          });
+      }
+      
+      return true;
   }
   
 
@@ -99,13 +119,14 @@ Tile.propTypes = {
 Tile.defaultProps = {
 
     plottype:   "line",
-    channel:    ""
+    channel:    "",
+    nextDatum:  null,
 }
 
 
 class ChannelCtrl extends Component {
 
-
+ 
     render() {
         return (
             <div>
@@ -127,14 +148,43 @@ class Dashboard extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            tiles: [{id: 0, type: "line", channel: "test"}, 
-                    {id: 1, type: "bar", channel: "test"}],
+            tiles: [{id: 0, type: "line", channel: "test", nextDatum: null}, 
+                    {id: 1, type: "bar", channel: "test2", nextDatum: null}],
             tileCounter: 2
         };
         
         this.addChannel = this.addChannel.bind(this);
         this.removeChannel = this.removeChannel.bind(this);
         this.createTile = this.createTile.bind(this);
+        this.update_data = this.update_data.bind(this);
+        
+        
+        this.socket = io.connect();
+        
+        this.socket.on("connect", function() {
+            console.log("Connected");
+        });
+        
+        this.socket.on("update_data", this.update_data);
+            
+    
+    }
+    
+    update_data(msg) {
+        console.log("Received message: ", msg);
+        let channel = msg.channel;
+        let payload = msg.y;
+        let tiles = this.state.tiles.slice();
+        tiles.forEach( (t) => {
+            if (t.channel === channel) {
+                console.log("adding datum to channel: ", t.channel);
+                t.nextDatum = payload[0];
+            }
+        });
+        console.log("before setState");
+        this.setState({
+            tiles: tiles
+        })
     }
     
     createTile(tile, index) {
@@ -145,6 +195,7 @@ class Dashboard extends Component {
                 id={tile.id}
                 key={tile.id}
                 removeChannel={this.removeChannel} 
+                nextDatum={tile.nextDatum}
             />
         )
     }
@@ -154,13 +205,17 @@ class Dashboard extends Component {
         let tiles = this.state.tiles;
         
         var toRem = -1;
+        let removedChannel = "";
         for (var i=0; i<tiles.length; i++) {
             if (tiles[i].id === tileId) {
+                removedChannel = tiles[i].channel;
                 toRem = i;
                 break;
             }
         }
+        
         if (toRem > -1) {
+            
             tiles.splice(toRem, 1);
         }
         
@@ -168,6 +223,8 @@ class Dashboard extends Component {
         this.setState( {
             tiles: tiles
         });
+        
+        this.socket.emit("remove_channel", removedChannel );
     
     }
     
@@ -177,6 +234,8 @@ class Dashboard extends Component {
         let plottype = document.getElementById("plottype").value;
         console.log("Selected channel: ", channel);
         console.log("Selected channel: ", plottype);
+        
+        this.socket.emit("add_channel", channel);
         
         const tiles = this.state.tiles;
         const tileCounter = this.state.tileCounter;
