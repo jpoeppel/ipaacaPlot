@@ -1,14 +1,13 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
+import LineChart from './components/line';
+import BarChart from './components/bar';
 import io from "socket.io-client";
-
-import * as V from 'victory';
-
 import './index.css';
 
 
-class Chart extends Component {
+class Tile extends Component {
 
     constructor(props) {
         super(props);
@@ -44,29 +43,12 @@ class Chart extends Component {
         
             if (plottype === "line") {
                 return (
-                    <V.VictoryGroup
-                          data={this.state.data[0]}
-                          color="blue"
-                          x={ (d,i) => {return i} }
-                          y={ (d) => { return d }}
-                    >
-                          <V.VictoryLine/>
-                          <V.VictoryScatter size={3} symbol="star"/>
-                    </V.VictoryGroup>
-                       
-                      
+                    <LineChart data={this.state.data} index={this.state.index}
+                    />
                 )
             } else if (plottype === "bar") {
                 return (
-                    <V.VictoryBar 
-                        data={this.state.data[0]}
-                        x="key"
-                        y="val"
-                        style={{
-                            data: {
-                                fill: "blue"
-                            }
-                        }}
+                    <BarChart data={this.state.data} index={this.state.index}
                      />
                 )
             } else {
@@ -77,26 +59,7 @@ class Chart extends Component {
         return (
             <div className="tile">
                 {channel}
-                <V.VictoryChart 
-                    domainPadding={this.props.plottype==="bar" ? 30 : 0}
-                    >
-                    {tile(plottype)}
-                    
-                    <V.VictoryAxis 
-                        crossAxis
-                        style={{
-                            ticks: {stroke: "black", size:5},
-                            tickLabels: { padding: 2}
-                        }}
-                    />
-                    <V.VictoryAxis 
-                        dependentAxis crossAxis
-                        style={{
-                            ticks: {stroke: "black", size:5},
-                            tickLabels: {padding: 2}
-                        }}
-                    />
-                 </V.VictoryChart>
+                {tile(plottype)}
                 <button onClick={() => this.props.removeChannel(this.props.id)} >
                     Remove Channel
                 </button>
@@ -149,11 +112,11 @@ class Chart extends Component {
 
 }
 
-Chart.propTypes = {
+Tile.propTypes = {
     plottype:   PropTypes.string
 }
 
-Chart.defaultProps = {
+Tile.defaultProps = {
 
     plottype:   "line",
     channel:    "",
@@ -229,7 +192,7 @@ class Dashboard extends Component {
     
     createTile(tile, index) {
         return (
-            <Chart 
+            <Tile 
                 channel={tile.channel} 
                 plottype={tile.type} 
                 id={tile.id}

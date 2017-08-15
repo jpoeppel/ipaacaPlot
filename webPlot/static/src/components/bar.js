@@ -87,7 +87,7 @@ class BarChart extends Component {
                 
         let yScale = d3.scaleLinear()
                 .domain([0, d3.max(dataSlice.map( (p) => {return p.val}))])
-                .range([0, height-padding]);
+                .range([padding, height-padding]);
         return (
             <svg width={width} height={height}
                 transform={`translate(${padding},-${padding})`} >

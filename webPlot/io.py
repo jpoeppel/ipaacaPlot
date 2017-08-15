@@ -5,6 +5,8 @@ Abstracts multiple connection possibilities away.
 @author: Jan
 """
 
+from . import app
+
 try:
     import ipaaca
     ipaacaAvailable = True
@@ -41,21 +43,28 @@ class RSBConnection(Connection):
         self.listener = rsb.createListener(channel)
         self.listener.addHandler(callback)
         
+    def __del__(self):
+        self.listener.deactivate()
+        del self.listener
+        
         
 class ConnectionManager(object):
     
     def __init__(self):
         self.connections = {}
-        
+         
     def add_connection(self, channel, callback, protocol):
-        if protocol == "rsb":
+        if protocol == "rsb": 
             self.connections[channel] = RSBConnection(callback, "/" + channel)
             
     def remove_connection(self, channel):
         try:
-            self.connections[channel].deactivate()
+#            self.connections[channel].listener.deactivate()
+#            for handler in self.connections[channel].getHandlers():
+#                self.connections[channel].removeHandler(handler)
             del self.connections[channel]
         except KeyError:
+            app.logger.debug("Key error when removing channel: {}".format(channel))
             pass
         
         
