@@ -4,6 +4,8 @@ In this branch I am exploring the idea of getting rid of platform dependent nati
 
 While there exist a few frameworks for combining react and d3 (e.g. reactd3.org, rd3 https://github.com/yang-wei/rd3 and many small others), most of those use d3 v3 and/or are searching for new maintainers. On top of this, I wanted to get my hands dirty myself, to familiarize myself more with both react and d3 so I currently wrote the charts as they are now myself, taking inspiration from various projects I could find, usually conferting them to es2015 and d3 v4.
 
+**Update**: I found [Victory](https://formidable.com/open-source/victory/) yesterday, which is maintained, well documented, uses modern standards (ES6 and d3 v4) and seems to be highly configurable. Therfore, after proving to myself that I can get simple charts to work myself, I am currently considering leaving the actual charting to people more familiar with d3,js and webvisualisation to concentrate on the actual features I want from this dashboard/dynamic visualisation app.
+
 I hope to be able to develop features on par with the native version of ipaacaPlot soon, i.e.:
 
 * specification of different channels for line- and barplots 
