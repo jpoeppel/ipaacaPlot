@@ -1,0 +1,4 @@
+Incorporate custom "widgets" that allow more interaction and can be coupled to
+plots.
+
+Start with adding canvas, which can be styled by custom provided JS and react to events based on custom JS (would be helpful for me and Sebastian!)
