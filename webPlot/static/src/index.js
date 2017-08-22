@@ -16,16 +16,14 @@ class Channel extends Component {
         super(props);
         this.state = {
                     data: []
-                    }    
+                    };
     }
 
 
     componentWillReceiveProps(nextProps) {
       if (nextProps.nextDatum) {
-          console.log("received new datum: ", nextProps.nextDatum);
           let data = this.state.data.slice();
           data.push(nextProps.nextDatum);
-          console.log("new data: ", data);
           this.setState( {
               data: data
           });
@@ -35,14 +33,14 @@ class Channel extends Component {
     }
 
     render() {
-        console.log("Rendering channel: ", this.props.id);
-        let {plottype} = this.props
+      //  console.log("Rendering channel: ", this.props.id);
+        let {plottype, color} = this.props
                 
         if (plottype === "line") {
             return (
                 <V.VictoryGroup
                       data={this.state.data}
-                      color="blue"
+                      color={color}
                       x={ (d,i) => {return i} }
                       y={ (d) => { return d }}
                 >
@@ -60,7 +58,7 @@ class Channel extends Component {
                     y="val"
                     style={{
                         data: {
-                            fill: "blue"
+                            fill: {color}
                         }
                     }}
                  />
@@ -73,37 +71,11 @@ class Channel extends Component {
 }
 
 class Chart extends Component {
-
-    constructor(props) {
-        super(props);
-     /*   
-        if (props.plottype === "line") {
-            this.state = {
-                    data: [[5,10,1,3,6,20,0],
-                          [1,6,2,10,23,43]],
-                    index:  null /* null stands for last */
-          /*      }
-        
-        } else {
-            this.state = {
-                data: [[
-                        {key: "A", val: 0.5},
-                        {key: "B", val: 0.25},
-                        {key: "C", val: 1.5},
-                        {key: "D", val: 0.5},
-                        {key: "E", val: 0},
-                      ]],
-                index:  null /* null stands for last */
-       /*     }
-        }
-        */
-   
-    }
     
     render() {
         
-        let {plottype, channel, children} = this.props;
-        console.log("Chart children: ", children);
+        let {channel, children} = this.props;
+     //   console.log("Chart children: ", children);
         return (
             <div className="tile">
                 {channel}
@@ -129,40 +101,9 @@ class Chart extends Component {
                 <button onClick={() => this.props.removeChannel(this.props.id)} >
                     Remove Channel
                 </button>
-                <button onClick={() => this.rndData()} >
-                    Add Data
-                </button>
             </div>
     );
   }
-  
-  rndData() {
-     console.log("Add data");
-     if (this.props.plottype === "line") {
-            let data = this.state.data.slice();
-            let randint = Math.floor(Math.random() * (70));
-            console.log("Adding: ", randint);
-            data[0].push(randint);
-            this.setState({
-                    data: data
-                });
-        
-        } else {
-            this.setState({
-                data: [[
-                        {key: "A", val: Math.random()},
-                        {key: "B", val: Math.random()},
-                        {key: "C", val: Math.random()},
-                        {key: "D", val: Math.random()},
-                        {key: "E", val: Math.random()},
-                      ]]
-            });
-        }
-  }
-  
-  
-  
-  
 
 }
 
@@ -175,6 +116,7 @@ Chart.defaultProps = {
     plottype:   "line",
     channel:    "",
     nextDatum:  null,
+    color: "black"
 }
 
 
@@ -182,6 +124,14 @@ class ChannelCtrl extends Component {
 
  
     render() {
+    
+        let tiles = this.props.tiles;
+        
+        let options = tiles.map( (tile) => {
+                                    return <option value={tile.id}>{tile.id}</option>
+                                });
+        options = options.concat(<option value="new">New</option>);
+    
         return (
             <div>
                 Channel: <input type="text" id="channel"/>
@@ -190,6 +140,10 @@ class ChannelCtrl extends Component {
                             <option value="bar">Barplot</option>
                           </select>     
                 Color:  <input type="color" id="color" />
+                Add to panel: <select id="tile">
+                                {options}
+                            </select>
+                
                 <button onClick={this.props.addChannel} >
                     Add Channel
                 </button>
@@ -203,11 +157,9 @@ class Dashboard extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            tiles: [{id: 0, type: "line", channel: "test", nextDatum: null}, 
-                    {id: 1, type: "bar", channel: "test2", nextDatum: null}],
-                    
+            tiles: [],
             channels: [],
-            tileCounter: 2
+            tileCounter: 0
         };
         
         this.addChannel = this.addChannel.bind(this);
@@ -216,6 +168,10 @@ class Dashboard extends Component {
         this.update_data = this.update_data.bind(this);
         
         
+    
+    }
+    
+    componentDidMount() {
         this.socket = io.connect("http://localhost:5002");
         
         this.socket.on("connect", function() {
@@ -223,8 +179,6 @@ class Dashboard extends Component {
         });
         
         this.socket.on("update_data", this.update_data);
-            
-    
     }
     
     update_data(msg) {
@@ -236,27 +190,27 @@ class Dashboard extends Component {
             if (c.id === channel) {
                 console.log("adding datum to channel: ", c.id);
                 c.nextDatum = payload[0];
-            }
+            } 
         });
-        console.log("before setState");
         this.setState({
             channels: channels
         })
     }
     
-    createTile(tile, index) {
+    createTile(tile) {
     
         let channels = this.state.channels.map( (c) => {
-            console.log("Channel map for: ", c.id);
-            if (c.tile === tile.id) {
-                console.log("Creating channel: ", c.id)
+           // console.log("Channel map for: ", c.id);
+            if (c.tile == tile.id) {
+               // console.log("Creating channel: ", c.id)
                 return <Channel id={c.id} 
                             plottype={c.plottype} 
                             nextDatum={c.nextDatum} 
-                            key={c.id} />
-            }
+                            color={c.color}
+                             />
+            } 
         });
-        
+      //  console.log("Channels: ", this.state.channels);
         return (
             <Chart 
                 id={tile.id}
@@ -269,7 +223,7 @@ class Dashboard extends Component {
     }
     
     removeChannel(tileId) {
-        console.log("Remove channel clicked: ", tileId);
+     //   console.log("Remove channel clicked: ", tileId);
         let tiles = this.state.tiles;
         
         var toRem = -1;
@@ -297,33 +251,45 @@ class Dashboard extends Component {
     }
     
     addChannel() {
-        console.log("Add channel pressed");
+      //  console.log("Add channel pressed");
         let channel = document.getElementById("channel").value;
         let plottype = document.getElementById("plottype").value;
         let color = document.getElementById("color").value;
-        console.log("Selected channel: ", channel);
-        console.log("Selected channel: ", plottype);
-        
-        this.socket.emit("add_channel", channel);
+        let tileId = document.getElementById("tile").value;
         
         const tiles = this.state.tiles;
         const tileCounter = this.state.tileCounter;
         const channels = this.state.channels;
-        let tileId = 0;
+        
+        let newTiles, newTileCounter;
+        if (tileId === "new") {
+            tileId = tileCounter;
+            newTiles = tiles.concat([{
+                id: tileCounter, 
+                channel: channel }])
+            newTileCounter = tileCounter+1;
+        } else {
+            newTiles = tiles;
+            newTileCounter = tileCounter;
+        }
+        
+        let newChannels = channels.concat([{
+                    id: channel,
+                    plottype: plottype,
+                    tile: tileId,
+                    color: color }]);
+                    
         
         /* TODO: Construct new tile if required and add channel to 
         desired tile */
         this.setState( {
-            tiles: tiles.concat([{
-                id: tileCounter, 
-                channel: channel }]),
-            tileCounter: tileCounter+1,
-            channels: channels.concat([{
-                    id: channel,
-                    plottype: plottype,
-                    tile: tileId
-                }])
+            tiles: newTiles,
+            tileCounter: newTileCounter,
+            channels: newChannels
             });
+            
+        this.socket.emit("add_channel", channel);
+        
     }
   
     render() {
@@ -338,6 +304,7 @@ class Dashboard extends Component {
                     <div className="ctrl">
                         <ChannelCtrl 
                             addChannel={this.addChannel} 
+                            tiles={this.state.tiles}
                         />
                     </div>
                  </div>
