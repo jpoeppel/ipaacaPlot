@@ -126,6 +126,9 @@ class Chart extends Component {
                 <button onClick={() => this.props.removeChannel(this.props.id)} >
                     Remove Channel
                 </button>
+                <button onClick={() => this.setState({svg: !this.state.svg})} >
+                    { this.state.svg ? "Render on Canvas" : "Render as svg"}
+                </button>
             </div>
     );
   }
