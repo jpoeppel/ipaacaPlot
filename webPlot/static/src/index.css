@@ -10,3 +10,14 @@
     display: flex;
     flex-direction: column;
 }
+
+.rv-xy-plot__series--line {
+  fill: none;
+  stroke-width: 2px;
+}
+
+.rv-xy-plot__axis__line {
+  fill: none;
+  stroke-width: 2px;
+  stroke: black;
+}

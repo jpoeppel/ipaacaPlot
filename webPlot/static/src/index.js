@@ -3,12 +3,15 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import io from "socket.io-client";
 
-import * as V from 'victory';
+
+import {XYPlot, XAxis, YAxis, LineSeries,VerticalBarSeries, VerticalBarSeriesCanvas, LineSeriesCanvas, AbstractSeries} from "react-vis";
+
+//import * as V from 'victory';
 
 import './index.css';
 
 
-class Channel extends Component {
+class Channel extends AbstractSeries {
 
     /*TODO: Currently channel components do not update the VictoryChart domain! */
 
@@ -23,7 +26,8 @@ class Channel extends Component {
     componentWillReceiveProps(nextProps) {
       if (nextProps.nextDatum) {
           let data = this.state.data.slice();
-          data.push(nextProps.nextDatum);
+          //data.push(nextProps.nextDatum);
+          data.push({"x": data.length, "y": nextProps.nextDatum});
           this.setState( {
               data: data
           });
@@ -33,36 +37,20 @@ class Channel extends Component {
     }
 
     render() {
-      //  console.log("Rendering channel: ", this.props.id);
+        console.log("Rendering channel: ", this.props.id);
         let {plottype, color} = this.props
                 
         if (plottype === "line") {
             return (
-                <V.VictoryGroup
-                      data={this.state.data}
-                      color={color}
-                      x={ (d,i) => {return i} }
-                      y={ (d) => { return d }}
-                >
-                      <V.VictoryLine/>
-                      <V.VictoryScatter size={3} symbol="star"/>
-                </V.VictoryGroup>
+                
+                    <LineSeries data={this.state.data} />
+                    
+                
                
               
             )
         } else if (plottype === "bar") {
-            return (
-                <V.VictoryBar 
-                    data={this.state.data}
-                    x="key"
-                    y="val"
-                    style={{
-                        data: {
-                            fill: {color}
-                        }
-                    }}
-                 />
-            )
+            return 
         } else {
             console.warn("Unknown plottype: ", plottype)
         }
@@ -70,34 +58,70 @@ class Channel extends Component {
     }
 }
 
+Channel.displayName = 'Channel';
+
 class Chart extends Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {
+                    data: [],
+                    svg: true
+                    };
+    }
+    
+   /* 
+    componentWillReceiveProps(nextProps) {
+        console.log("chart got new props: ", nextProps);
+      if (nextProps.channels[0].nextDatum) {
+          let data = this.state.data.slice();
+          //data.push(nextProps.nextDatum);
+          data.push({"x": data.length, "y": nextProps.channels[0].nextDatum});
+          this.setState( {
+              data: data
+          });
+      }
+      
+      return true;
+    }
+    */
+    
+    createChannels(channels) {
+        //console.log("channels: ", channels);
+        return channels.map( (c) => {
+        
+            if (c.plottype == "line") {
+                if (this.state.svg) {
+                    return <LineSeries data={c.data} stroke={c.color}/>
+                } else {
+                    return <LineSeriesCanvas data={c.data} stroke={c.color}/>
+                }
+                
+            } else if (c.plottype == "bar" ) {
+                if (this.state.svg) {
+                    console.log("bardata: ", c.data);
+                    return <VerticalBarSeries  data={c.data} />
+                } else {
+                    return <VerticalBarSeriesCanvas data={c.data} />
+                }
+                
+            }
+        
+        });
+    
+    }
     
     render() {
         
-        let {channel, children} = this.props;
-     //   console.log("Chart children: ", children);
+        let {id, channels} = this.props;
         return (
             <div className="tile">
-                {channel}
-                <V.VictoryChart domainPadding={30}>
-                
-                    {children}
-                    
-                    <V.VictoryAxis 
-                        crossAxis
-                        style={{
-                            ticks: {stroke: "black", size:5},
-                            tickLabels: { padding: 2}
-                        }}
-                    />
-                    <V.VictoryAxis 
-                        dependentAxis crossAxis
-                        style={{
-                            ticks: {stroke: "black", size:5},
-                            tickLabels: {padding: 2}
-                        }}
-                    />
-                </V.VictoryChart>
+                {id}
+                <XYPlot height={300} width={600} dontCheckIfEmpty={false} >
+                    {this.createChannels(channels)}
+                    <XAxis />
+                    <YAxis />
+                </XYPlot>
                 <button onClick={() => this.props.removeChannel(this.props.id)} >
                     Remove Channel
                 </button>
@@ -182,14 +206,18 @@ class Dashboard extends Component {
     }
     
     update_data(msg) {
-        console.log("Received message: ", msg);
         let channel = msg.channel;
         let payload = msg.y;
         let channels = this.state.channels.slice();
         channels.forEach( (c) => {
             if (c.id === channel) {
-                console.log("adding datum to channel: ", c.id);
-                c.nextDatum = payload[0];
+                if (c.plottype == "line") {
+                    c.nextDatum = payload[0];
+                    c.data.push({"x":c.data.length, "y":payload[0]});
+                } else if (c.plottype == "bar") {
+                    let chars = ["a","b","c","d","e","f"]
+                    c.data = msg.dist.map( (v, i) => { return {"x":chars[i], "y":v}});
+                }
             } 
         });
         this.setState({
@@ -198,32 +226,20 @@ class Dashboard extends Component {
     }
     
     createTile(tile) {
-    
-        let channels = this.state.channels.map( (c) => {
-           // console.log("Channel map for: ", c.id);
-            if (c.tile == tile.id) {
-               // console.log("Creating channel: ", c.id)
-                return <Channel id={c.id} 
-                            plottype={c.plottype} 
-                            nextDatum={c.nextDatum} 
-                            color={c.color}
-                             />
-            } 
-        });
+        let channels = this.state.channels.filter( (c) => {return c.tile == tile.id });
       //  console.log("Channels: ", this.state.channels);
         return (
             <Chart 
                 id={tile.id}
                 key={tile.id}
                 removeChannel={this.removeChannel} 
+                channels={channels}
             >
-                {channels}
             </Chart>
         )
     }
     
     removeChannel(tileId) {
-     //   console.log("Remove channel clicked: ", tileId);
         let tiles = this.state.tiles;
         
         var toRem = -1;
@@ -241,7 +257,7 @@ class Dashboard extends Component {
             tiles.splice(toRem, 1);
         }
         
-        console.log("new tiles: ", toRem);
+       // console.log("new tiles: ", toRem);
         this.setState( {
             tiles: tiles
         });
@@ -277,11 +293,10 @@ class Dashboard extends Component {
                     id: channel,
                     plottype: plottype,
                     tile: tileId,
-                    color: color }]);
+                    color: color,
+                    nextDatum: null,
+                    data: [] }]);
                     
-        
-        /* TODO: Construct new tile if required and add channel to 
-        desired tile */
         this.setState( {
             tiles: newTiles,
             tileCounter: newTileCounter,
