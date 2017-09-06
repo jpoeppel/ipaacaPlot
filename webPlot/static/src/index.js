@@ -66,7 +66,7 @@ class Chart extends Component {
         super(props);
         this.state = {
                     data: [],
-                    svg: true
+                    svg: false
                     };
     }
     
@@ -118,9 +118,10 @@ class Chart extends Component {
             <div className="tile">
                 {id}
                 <XYPlot height={300} width={600} dontCheckIfEmpty={false} >
-                    {this.createChannels(channels)}
                     <XAxis />
                     <YAxis />
+                    {this.createChannels(channels)}
+                    
                 </XYPlot>
                 <button onClick={() => this.props.removeChannel(this.props.id)} >
                     Remove Channel

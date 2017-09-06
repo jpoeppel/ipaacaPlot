@@ -21,3 +21,13 @@
   stroke-width: 2px;
   stroke: black;
 }
+
+.rv-xy-canvas {
+    pointer-events: none;
+    position: absolute;
+}
+
+.rv-xy-plot {
+    color: #c3c3c3;
+    position: relative;
+}
