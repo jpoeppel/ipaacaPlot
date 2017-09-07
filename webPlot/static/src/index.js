@@ -68,6 +68,8 @@ class Chart extends Component {
                     data: [],
                     svg: false
                     };
+                    
+        this.createChannelCtrl = this.createChannelCtrl.bind(this);
     }
     
    /* 
@@ -111,9 +113,50 @@ class Chart extends Component {
     
     }
     
+    createChannelCtrl(channels, tileIDs) {
+
+        
+        let options = tileIDs.map( (tile) => {
+                                    return <option value={tile}>{tile}</option>
+                                });
+        options = options.concat(<option value="new">New</option>);
+    
+        return channels.map( (c) => {
+            return (
+                <div>
+                    <span> Channel: {c.id} </span>
+                    <span> Plottype: {c.plottype} </span>  
+                    <span> Color:  <input type="color" id="color" 
+                                value={c.color} 
+                                onInput={ (e) => {
+                                    console.log("Changing color for channel: ", e.target.value);
+                                    this.props.colorChanged(c.id, e.target);
+                                    }
+                            } />
+                    </span>
+                    <span> Add to panel: <select id="tile" 
+                                                value={c.tile}
+                                                onInput={ (e) => {
+                                                    console.log("moving channel to: ", e.target.value);
+                                                    this.props.tileChanged(c.id, e.target);
+                                                    }
+                                                }
+                                          >
+                                            {options}
+                                         </select>
+                    </span>
+                    <button onClick={ () => {this.props.removeChannel(c) } } >
+                        Remove Channel
+                    </button>
+                </div>
+                )
+        
+        });
+    }
+    
     render() {
         
-        let {id, channels} = this.props;
+        let {id, channels, tileIDs} = this.props;
         return (
             <div className="tile">
                 {id}
@@ -123,12 +166,12 @@ class Chart extends Component {
                     {this.createChannels(channels)}
                     
                 </XYPlot>
-                <button onClick={() => this.props.removeChannel(this.props.id)} >
-                    Remove Channel
-                </button>
                 <button onClick={() => this.setState({svg: !this.state.svg})} >
                     { this.state.svg ? "Render on Canvas" : "Render as svg"}
                 </button>
+                <div className="channelCtrl">
+                    { this.createChannelCtrl(channels, tileIDs)}
+                </div>
             </div>
     );
   }
@@ -194,9 +237,56 @@ class Dashboard extends Component {
         this.removeChannel = this.removeChannel.bind(this);
         this.createTile = this.createTile.bind(this);
         this.update_data = this.update_data.bind(this);
-        
+        this.update_channel_color = this.update_channel_color.bind(this);
+        this.update_channel_tile = this.update_channel_tile.bind(this);
         
     
+    }
+    
+    update_channel_tile(channelId, input) {
+        const channels = this.state.channels;
+        
+        let newTiles = this.state.tiles;
+        const tileCounter = this.state.tileCounter;
+        let newTileCounter = tileCounter;
+        
+        let newTile = input.value;
+        if (newTile === "new") {
+            newTile = tileCounter;
+            newTiles = newTiles.concat([{
+                id: tileCounter, 
+                numChannels: 1,
+                channel: channelId }])
+            newTileCounter = tileCounter+1;
+        } 
+        
+        //Update channel's tile
+        channels.forEach( (c) => {
+            if (c.id == channelId) {
+                c.tile = newTile;
+            }
+        });
+        
+        this.setState( {
+            tiles: newTiles,
+            tileCounter: newTileCounter
+        })
+        
+        /* TODO: remove empty tiles */
+    
+    }
+    
+    update_channel_color(channelId, input) {
+        const channels = this.state.channels;
+        channels.forEach( (c) => {
+            if (c.id == channelId) {
+                c.color = input.value;
+            }
+        
+        });
+        this.setState({
+            channels: channels
+        });
     }
     
     componentDidMount() {
@@ -220,7 +310,7 @@ class Dashboard extends Component {
                     c.data.push({"x":c.data.length, "y":payload[0]});
                 } else if (c.plottype == "bar") {
                     let chars = ["a","b","c","d","e","f"]
-                    c.data = msg.dist.map( (v, i) => { return {"x":chars[i], "y":v}});
+                    c.data = msg.dist.map( (v, i) => { return {"x":i, "y":v}});
                 }
             } 
         });
@@ -238,12 +328,50 @@ class Dashboard extends Component {
                 key={tile.id}
                 removeChannel={this.removeChannel} 
                 channels={channels}
+                colorChanged={this.update_channel_color}
+                tileChanged={this.update_channel_tile}
+                tileIDs={this.state.tiles.map( (tile) => {return tile.id})}
             >
             </Chart>
         )
     }
     
-    removeChannel(tileId) {
+    removeChannel(channel) {
+
+        /* TODO: Handle corner case of the same channel being in one chart 
+                 multiple times. 
+        */
+        
+        //filter out all channels with this id
+        let channels = this.state.channels.filter( (c) => {return c != channel });
+        let tiles = this.state.tiles;
+        tiles.forEach( (t) => {
+            if (channel.tile == t.id) {
+                t.numChannels = t.numChannels-1;
+            }
+        });
+        let newTiles = tiles.filter( (t) => {return t.numChannels != 0});
+        
+        
+       // console.log("new tiles: ", toRem);
+        this.setState( {
+            channels: channels,
+            tiles: newTiles
+        });
+        
+        let remChannel = true;
+        channels.forEach( (c) => {
+            if (c.id == channel.id) {
+                remChannel = false;
+            }
+        });
+        if (remChannel) {
+            this.socket.emit("remove_channel", channel.id );
+        }
+    
+    }
+    
+    removeChannel_old(tileId) {
         let tiles = this.state.tiles;
         
         var toRem = -1;
@@ -286,10 +414,16 @@ class Dashboard extends Component {
             tileId = tileCounter;
             newTiles = tiles.concat([{
                 id: tileCounter, 
+                numChannels: 1,
                 channel: channel }])
             newTileCounter = tileCounter+1;
         } else {
             newTiles = tiles;
+            newTiles.forEach( (t) => {
+                if (t.id == tileId) {
+                    t.numChannels = t.numChannels+1;
+                }
+            });
             newTileCounter = tileCounter;
         }
         
