@@ -4,108 +4,43 @@ import PropTypes from 'prop-types';
 import io from "socket.io-client";
 
 
-import {XYPlot, XAxis, YAxis, LineSeries,VerticalBarSeries, VerticalBarSeriesCanvas, LineSeriesCanvas, AbstractSeries} from "react-vis";
+import {XYPlot, XAxis, YAxis, Borders,
+        LineSeries, LineSeriesCanvas,
+        VerticalBarSeries, VerticalBarSeriesCanvas, 
+        CustomSVGSeries} from "react-vis";
 
 //import * as V from 'victory';
 
 import './index.css';
 
 
-class Channel extends AbstractSeries {
-
-    /*TODO: Currently channel components do not update the VictoryChart domain! */
-
-    constructor(props) {
-        super(props);
-        this.state = {
-                    data: []
-                    };
-    }
-
-
-    componentWillReceiveProps(nextProps) {
-      if (nextProps.nextDatum) {
-          let data = this.state.data.slice();
-          //data.push(nextProps.nextDatum);
-          data.push({"x": data.length, "y": nextProps.nextDatum});
-          this.setState( {
-              data: data
-          });
-      }
-      
-      return true;
-    }
-
-    render() {
-        console.log("Rendering channel: ", this.props.id);
-        let {plottype, color} = this.props
-                
-        if (plottype === "line") {
-            return (
-                
-                    <LineSeries data={this.state.data} />
-                    
-                
-               
-              
-            )
-        } else if (plottype === "bar") {
-            return 
-        } else {
-            console.warn("Unknown plottype: ", plottype)
-        }
-        
-    }
-}
-
-Channel.displayName = 'Channel';
-
 class Chart extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-                    data: [],
-                    svg: false
+                    svg: true,
+                    fixed_x: true
                     };
                     
         this.createChannelCtrl = this.createChannelCtrl.bind(this);
     }
     
-   /* 
-    componentWillReceiveProps(nextProps) {
-        console.log("chart got new props: ", nextProps);
-      if (nextProps.channels[0].nextDatum) {
-          let data = this.state.data.slice();
-          //data.push(nextProps.nextDatum);
-          data.push({"x": data.length, "y": nextProps.channels[0].nextDatum});
-          this.setState( {
-              data: data
-          });
-      }
-      
-      return true;
-    }
-    */
     
     createChannels(channels) {
         //console.log("channels: ", channels);
         return channels.map( (c) => {
-        
-            if (c.plottype == "line") {
-                if (this.state.svg) {
-                    return <LineSeries data={c.data} stroke={c.color}/>
-                } else {
-                    return <LineSeriesCanvas data={c.data} stroke={c.color}/>
-                }
+            
+            if (c.plottype == "line") { 
+                let Line = this.state.svg ? LineSeries : LineSeriesCanvas;
+                return [c.mark ? <CustomSVGSeries customComponent={c.mark} data={c.data} style={{stroke: 'red', fill: 'orange'}} /> : null,
+                            <Line data={c.data} stroke={c.color} />
+                        ]
+                        
                 
             } else if (c.plottype == "bar" ) {
-                if (this.state.svg) {
-                    console.log("bardata: ", c.data);
-                    return <VerticalBarSeries  data={c.data} />
-                } else {
-                    return <VerticalBarSeriesCanvas data={c.data} />
-                }
+                let Bar = this.state.svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
+                return <Bar  data={c.data} color={c.color}/>
                 
             }
         
@@ -115,11 +50,16 @@ class Chart extends Component {
     
     createChannelCtrl(channels, tileIDs) {
 
-        
         let options = tileIDs.map( (tile) => {
                                     return <option value={tile}>{tile}</option>
                                 });
         options = options.concat(<option value="new">New</option>);
+    
+    
+        let markOptions = ["star", "square", "circle", "diamond", "none"].map( 
+                            (option) => {
+                                 return <option value={option}>{option}</option>   
+                            });
     
         return channels.map( (c) => {
             return (
@@ -129,15 +69,22 @@ class Chart extends Component {
                     <span> Color:  <input type="color" id="color" 
                                 value={c.color} 
                                 onInput={ (e) => {
-                                    console.log("Changing color for channel: ", e.target.value);
                                     this.props.colorChanged(c.id, e.target);
                                     }
                             } />
                     </span>
-                    <span> Add to panel: <select id="tile" 
+                    <span> Add mark: <select value={c.mark ? c.mark : "none"}
+                                                onInput={ (e) => {
+                                                    this.props.markChanged(c.id, e.target);
+                                                    }
+                                                }
+                                          >
+                                            {markOptions}
+                                         </select>
+                    </span>
+                    <span> Display in panel: <select  
                                                 value={c.tile}
                                                 onInput={ (e) => {
-                                                    console.log("moving channel to: ", e.target.value);
                                                     this.props.tileChanged(c.id, e.target);
                                                     }
                                                 }
@@ -156,18 +103,40 @@ class Chart extends Component {
     
     render() {
         
-        let {id, channels, tileIDs} = this.props;
+        let {id, channels, tileIDs, width, height} = this.props;
+        let min=0, max = 0;
+     //   if (this.state.fixed_x) {
+            
+            channels.forEach( (c) => {
+                if (c.data.length > 0) {
+                    min = Math.min(min, c.data[0].x);
+                    max = Math.max(max, c.data[c.data.length-1].x)
+                }
+            });
+            min = Math.max(0, max - 10);
+            max = Math.max(10, max);
+     //   }
         return (
             <div className="tile">
-                {id}
-                <XYPlot height={300} width={600} dontCheckIfEmpty={false} >
+                Chart number: {id}
+                <XYPlot height={height} width={width} dontCheckIfEmpty={false} xDomain={this.state.fixed_x ? [min,max] : null} >
+                    
+                    {this.createChannels(channels)}
+                    <Borders style={{
+                        bottom: {fill: '#fff'},
+                        left: {fill: '#fff'},
+                        right: {fill: '#fff'},
+                        top: {fill: '#fff'}
+                          }}
+                    />
                     <XAxis />
                     <YAxis />
-                    {this.createChannels(channels)}
-                    
                 </XYPlot>
                 <button onClick={() => this.setState({svg: !this.state.svg})} >
                     { this.state.svg ? "Render on Canvas" : "Render as svg"}
+                </button>
+                <button onClick={() => this.setState({fixed_x: !this.state.fixed_x})} >
+                    { this.state.fixed_x ? "Unfix x-Axis" : "Fix x-Axis"}
                 </button>
                 <div className="channelCtrl">
                     { this.createChannelCtrl(channels, tileIDs)}
@@ -179,7 +148,10 @@ class Chart extends Component {
 }
 
 Chart.propTypes = {
-    plottype:   PropTypes.string
+    plottype:   PropTypes.string,
+    width:      PropTypes.number,
+    height:     PropTypes.number,
+    tileIDs:    PropTypes.array
 }
 
 Chart.defaultProps = {
@@ -187,7 +159,9 @@ Chart.defaultProps = {
     plottype:   "line",
     channel:    "",
     nextDatum:  null,
-    color: "black"
+    color: "black",
+    width: 600,
+    height: 300
 }
 
 
@@ -239,8 +213,18 @@ class Dashboard extends Component {
         this.update_data = this.update_data.bind(this);
         this.update_channel_color = this.update_channel_color.bind(this);
         this.update_channel_tile = this.update_channel_tile.bind(this);
-        
+        this.update_channel_mark = this.update_channel_mark.bind(this);
     
+    }
+        
+    update_channel_mark(channelId, input) {
+        const channels = this.state.channels;
+        channels.forEach( (c) => {
+            if (c.id == channelId) {
+                c.mark = (input.value != "none") ? input.value : null;
+            }
+        
+        });
     }
     
     update_channel_tile(channelId, input) {
@@ -307,7 +291,7 @@ class Dashboard extends Component {
             if (c.id === channel) {
                 if (c.plottype == "line") {
                     c.nextDatum = payload[0];
-                    c.data.push({"x":c.data.length, "y":payload[0]});
+                    c.data.push({"x":c.data.length, "y":payload[0], "size":c.markSize, "style":{"fill":c.color}});
                 } else if (c.plottype == "bar") {
                     let chars = ["a","b","c","d","e","f"]
                     c.data = msg.dist.map( (v, i) => { return {"x":i, "y":v}});
@@ -330,6 +314,7 @@ class Dashboard extends Component {
                 channels={channels}
                 colorChanged={this.update_channel_color}
                 tileChanged={this.update_channel_tile}
+                markChanged={this.update_channel_mark}
                 tileIDs={this.state.tiles.map( (tile) => {return tile.id})}
             >
             </Chart>
@@ -433,7 +418,9 @@ class Dashboard extends Component {
                     tile: tileId,
                     color: color,
                     nextDatum: null,
-                    data: [] }]);
+                    data: [],
+                    mark: null,
+                    markSize: 5}]);
                     
         this.setState( {
             tiles: newTiles,
