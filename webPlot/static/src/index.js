@@ -31,18 +31,21 @@ class Chart extends Component {
         //console.log("channels: ", channels);
         return channels.map( (c) => {
             
-            if (c.plottype == "line") { 
+            if (c.plottype === "line") { 
                 let Line = this.state.svg ? LineSeries : LineSeriesCanvas;
                 return [c.mark ? <CustomSVGSeries customComponent={c.mark} data={c.data} style={{stroke: 'red', fill: 'orange'}} /> : null,
                             <Line data={c.data} stroke={c.color} />
                         ]
                         
                 
-            } else if (c.plottype == "bar" ) {
+            } else if (c.plottype === "bar" ) {
                 let Bar = this.state.svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
                 return <Bar  data={c.data} color={c.color}/>
                 
+            } else {
+                return "Invalid plottype"        
             }
+            
         
         });
     
@@ -220,8 +223,8 @@ class Dashboard extends Component {
     update_channel_mark(channelId, input) {
         const channels = this.state.channels;
         channels.forEach( (c) => {
-            if (c.id == channelId) {
-                c.mark = (input.value != "none") ? input.value : null;
+            if (c.id === channelId) {
+                c.mark = (input.value !== "none") ? input.value : null;
             }
         
         });
@@ -246,7 +249,7 @@ class Dashboard extends Component {
         
         //Update channel's tile
         channels.forEach( (c) => {
-            if (c.id == channelId) {
+            if (c.id === channelId) {
                 c.tile = newTile;
             }
         });
@@ -263,7 +266,7 @@ class Dashboard extends Component {
     update_channel_color(channelId, input) {
         const channels = this.state.channels;
         channels.forEach( (c) => {
-            if (c.id == channelId) {
+            if (c.id === channelId) {
                 c.color = input.value;
             }
         
@@ -289,11 +292,11 @@ class Dashboard extends Component {
         let channels = this.state.channels.slice();
         channels.forEach( (c) => {
             if (c.id === channel) {
-                if (c.plottype == "line") {
+                if (c.plottype === "line") {
                     c.nextDatum = payload[0];
                     c.data.push({"x":c.data.length, "y":payload[0], "size":c.markSize, "style":{"fill":c.color}});
-                } else if (c.plottype == "bar") {
-                    let chars = ["a","b","c","d","e","f"]
+                } else if (c.plottype === "bar") {
+                   // let chars = ["a","b","c","d","e","f"]
                     c.data = msg.dist.map( (v, i) => { return {"x":i, "y":v}});
                 }
             } 
@@ -304,7 +307,7 @@ class Dashboard extends Component {
     }
     
     createTile(tile) {
-        let channels = this.state.channels.filter( (c) => {return c.tile == tile.id });
+        let channels = this.state.channels.filter( (c) => {return c.tile === tile.id });
       //  console.log("Channels: ", this.state.channels);
         return (
             <Chart 
@@ -328,14 +331,14 @@ class Dashboard extends Component {
         */
         
         //filter out all channels with this id
-        let channels = this.state.channels.filter( (c) => {return c != channel });
+        let channels = this.state.channels.filter( (c) => {return c !== channel });
         let tiles = this.state.tiles;
         tiles.forEach( (t) => {
-            if (channel.tile == t.id) {
+            if (channel.tile === t.id) {
                 t.numChannels = t.numChannels-1;
             }
         });
-        let newTiles = tiles.filter( (t) => {return t.numChannels != 0});
+        let newTiles = tiles.filter( (t) => {return t.numChannels !== 0});
         
         
        // console.log("new tiles: ", toRem);
@@ -346,7 +349,7 @@ class Dashboard extends Component {
         
         let remChannel = true;
         channels.forEach( (c) => {
-            if (c.id == channel.id) {
+            if (c.id === channel.id) {
                 remChannel = false;
             }
         });
@@ -405,7 +408,7 @@ class Dashboard extends Component {
         } else {
             newTiles = tiles;
             newTiles.forEach( (t) => {
-                if (t.id == tileId) {
+                if (t.id === tileId) {
                     t.numChannels = t.numChannels+1;
                 }
             });
