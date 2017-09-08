@@ -6,13 +6,21 @@ While there exist a few frameworks for combining react and d3 (e.g. reactd3.org,
 
 **Update**: I found [Victory](https://formidable.com/open-source/victory/) yesterday, which is maintained, well documented, uses modern standards (ES6 and d3 v4) and seems to be highly configurable. Therfore, after proving to myself that I can get simple charts to work myself, I am currently considering leaving the actual charting to people more familiar with d3,js and webvisualisation to concentrate on the actual features I want from this dashboard/dynamic visualisation app.
 
+**Update 2**: Naive streaming based components based on Victory quickly became very slow, basically rendering Firefox (and Chrome) useless after receiving a few thousand datapoints. It is very likely that I can optimize this by diving deeper into Victory but for my initial Use-Case of only requirering Line- and Barplots this might not be worth it. Instead I am currently experimenting with [react-vis](https://github.com/uber/react-vis), a smaller library with simpler structure (I can actually quickly understand what they are doing where), which also provides a canvas version of basically all their supported graphs, so that one can easily implement switching between canvas and svg if performance becomes an issue. 
+Main problem currently: When only looking at a limited xDomain, the series are not truncated on the left (y-axis), a problem that the SVG-Version can circumvent using borders, that hide the additional data, but this is not yet available for the canvas versions.
+
 I hope to be able to develop features on par with the native version of ipaacaPlot soon, i.e.:
 
 * specification of different channels for line- and barplots 
     * This obviously includes updating the plots with streamed data
+    * **Done**
 * specifying in which panel to add a the plot
+    * **Done**
 * configuring colors and symbols/glyphs 
+    * **Done** at least in a basic fashion
 * Showing sliding windows or entire plot for lineplots
+    * **Done** with a hardcoded window for now, needs to be improved!
+* Allow pausing the updates!
 * Allowing to zoom and pan in plots
 * saving and loading configurations
 * hiding of the controls
