@@ -20,7 +20,7 @@ class Chart extends Component {
         super(props);
         this.state = {
                     svg: true,
-                    fixed_x: true
+                    fixed_x: false
                     };
                     
         this.createChannelCtrl = this.createChannelCtrl.bind(this);
@@ -40,7 +40,7 @@ class Chart extends Component {
                 
             } else if (c.plottype === "bar" ) {
                 let Bar = this.state.svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
-                return <Bar  data={c.data} color={c.color}/>
+                return <Bar data={c.data} color={c.color} />
                 
             } else {
                 return "Invalid plottype"        
@@ -108,12 +108,16 @@ class Chart extends Component {
         
         let {id, channels, tileIDs, width, height} = this.props;
         let min=0, max = 0;
+        let barPresent = false;
      //   if (this.state.fixed_x) {
             
             channels.forEach( (c) => {
                 if (c.data.length > 0) {
                     min = Math.min(min, c.data[0].x);
                     max = Math.max(max, c.data[c.data.length-1].x)
+                }
+                if (c.plottype === "bar") {
+                    barPresent = true;
                 }
             });
             min = Math.max(0, max - 10);
@@ -122,7 +126,10 @@ class Chart extends Component {
         return (
             <div className="tile">
                 Chart number: {id}
-                <XYPlot height={height} width={width} dontCheckIfEmpty={false} xDomain={this.state.fixed_x ? [min,max] : null} >
+                <XYPlot height={height} width={width} 
+                        dontCheckIfEmpty={false}
+                        xType={ barPresent ? "ordinal" : "linear"}
+                        xDomain={this.state.fixed_x ? [min,max] : null} >
                     
                     {this.createChannels(channels)}
                     <Borders style={{
@@ -182,7 +189,7 @@ class ChannelCtrl extends Component {
     
         return (
             <div>
-                Channel: <input type="text" id="channel"/>
+                Channel: <input type="text" id="channel" />
                 Plottype: <select id="plottype">
                             <option value="line">Lineplot</option>
                             <option value="bar">Barplot</option>
@@ -308,7 +315,7 @@ class Dashboard extends Component {
     
     createTile(tile) {
         let channels = this.state.channels.filter( (c) => {return c.tile === tile.id });
-      //  console.log("Channels: ", this.state.channels);
+       // console.log("Channels: ", channels);
         return (
             <Chart 
                 id={tile.id}
@@ -387,7 +394,7 @@ class Dashboard extends Component {
     }
     
     addChannel() {
-      //  console.log("Add channel pressed");
+        console.log("Add channel pressed");
         let channel = document.getElementById("channel").value;
         let plottype = document.getElementById("plottype").value;
         let color = document.getElementById("color").value;
@@ -408,7 +415,7 @@ class Dashboard extends Component {
         } else {
             newTiles = tiles;
             newTiles.forEach( (t) => {
-                if (t.id === tileId) {
+                if (t.id === Number(tileId)) {
                     t.numChannels = t.numChannels+1;
                 }
             });
@@ -418,7 +425,7 @@ class Dashboard extends Component {
         let newChannels = channels.concat([{
                     id: channel,
                     plottype: plottype,
-                    tile: tileId,
+                    tile: Number(tileId),
                     color: color,
                     nextDatum: null,
                     data: [],
