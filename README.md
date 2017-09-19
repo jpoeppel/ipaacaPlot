@@ -34,6 +34,25 @@ As well as additional features:
 * Custom canvases, e.g. my webblots maze as a special kind of "plot" which can be synchronized to the rest (TODO: Decide how to handle this programmatically, include webblocks code in this repository, or provide a way to load this dynamically)
 * ...
 
+### Usage
+
+Currently the frontend would need to be build using npm first (alternatively start the debugging client using ```
+npm start```) and run the webserver using ```python run.py```. 
+
+You can subscribe to channels using the web UI. Channels are specified as:
+
+[protocol:]channelName
+
+If protocol ist not given, rsb is currently assumed as default. As an example, if you want to subscribe to the ipaaca category "data" you would specify:
+```
+ipaaca:data
+```
+when adding the channel.
+
+Currently the frontend assumes for LinePlots that the msg contains a field "y" with a list containing the new value as value.
+BarPlots assume a field "dist" containing the ordered values for the plot. You can look at "testDistribution.py" for example data for both plots.
+
+**WARNING** Both will be changed soonish!
 
 
 # ipaacaPlot
