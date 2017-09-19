@@ -278,7 +278,7 @@ class Dashboard extends Component {
     }
     
     componentDidMount() {
-        this.socket = io.connect("http://localhost:5003");
+        this.socket = io.connect("http://localhost:5002");
         
         this.socket.on("connect", function() {
             console.log("Connected");
