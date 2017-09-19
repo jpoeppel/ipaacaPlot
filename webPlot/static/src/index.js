@@ -9,8 +9,6 @@ import {XYPlot, XAxis, YAxis, Borders,
         VerticalBarSeries, VerticalBarSeriesCanvas, 
         CustomSVGSeries} from "react-vis";
 
-//import * as V from 'victory';
-
 import './index.css';
 
 
@@ -158,17 +156,13 @@ class Chart extends Component {
 }
 
 Chart.propTypes = {
-    plottype:   PropTypes.string,
     width:      PropTypes.number,
     height:     PropTypes.number,
     tileIDs:    PropTypes.array
 }
 
 Chart.defaultProps = {
-
-    plottype:   "line",
     channel:    "",
-    nextDatum:  null,
     color: "black",
     width: 600,
     height: 300
@@ -284,7 +278,7 @@ class Dashboard extends Component {
     }
     
     componentDidMount() {
-        this.socket = io.connect("http://localhost:5002");
+        this.socket = io.connect("http://localhost:5003");
         
         this.socket.on("connect", function() {
             console.log("Connected");
@@ -294,13 +288,13 @@ class Dashboard extends Component {
     }
     
     update_data(msg) {
+    console.log("reveived data: ", msg);
         let channel = msg.channel;
         let payload = msg.y;
         let channels = this.state.channels.slice();
         channels.forEach( (c) => {
             if (c.id === channel) {
                 if (c.plottype === "line") {
-                    c.nextDatum = payload[0];
                     c.data.push({"x":c.data.length, "y":payload[0], "size":c.markSize, "style":{"fill":c.color}});
                 } else if (c.plottype === "bar") {
                    // let chars = ["a","b","c","d","e","f"]
@@ -396,6 +390,10 @@ class Dashboard extends Component {
     addChannel() {
         console.log("Add channel pressed");
         let channel = document.getElementById("channel").value;
+        
+        if (channel.indexOf(":") === -1) {
+            channel = "rsb:" + channel;
+        }
         let plottype = document.getElementById("plottype").value;
         let color = document.getElementById("color").value;
         let tileId = document.getElementById("tile").value;
@@ -427,7 +425,6 @@ class Dashboard extends Component {
                     plottype: plottype,
                     tile: Number(tileId),
                     color: color,
-                    nextDatum: null,
                     data: [],
                     mark: null,
                     markSize: 5}]);

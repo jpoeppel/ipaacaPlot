@@ -15,6 +15,10 @@ informer = rsb.createInformer("/test")
 
 informer2 = rsb.createInformer("/bartest")
 
+import ipaaca
+
+ipaacaOutbuffer = ipaaca.OutputBuffer("IpaacaTest")
+
 try:
     while True:
     
@@ -22,6 +26,10 @@ try:
         print("Sending data: ", data)
         informer.publishData(json.dumps(data))
         
+        msg = ipaaca.Message("test")
+        msg.payload = {k: str(v) for k,v in data.items()}
+        
+        ipaacaOutbuffer.add(msg)
         
         data = {"channel":"bartest", "dist": list(np.random.rand(5))}
         

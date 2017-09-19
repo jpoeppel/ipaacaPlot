@@ -27,9 +27,11 @@ class Connection(object):
     
 class IpaacaConnection(Connection):
     
-    def __init__(self, callback):
+    def __init__(self, callback, channel):
         self.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
         self.inputBuffer.register_handler(callback)
+        #TODO do not create new buffers for each new category/channel
+        self.inputBuffer.add_category_interests(channel)
         
         
 class SocketConnection(Connection):
@@ -56,6 +58,8 @@ class ConnectionManager(object):
     def add_connection(self, channel, callback, protocol):
         if protocol == "rsb": 
             self.connections[channel] = RSBConnection(callback, "/" + channel)
+        elif protocol == "ipaaca":
+            self.connections[channel] = IpaacaConnection(callback, channel)
             
     def remove_connection(self, channel):
         try:

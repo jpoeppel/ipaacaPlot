@@ -20,12 +20,16 @@ import json
 
 def update_data(iu, event_type, local):
     if event_type in ['ADDED', 'UPDATED', 'MESSAGE']:
-#        app.logger.info("Received message from channel {}, payload: {}".format(iu.category, iu.payload))
-        socketio.emit("update_data", iu.payload)
+        app.logger.info("Received message from channel {}, payload: {}".format(iu.category, iu.payload))
+        payload = dict(iu.payload)
+        payload["y"] = json.loads(payload["y"])
+        payload["channel"] = "ipaaca:"+payload["channel"]
+        socketio.emit("update_data", payload)
 
 
 def update_data_rsb(event):
     js = json.loads(event.data)
+    js["channel"] = "rsb:"+js["channel"]
     socketio.emit("update_data", js) 
 
 #app.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
@@ -49,8 +53,16 @@ def index():
 
 @socketio.on("add_channel")
 def add_channel(channel):
+    if ":" in channel:
+        prot, channel = channel.split(":")
+    else:
+        prot = "rsb"
+        channel = channel
     app.logger.info("adding channel: {}".format(channel))
-    app.connectionManager.add_connection(channel, update_data_rsb, "rsb")
+    if prot == "rsb":
+        app.connectionManager.add_connection(channel, update_data_rsb, "rsb")
+    elif prot == "ipaaca":
+        app.connectionManager.add_connection(channel, update_data, "ipaaca")
 #    app.inputBuffer.add_category_interests(channel)
     
 
