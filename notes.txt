@@ -1,0 +1,10 @@
+Could we build something that lets users dynamically configure their plots via drag&drop from a list of possible primitives 
+which would be linked to incoming data?
+
+1. The user would start with picking either svg or canvas to use.
+2. The user would then select elements whose properties (e.g. x,y) he can link to incoming socket data or predetermine (e.g. size)
+3. Optionally the user could potentially add things like axis or legends etc
+
+The code would obviously need to make certain assumptions (especially about the way elements are
+handled internally) and allow only a couple of possible interactions but maybe those can 
+already be useful enough to construct useful custom charts easily.
