@@ -18,8 +18,13 @@ try:
     rsbAvailable = True
 except ImportError:
     rsbAvailable = False
+
+
+import socket
     
 import json
+
+MAX_CONNECTIONS = 5
 
 class Connection(object):
     
@@ -36,8 +41,18 @@ class IpaacaConnection(Connection):
         
 class SocketConnection(Connection):
     
-    def __init__(self, callback):
-        pass
+    def __init__(self, callback, port):
+        
+        serverName = "localhost" #socket.gethostname() if we need to allow different machines!
+        
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.bind((serverName, port))
+        self.sock.listen(MAX_CONNECTIONS)
+#        while True:
+#            connection, client_address = self.sock.accept()
+#            
+#            try:
+                
     
 class RSBConnection(Connection):
     
