@@ -56,7 +56,6 @@ class Chart extends Component {
                                 });
         options = options.concat(<option value="new">New</option>);
     
-    
         let markOptions = ["star", "square", "circle", "diamond", "none"].map( 
                             (option) => {
                                  return <option value={option}>{option}</option>   
@@ -98,7 +97,6 @@ class Chart extends Component {
                     </button>
                 </div>
                 )
-        
         });
     }
     
@@ -107,6 +105,7 @@ class Chart extends Component {
         let {id, channels, tileIDs, width, height} = this.props;
         let min=0, max = 0;
         let barPresent = false;
+        
      //   if (this.state.fixed_x) {
             
             channels.forEach( (c) => {
@@ -126,7 +125,7 @@ class Chart extends Component {
                 Chart number: {id}
                 <XYPlot height={height} width={width} 
                         dontCheckIfEmpty={false}
-                        xType={ barPresent ? "ordinal" : "linear"}
+                        xType={barPresent ? "ordinal" : "linear"}
                         xDomain={this.state.fixed_x ? [min,max] : null} >
                     
                     {this.createChannels(channels)}
@@ -164,7 +163,7 @@ Chart.propTypes = {
 Chart.defaultProps = {
     channel:    "",
     color: "black",
-    width: 600,
+    width: 800,
     height: 300
 }
 
@@ -288,11 +287,12 @@ class Dashboard extends Component {
     }
     
     update_data(msg) {
-    console.log("reveived data: ", msg);
+    console.log("received data: ", msg);
         let channel = msg.channel;
         let payload = msg.y;
         let channels = this.state.channels.slice();
         channels.forEach( (c) => {
+            console.log("channel id: ", c.id);
             if (c.id === channel) {
                 if (c.plottype === "line") {
                     c.data.push({"x":c.data.length, "y":payload[0], "size":c.markSize, "style":{"fill":c.color}});

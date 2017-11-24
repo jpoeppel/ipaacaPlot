@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+uimport React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as d3 from "d3";
 import Axis from './axis';

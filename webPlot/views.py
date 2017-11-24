@@ -14,7 +14,11 @@ from . import io
 
 import os
 
-#import ipaaca
+try:
+    import SocketServer as socketserver
+except:
+    import socketserver 
+
 
 import json
 
@@ -23,20 +27,34 @@ def update_data(iu, event_type, local):
         app.logger.info("Received message from channel {}, payload: {}".format(iu.category, iu.payload))
         payload = dict(iu.payload)
         payload["y"] = json.loads(payload["y"])
-        payload["channel"] = "ipaaca:"+payload["channel"]
+        payload["channel"] = "ipaaca:"+iu.category
         socketio.emit("update_data", payload)
 
 
 def update_data_rsb(event):
     js = json.loads(event.data)
-    js["channel"] = "rsb:"+js["channel"]
+    js["channel"] = "rsb:"+event.scope.toString().strip("/")
     socketio.emit("update_data", js) 
+
+
+class MyTCPStreamHandler(socketserver.StreamRequestHandler):
+    
+    def handle(self):
+        try:
+            chunk = self.rfile.readline().strip()
+        except Exception as e:
+            app.logger.error(str(e))
+        app.logger.info("Received {} from {}".format(chunk, self.client_address))
+        js = json.loads(chunk)
+        js["channel"] = "tcp:"+str(self.server.server_address[1])
+        socketio.emit("update_data", js)
+        app.logger.info("emitted response")
 
 #app.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
 #app.inputBuffer.register_handler(update_data)
 
 app.connectionManager = io.ConnectionManager()
-
+#app.connectionManager.add_connection("8092", MyTCPStreamHandler, "tcp")
 
 @app.route('/') 
 @app.route('/index')
@@ -60,9 +78,11 @@ def add_channel(channel):
         channel = channel
     app.logger.info("adding channel: {}".format(channel))
     if prot == "rsb":
-        app.connectionManager.add_connection(channel, update_data_rsb, "rsb")
+        app.connectionManager.add_connection(channel, update_data_rsb, prot)
     elif prot == "ipaaca":
-        app.connectionManager.add_connection(channel, update_data, "ipaaca")
+        app.connectionManager.add_connection(channel, update_data, prot)
+    elif prot == "tcp":
+        app.connectionManager.add_connection(channel, MyTCPStreamHandler, prot)
 #    app.inputBuffer.add_category_interests(channel)
     
 

@@ -21,7 +21,13 @@ except ImportError:
 
 
 import socket
-    
+import threading
+
+try:
+    import SocketServer as socketserver
+except:
+    import socketserver    
+
 import json
 
 MAX_CONNECTIONS = 5
@@ -39,20 +45,43 @@ class IpaacaConnection(Connection):
         self.inputBuffer.add_category_interests(channel)
         
         
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    pass
+        
+
+class MyTCPHandler(socketserver.BaseRequestHandler):
+    
+    def handle(self):
+        chunk = self.request.recv(2048)
+        print("Received {} from {}".format(chunk, self.client_address))
+        
+        
+class MyTCPStreamHandler(socketserver.StreamRequestHandler):
+    
+    def handle(self):
+        
+        chunk = self.rfile.readline()
+        print("Received {} from {}".format(chunk, self.client_address))
+
+
 class SocketConnection(Connection):
     
-    def __init__(self, callback, port):
+    def __init__(self, handler, port):
         
         serverName = "localhost" #socket.gethostname() if we need to allow different machines!
+        app.logger.info("Setting up TCP server")
+        self.server = ThreadedTCPServer((serverName, port), handler)
         
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind((serverName, port))
-        self.sock.listen(MAX_CONNECTIONS)
-#        while True:
-#            connection, client_address = self.sock.accept()
-#            
-#            try:
-                
+        self.server_thread = threading.Thread(target=self.server.serve_forever)
+        # Exit the server thread when the main thread terminates
+        self.server_thread.daemon = True
+        self.server_thread.start()
+        app.logger.info("Finished setting up tcp server")
+
+    def __del__(self):
+        self.server.shutdown()
+        self.server.server_close()
+        
     
 class RSBConnection(Connection):
     
@@ -68,15 +97,23 @@ class RSBConnection(Connection):
 class ConnectionManager(object):
     
     def __init__(self):
+        app.logger.info("Init ConnectionManager")
         self.connections = {}
          
     def add_connection(self, channel, callback, protocol):
+        channelID = protocol + ":" + channel
         if protocol == "rsb": 
-            self.connections[channel] = RSBConnection(callback, "/" + channel)
+            self.connections[channelID] = RSBConnection(callback, "/" + channel)
         elif protocol == "ipaaca":
-            self.connections[channel] = IpaacaConnection(callback, channel)
+            self.connections[channelID] = IpaacaConnection(callback, channel)
+        elif protocol == "tcp":
+            #Use port as channel in the tcp case for now
+            #The callback needs to be a HandlerClass!
+            self.connections[channelID] = SocketConnection(callback, int(channel))
             
     def remove_connection(self, channel):
+        app.logger.info("removing connection for channel: {}".format(channel))
+        app.logger.info("Currently contained channels: {}".format(self.connections.keys()))
         try:
 #            self.connections[channel].listener.deactivate()
 #            for handler in self.connections[channel].getHandlers():

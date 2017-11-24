@@ -9,31 +9,55 @@ import numpy as np
 import time
 import rsb
 
+import socket
+
 import json
 
-informer = rsb.createInformer("/test")
+#informer = rsb.createInformer("/test")
 
-informer2 = rsb.createInformer("/bartest")
+#informer2 = rsb.createInformer("/bartest")
 
-import ipaaca
+#import ipaaca
 
-ipaacaOutbuffer = ipaaca.OutputBuffer("IpaacaTest")
+#ipaacaOutbuffer = ipaaca.OutputBuffer("IpaacaTest")
+
+
+
+
+def client(ip, port, message):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((ip, port))
+    sock.sendall(message)
+    sock.close()
+
+#sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#
+#sock.connect(("localhost", 9001))
 
 try:
     while True:
     
-        data = {"channel": "test", "y": list(np.random.rand(1))}
-        print("Sending data: ", data)
-        informer.publishData(json.dumps(data))
+#        data = {"channel": "test", "y": list(np.random.rand(1))}
+        data = {"y": list(np.random.rand(1))}
+#        print("Sending data: ", data)
+#        informer.publishData(json.dumps(data))
         
-        msg = ipaaca.Message("test")
-        msg.payload = {k: str(v) for k,v in data.items()}
+#        sock.connect(("localhost", 8091))
+        try:
+            port = 9080
+            client("localhost", port, json.dumps(data) + "\n")
+        except:
+            pass
+#        sock.close()
+#        msg = ipaaca.Message("test")
+#        msg.payload = {k: str(v) for k,v in data.items()}
         
-        ipaacaOutbuffer.add(msg)
+#        ipaacaOutbuffer.add(msg)
         
-        data = {"channel":"bartest", "dist": list(np.random.rand(5))}
+#        data = {"channel":"bartest", "dist": list(np.random.rand(5))}
         
-        informer2.publishData(json.dumps(data))
+#        informer2.publishData(json.dumps(data))
         time.sleep(0.15)
 except KeyboardInterrupt:
     del informer
+#    del ipaacaOutbuffer
