@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import io from "socket.io-client";
 
-import {XYPlot, XAxis, YAxis, Borders, Hint, AbstractSeries,
+import {XYPlot,FlexibleWidthXYPlot, XAxis, YAxis, Borders, Hint, AbstractSeries,
         LineSeries, LineSeriesCanvas,
         VerticalBarSeries, VerticalBarSeriesCanvas, 
-        CustomSVGSeries} from "react-vis";
+        CustomSVGSeries} from "react-vis"; // ./3rdParty/
 
 
 import './index.css';
@@ -94,7 +94,7 @@ class Chart extends Component {
                 
                 
         return channels.map( (c) => {
-        
+            /*
             return <Series  key={c.id}
                             plottype={c.plottype} 
                             data={c.data}
@@ -102,7 +102,7 @@ class Chart extends Component {
                             mark={c.mark}
                             svg={this.state.svg}
                 />
-            /*
+            */
             if (c.plottype === "line") { 
                 let Line = this.state.svg ? LineSeries : LineSeriesCanvas;
                 return [c.mark ? <CustomSVGSeries customComponent={c.mark} data={c.data} style={{stroke: 'red', fill: 'orange'}} /> : null,
@@ -117,8 +117,7 @@ class Chart extends Component {
             } else {
                 return "Invalid plottype"        
             }
-            
-        */
+          
         });
     
     }
@@ -197,14 +196,15 @@ class Chart extends Component {
         return (
             <div className="tile">
                 Chart number: {id}
-                <XYPlot height={height} width={width}
+                <FlexibleWidthXYPlot height={height}
                         dontCheckIfEmpty={false}
                         xType={barPresent ? "ordinal" : "linear"}
-                        xDomain={this.state.fixed_x ? [min,max] : null} >
+                        xDomain={this.state.fixed_x ? [min,max] : null} 
+                        margin={{"left": 80}}>
                     <XAxis />
                     <YAxis />
                     {this.createChannels(channels)}
-                </XYPlot>
+                </FlexibleWidthXYPlot>
                 <button onClick={() => this.setState({svg: !this.state.svg})} >
                     { this.state.svg ? "Render on Canvas" : "Render as svg"}
                 </button>
@@ -229,7 +229,7 @@ Chart.propTypes = {
 Chart.defaultProps = {
     channel:    "",
     color: "black",
-    width: 800,
+    width: 500,
     height: 300
 }
 
@@ -276,6 +276,9 @@ class Dashboard extends Component {
             tileCounter: 0
         };
         
+        
+        //this.channels = [];
+        
         this.addChannel = this.addChannel.bind(this);
         this.removeChannel = this.removeChannel.bind(this);
         this.createTile = this.createTile.bind(this);
@@ -288,6 +291,7 @@ class Dashboard extends Component {
         
     update_channel_mark(channelId, input) {
         const channels = this.state.channels;
+        //const channels = this.channels;
         channels.forEach( (c) => {
             if (c.id === channelId) {
                 c.mark = (input.value !== "none") ? input.value : null;
@@ -297,7 +301,8 @@ class Dashboard extends Component {
     }
     
     update_channel_tile(channelId, input) {
-        const channels = this.state.channels;
+        //const channels = this.state.channels;
+        const channels = this.channels;
         
         let newTiles = this.state.tiles;
         const tileCounter = this.state.tileCounter;
@@ -330,6 +335,7 @@ class Dashboard extends Component {
     }
     
     update_channel_color(channelId, input) {
+        //const channels = this.channels;
         const channels = this.state.channels;
         channels.forEach( (c) => {
             if (c.id === channelId) {
@@ -337,9 +343,11 @@ class Dashboard extends Component {
             }
         
         });
-        this.setState({
+        this.forceUpdate();
+     /*   this.setState({
             channels: channels
         });
+    */
     }
     
     componentDidMount() {
@@ -356,6 +364,7 @@ class Dashboard extends Component {
    // console.log("received data: ", msg);
         let channel = msg.channel;
         let payload = msg.y;
+        //let channels = this.channels.slice()
         let channels = this.state.channels.slice();
         channels.forEach( (c) => {
             console.log("channel id: ", c.id);
@@ -368,12 +377,16 @@ class Dashboard extends Component {
                 }
             } 
         });
+        
+        
         this.setState({
             channels: channels
         })
+        
     }
     
     createTile(tile) {
+        //let channels = this.channels.filter( (c) => {return c.tile === tile.id });
         let channels = this.state.channels.filter( (c) => {return c.tile === tile.id });
        // console.log("Channels: ", channels);
         return (
@@ -399,6 +412,7 @@ class Dashboard extends Component {
         
         //filter out all channels with this id
         let channels = this.state.channels.filter( (c) => {return c !== channel });
+        //let channels = this.channels.filter( (c) => {return c !== channel });
         let tiles = this.state.tiles;
         tiles.forEach( (t) => {
             if (channel.tile === t.id) {
@@ -466,6 +480,8 @@ class Dashboard extends Component {
         
         const tiles = this.state.tiles;
         const tileCounter = this.state.tileCounter;
+        //const channels = this.channels;
+        
         const channels = this.state.channels;
         
         let newTiles, newTileCounter;
@@ -501,6 +517,8 @@ class Dashboard extends Component {
             channels: newChannels
             });
             
+        //this.channels = newChannels;
+            
         this.socket.emit("add_channel", channel);
         
     }
@@ -525,6 +543,22 @@ class Dashboard extends Component {
                     {tiles.map(this.createTile)}
                  </div>
                  
+                 <XYPlot
+                  width={300}
+                  height={300} dontCheckIfEmpty={false}>
+                  <VerticalBarSeries plottype={"bar"} data={[
+                                              {x: 1, y: 10},
+                                              {x: 2, y: 5},
+                                              {x: 3, y: 15}
+                                            ]}
+                                            color={"red"}
+                                            svg={true}
+                />
+                <XAxis />
+                <YAxis />
+                </XYPlot>
+
+
              
             </div>  
     );
