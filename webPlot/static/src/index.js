@@ -3,13 +3,75 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import io from "socket.io-client";
 
-
-import {XYPlot, XAxis, YAxis, Borders,
+import {XYPlot, XAxis, YAxis, Borders, Hint, AbstractSeries,
         LineSeries, LineSeriesCanvas,
         VerticalBarSeries, VerticalBarSeriesCanvas, 
         CustomSVGSeries} from "react-vis";
 
+
 import './index.css';
+
+
+class Series extends AbstractSeries {
+
+    constructor(props) {
+        super(props);
+        
+        this.requiresSVG = this.requiresSVG.bind(this);
+        this.isCanvas = this.isCanvas.bind(this);
+    }
+
+
+    requiresSVG() {
+        return this.props.svg;
+      }
+    
+    isCanvas() {
+        return !this.props.svg;
+    }
+    
+    static renderLayer(props, ctx) {
+        console.log("Props: ", props);
+        if (!props.svg) {
+            if (props.plottype === "line") { 
+                LineSeriesCanvas.renderLayer(props,ctx);
+            } else if (props.plottype === "bar" ) {
+                VerticalBarSeriesCanvas.renderLayer(props,ctx);
+            }
+        }   
+    
+    }
+    
+
+    render() {
+        let {data, plottype, mark, color, svg} = this.props;
+        const props = this.props;
+        if (!svg) {
+            return null;
+        }
+        if (plottype === "line") { 
+                let Line = svg ? LineSeries : LineSeriesCanvas;
+                return <Line data={data} stroke={color} 
+                                //Props passed down from XYPlot
+                                {...this.props}
+                            />
+                
+        } else if (plottype === "bar" ) {
+            let Bar = svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
+            return <Bar data={data} color={color} 
+                                //Props passed down from XYPlot
+                                {...this.props}
+                    />
+            
+        } else {
+            return "Invalid plottype"        
+        }
+        
+    }
+            
+    
+}
+Series.displayName = 'Series';
 
 
 class Chart extends Component {
@@ -26,9 +88,21 @@ class Chart extends Component {
     
     
     createChannels(channels) {
-        //console.log("channels: ", channels);
+        console.log("channels: ", channels);
+        
+
+                
+                
         return channels.map( (c) => {
-            
+        
+            return <Series  key={c.id}
+                            plottype={c.plottype} 
+                            data={c.data}
+                            color={c.color}
+                            mark={c.mark}
+                            svg={this.state.svg}
+                />
+            /*
             if (c.plottype === "line") { 
                 let Line = this.state.svg ? LineSeries : LineSeriesCanvas;
                 return [c.mark ? <CustomSVGSeries customComponent={c.mark} data={c.data} style={{stroke: 'red', fill: 'orange'}} /> : null,
@@ -44,7 +118,7 @@ class Chart extends Component {
                 return "Invalid plottype"        
             }
             
-        
+        */
         });
     
     }
@@ -97,11 +171,11 @@ class Chart extends Component {
                     </button>
                 </div>
                 )
-        });
+        }); 
     }
     
     render() {
-        
+        console.log("rendering chart");
         let {id, channels, tileIDs, width, height} = this.props;
         let min=0, max = 0;
         let barPresent = false;
@@ -114,7 +188,7 @@ class Chart extends Component {
                     max = Math.max(max, c.data[c.data.length-1].x)
                 }
                 if (c.plottype === "bar") {
-                    barPresent = true;
+                    barPresent = true;  
                 }
             });
             min = Math.max(0, max - 10);
@@ -123,21 +197,13 @@ class Chart extends Component {
         return (
             <div className="tile">
                 Chart number: {id}
-                <XYPlot height={height} width={width} 
+                <XYPlot height={height} width={width}
                         dontCheckIfEmpty={false}
                         xType={barPresent ? "ordinal" : "linear"}
                         xDomain={this.state.fixed_x ? [min,max] : null} >
-                    
-                    {this.createChannels(channels)}
-                    <Borders style={{
-                        bottom: {fill: '#fff'},
-                        left: {fill: '#fff'},
-                        right: {fill: '#fff'},
-                        top: {fill: '#fff'}
-                          }}
-                    />
                     <XAxis />
                     <YAxis />
+                    {this.createChannels(channels)}
                 </XYPlot>
                 <button onClick={() => this.setState({svg: !this.state.svg})} >
                     { this.state.svg ? "Render on Canvas" : "Render as svg"}
@@ -287,7 +353,7 @@ class Dashboard extends Component {
     }
     
     update_data(msg) {
-    console.log("received data: ", msg);
+   // console.log("received data: ", msg);
         let channel = msg.channel;
         let payload = msg.y;
         let channels = this.state.channels.slice();
@@ -458,6 +524,7 @@ class Dashboard extends Component {
                  <div className="tile-board">
                     {tiles.map(this.createTile)}
                  </div>
+                 
              
             </div>  
     );

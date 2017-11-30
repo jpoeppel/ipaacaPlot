@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("/homes/jpoeppel/repo/ipaaca/ipaacalib/python/build")
+#sys.path.append("/homes/jpoeppel/repo/ipaaca/ipaacalib/python/build")
 
 from webPlot import app
 from webPlot import socketio
