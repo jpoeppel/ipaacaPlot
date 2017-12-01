@@ -9,6 +9,11 @@ import {XYPlot,FlexibleWidthXYPlot, XAxis, YAxis, Borders, Hint, AbstractSeries,
         CustomSVGSeries} from "react-vis"; // ./3rdParty/
 
 
+import CollapsibleCard from "./components/collapsibleCard";
+import ChartControls from "./components/chartControls";
+
+//import {VictoryChart, VictoryTheme, VictoryLine} from "victory";
+
 import './index.css';
 
 
@@ -80,12 +85,33 @@ class Chart extends Component {
         super(props);
         this.state = {
                     svg: true,
-                    fixed_x: false
+                    fixed_x: false,
+                    xRange: null
                     };
                     
         this.createChannelCtrl = this.createChannelCtrl.bind(this);
     }
     
+    
+    createVictoryChannels(channels) {
+/*        
+        return channels.map( (c) => {
+        
+            if (c.plottype === "line") {
+            
+                return <VictoryLine
+                    style={{
+                      data: { stroke: c.color },
+                      parent: { border: "1px solid #ccc"}
+                    }}
+                    data={c.data}
+                  />
+            
+            }
+        
+        });
+  */  
+    }
     
     createChannels(channels) {
         console.log("channels: ", channels);
@@ -173,9 +199,78 @@ class Chart extends Component {
         }); 
     }
     
+    
+    createChannelCtrl2(channels, tileIDs) {
+        let options = tileIDs.map( (tile) => {
+                                    return <option value={tile}>{tile}</option>
+                                });
+        options = options.concat(<option value="new">New</option>);
+    
+        let markOptions = ["star", "square", "circle", "diamond", "none"].map( 
+                            (option) => {
+                                 return <option value={option}>{option}</option>   
+                            });
+                            
+                            
+        return (
+            <ChartControls title={"Chart settings"} group={"Series"}>
+                  <div name={"Series"}>
+                      {channels.map( (c) => {
+                          return ([
+                          <div>
+                             <span> Channel: {c.id} </span>
+                             <span> Plottype: {c.plottype} </span> 
+                             <span> Display in panel: <select  
+                                                value={c.tile}
+                                                onInput={ (e) => {
+                                                    this.props.tileChanged(c.id, e.target);
+                                                    }
+                                                }
+                                          >
+                                            {options}
+                                         </select>
+                             </span>
+                             <span> Color:  <input type="color" id="color" 
+                                value={c.color} 
+                                onInput={ (e) => {
+                                    this.props.colorChanged(c.id, e.target);
+                                    }
+                            } />
+                    </span>
+                             <button onClick={ () => {this.props.removeChannel(c) } } >
+                                Remove Channel
+                             </button>
+                         </div> 
+                         ])})
+                      }
+                  </div>
+                  <div name={"Display"} >
+                      <button onClick={() => this.setState({svg: !this.state.svg})} >
+                            { this.state.svg ? "Render on Canvas" : "Render as svg"}
+                      </button>
+                      <span> Show only last: <input type="text" id="xRange" />
+                          <button onClick={() => {
+                              let xRange = document.getElementById("xRange").value;
+                              
+                              if (xRange === "0") {
+                                  this.setState({xRange: null})
+                              } else {
+                                  this.setState({xRange: xRange})
+                              }
+                          }}>
+                            {"Update"}
+                      </button>
+                      </span>
+                  </div>
+              </ChartControls>
+        
+        )
+    }
+    
     render() {
         console.log("rendering chart");
         let {id, channels, tileIDs, width, height} = this.props;
+        let { xRange } = this.state;
         let min=0, max = 0;
         let barPresent = false;
         
@@ -190,7 +285,13 @@ class Chart extends Component {
                     barPresent = true;  
                 }
             });
-            min = Math.max(0, max - 10);
+            
+            if (xRange !== null) {
+                min = Math.max(0, max - xRange);
+            } else {
+                min = Math.max(0, max - 10);
+            }
+            
             max = Math.max(10, max);
      //   }
         return (
@@ -199,20 +300,14 @@ class Chart extends Component {
                 <FlexibleWidthXYPlot height={height}
                         dontCheckIfEmpty={false}
                         xType={barPresent ? "ordinal" : "linear"}
-                        xDomain={this.state.fixed_x ? [min,max] : null} 
+                        xDomain={this.state.xRange ? [min,max] : null} 
                         margin={{"left": 80}}>
                     <XAxis />
                     <YAxis />
                     {this.createChannels(channels)}
                 </FlexibleWidthXYPlot>
-                <button onClick={() => this.setState({svg: !this.state.svg})} >
-                    { this.state.svg ? "Render on Canvas" : "Render as svg"}
-                </button>
-                <button onClick={() => this.setState({fixed_x: !this.state.fixed_x})} >
-                    { this.state.fixed_x ? "Unfix x-Axis" : "Fix x-Axis"}
-                </button>
                 <div className="channelCtrl">
-                    { this.createChannelCtrl(channels, tileIDs)}
+                    { this.createChannelCtrl2(channels, tileIDs)}
                 </div>
             </div>
     );
@@ -351,7 +446,7 @@ class Dashboard extends Component {
     }
     
     componentDidMount() {
-        this.socket = io.connect("http://localhost:5002");
+        this.socket = io.connect("http://localhost:5000");
         
         this.socket.on("connect", function() {
             console.log("Connected");
@@ -557,9 +652,16 @@ class Dashboard extends Component {
                 <XAxis />
                 <YAxis />
                 </XYPlot>
-
-
-             
+             <div style={{"width":"800px"}}>
+                  <ChartControls>
+                      <div name={"A"}>
+                          {"Test"}
+                      </div>
+                      <div name={"B"} >
+                          {"test 2"}
+                      </div>
+                  </ChartControls>
+                </div>
             </div>  
     );
   }
