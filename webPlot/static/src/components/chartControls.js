@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
 import CollapsibleCard from './collapsibleCard';
@@ -6,7 +6,7 @@ import CollapsibleCard from './collapsibleCard';
 import classNames from 'classnames'
 
 
-export default class ChartControls extends Component {
+export default class ChartControls extends PureComponent {
 
 
     constructor(props) {

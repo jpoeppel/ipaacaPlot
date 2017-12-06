@@ -86,10 +86,11 @@ class Chart extends Component {
         this.state = {
                     svg: true,
                     fixed_x: false,
-                    xRange: null
+                    xRange: null,
+                    yRange: null
                     };
                     
-        this.createChannelCtrl = this.createChannelCtrl.bind(this);
+        this.onWheel = this.onWheel.bind(this);
     }
     
     
@@ -147,60 +148,9 @@ class Chart extends Component {
         });
     
     }
-    
-    createChannelCtrl(channels, tileIDs) {
 
-        let options = tileIDs.map( (tile) => {
-                                    return <option value={tile}>{tile}</option>
-                                });
-        options = options.concat(<option value="new">New</option>);
     
-        let markOptions = ["star", "square", "circle", "diamond", "none"].map( 
-                            (option) => {
-                                 return <option value={option}>{option}</option>   
-                            });
-    
-        return channels.map( (c) => {
-            return (
-                <div>
-                    <span> Channel: {c.id} </span>
-                    <span> Plottype: {c.plottype} </span>  
-                    <span> Color:  <input type="color" id="color" 
-                                value={c.color} 
-                                onInput={ (e) => {
-                                    this.props.colorChanged(c.id, e.target);
-                                    }
-                            } />
-                    </span>
-                    <span> Add mark: <select value={c.mark ? c.mark : "none"}
-                                                onInput={ (e) => {
-                                                    this.props.markChanged(c.id, e.target);
-                                                    }
-                                                }
-                                          >
-                                            {markOptions}
-                                         </select>
-                    </span>
-                    <span> Display in panel: <select  
-                                                value={c.tile}
-                                                onInput={ (e) => {
-                                                    this.props.tileChanged(c.id, e.target);
-                                                    }
-                                                }
-                                          >
-                                            {options}
-                                         </select>
-                    </span>
-                    <button onClick={ () => {this.props.removeChannel(c) } } >
-                        Remove Channel
-                    </button>
-                </div>
-                )
-        }); 
-    }
-    
-    
-    createChannelCtrl2(channels, tileIDs) {
+    createChartCtrl(channels, tileIDs) {
         let options = tileIDs.map( (tile) => {
                                     return <option value={tile}>{tile}</option>
                                 });
@@ -237,6 +187,9 @@ class Chart extends Component {
                                                 }
                                             } />
                             </div>
+                            <button onClick={ () => {this.props.togglePauseChannel(c) } } >
+                               {c.paused ? "Resume Channel" : "Pause Channel"}
+                             </button>                            
                              <button onClick={ () => {this.props.removeChannel(c) } } >
                                 Remove Channel
                              </button>
@@ -261,14 +214,52 @@ class Chart extends Component {
                             {"Update"}
                       </button>
                       </div>
+                      <div> Y Range min: 
+                          <input type="text" id="yRangeMin"/>
+                          <input type="text" id="yRangeMax"/>
+                          <button onClick={() => {
+                              let yRangeMin = document.getElementById("yRangeMin").value;
+                              let yRangeMax = document.getElementById("yRangeMax").value;
+                              
+                              if (yRangeMin === "") {
+                                  yRangeMin = null;
+                              }
+                              if (yRangeMax === "") {
+                                  yRangeMax = null;
+                              }
+                              let yRange = null;
+                              if (yRangeMin !== null || yRangeMax !== null) {
+                                  yRange = [yRangeMin, yRangeMax];
+                              }
+                              
+                              this.setState({yRange:yRange})
+                      
+                          }}>
+                            {"Update"}
+                      </button>
+                      <button onClick={() => {
+                              this.setState({yRange: null})
+                              document.getElementById("yRangeMin").value = "";
+                              document.getElementById("yRangeMax").value = "";
+                          }}>
+                            {"Clear"}
+                      </button>
+                      </div>
                   </div>
               </ChartControls>
         
         )
     }
     
+    
+    onWheel(event) {
+    
+        console.log("Used MouseWheel on plot");
+        console.log("event: ", event.deltaY);
+    
+    };
+    
     render() {
-        console.log("rendering chart");
         let {id, channels, tileIDs, width, height} = this.props;
         let { xRange } = this.state;
         let min=0, max = 0;
@@ -302,10 +293,13 @@ class Chart extends Component {
                 Chart number: {id}
                 <FlexibleWidthXYPlot height={height}
                         dontCheckIfEmpty={false}
+                        onWheel={this.onWheel}
                         xType={barPresent ? "ordinal" : "linear"}
                         xDomain={this.state.xRange ? [min,max] : null} 
+                        yDomain={this.state.yRange}
                         margin={{"left": 80, "right": 40}}>
                     {this.createChannels(channels)}
+                    
                     <Borders style={{
                     bottom: {fill: '#fff'},
                     left: {fill: '#fff'},
@@ -315,8 +309,8 @@ class Chart extends Component {
                     <XAxis tickTotal={this.state.xRange ? numTicks : null} />
                     <YAxis />
                 </FlexibleWidthXYPlot>
-                <div className="channelCtrl">
-                    { this.createChannelCtrl2(channels, tileIDs)}
+                <div className="chartCtrl">
+                    { this.createChartCtrl(channels, tileIDs)}
                 </div>
             </div>
     );
@@ -390,7 +384,7 @@ class Dashboard extends Component {
         this.update_channel_color = this.update_channel_color.bind(this);
         this.update_channel_tile = this.update_channel_tile.bind(this);
         this.update_channel_mark = this.update_channel_mark.bind(this);
-    
+        this.togglePauseChannel = this.togglePauseChannel.bind(this);
     }
         
     update_channel_mark(channelId, input) {
@@ -458,6 +452,12 @@ class Dashboard extends Component {
     
     }
     
+    togglePauseChannel(channel) {
+    
+        channel.paused = !channel.paused;
+    
+    }
+    
     update_channel_color(channelId, input) {
         //const channels = this.channels;
         const channels = this.state.channels;
@@ -492,7 +492,7 @@ class Dashboard extends Component {
         let channels = this.state.channels.slice();
         channels.forEach( (c) => {
             console.log("channel id: ", c.id);
-            if (c.id === channel) {
+            if (c.id === channel && !c.paused) {
                 if (c.plottype === "line") {
                     c.data.push({"x":c.data.length, "y":payload[0], "size":c.markSize, "style":{"fill":c.color}});
                 } else if (c.plottype === "bar") {
@@ -518,6 +518,7 @@ class Dashboard extends Component {
                 id={tile.id}
                 key={tile.id}
                 removeChannel={this.removeChannel} 
+                togglePauseChannel={this.togglePauseChannel}
                 channels={channels}
                 colorChanged={this.update_channel_color}
                 tileChanged={this.update_channel_tile}
