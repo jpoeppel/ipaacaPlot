@@ -218,9 +218,9 @@ class Chart extends Component {
                       {channels.map( (c) => {
                           return ([
                           <div>
-                             <span> Channel: {c.id} </span>
-                             <span> Plottype: {c.plottype} </span> 
-                             <span> Display in panel: <select  
+                              <div> Channel: {c.id} </div>
+                             <div> Plottype: {c.plottype} </div> 
+                             <div> Display in panel: <select  
                                                 value={c.tile}
                                                 onInput={ (e) => {
                                                     this.props.tileChanged(c.id, e.target);
@@ -229,14 +229,14 @@ class Chart extends Component {
                                           >
                                             {options}
                                          </select>
-                             </span>
-                             <span> Color:  <input type="color" id="color" 
-                                value={c.color} 
-                                onInput={ (e) => {
-                                    this.props.colorChanged(c.id, e.target);
-                                    }
-                            } />
-                    </span>
+                             </div>
+                             <div> Color:  <input type="color" id="color" 
+                                            value={c.color} 
+                                            onInput={ (e) => {
+                                                this.props.colorChanged(c.id, e.target);
+                                                }
+                                            } />
+                            </div>
                              <button onClick={ () => {this.props.removeChannel(c) } } >
                                 Remove Channel
                              </button>
@@ -248,7 +248,7 @@ class Chart extends Component {
                       <button onClick={() => this.setState({svg: !this.state.svg})} >
                             { this.state.svg ? "Render on Canvas" : "Render as svg"}
                       </button>
-                      <span> Show only last: <input type="text" id="xRange" />
+                      <div> Show only last: <input type="text" id="xRange" />
                           <button onClick={() => {
                               let xRange = document.getElementById("xRange").value;
                               
@@ -260,7 +260,7 @@ class Chart extends Component {
                           }}>
                             {"Update"}
                       </button>
-                      </span>
+                      </div>
                   </div>
               </ChartControls>
         
@@ -273,7 +273,7 @@ class Chart extends Component {
         let { xRange } = this.state;
         let min=0, max = 0;
         let barPresent = false;
-        
+        let numTicks = 0;
      //   if (this.state.fixed_x) {
             
             channels.forEach( (c) => {
@@ -288,11 +288,14 @@ class Chart extends Component {
             
             if (xRange !== null) {
                 min = Math.max(0, max - xRange);
+                numTicks = max-min > 20 ? null : max-min;
             } else {
                 min = Math.max(0, max - 10);
             }
             
             max = Math.max(10, max);
+            
+        
      //   }
         return (
             <div className="tile">
@@ -301,10 +304,16 @@ class Chart extends Component {
                         dontCheckIfEmpty={false}
                         xType={barPresent ? "ordinal" : "linear"}
                         xDomain={this.state.xRange ? [min,max] : null} 
-                        margin={{"left": 80}}>
-                    <XAxis />
-                    <YAxis />
+                        margin={{"left": 80, "right": 40}}>
                     {this.createChannels(channels)}
+                    <Borders style={{
+                    bottom: {fill: '#fff'},
+                    left: {fill: '#fff'},
+                    right: {fill: '#fff'},
+                    top: {fill: '#fff'}
+                  }}/>
+                    <XAxis tickTotal={this.state.xRange ? numTicks : null} />
+                    <YAxis />
                 </FlexibleWidthXYPlot>
                 <div className="channelCtrl">
                     { this.createChannelCtrl2(channels, tileIDs)}
@@ -396,8 +405,8 @@ class Dashboard extends Component {
     }
     
     update_channel_tile(channelId, input) {
-        //const channels = this.state.channels;
-        const channels = this.channels;
+        const channels = this.state.channels;
+        //const channels = this.channels;
         
         let newTiles = this.state.tiles;
         const tileCounter = this.state.tileCounter;
@@ -406,6 +415,7 @@ class Dashboard extends Component {
         let newTile = input.value;
         if (newTile === "new") {
             newTile = tileCounter;
+            
             newTiles = newTiles.concat([{
                 id: tileCounter, 
                 numChannels: 1,
@@ -413,12 +423,31 @@ class Dashboard extends Component {
             newTileCounter = tileCounter+1;
         } 
         
+        
+        let oldTile = null;
+        
+        
         //Update channel's tile
         channels.forEach( (c) => {
             if (c.id === channelId) {
+                oldTile = c.tile;
                 c.tile = newTile;
             }
         });
+        
+        newTiles.forEach( (t) => {
+            if (t.id === oldTile) {
+                t.numChannels = t.numChannels -1;
+            }
+        });
+        
+        
+        newTiles = newTiles.filter( (t, i, a) => {
+            return t.numChannels !== 0;
+        })
+        
+        console.log("Old tile: ", oldTile);
+        console.log("tiles: ", newTiles);
         
         this.setState( {
             tiles: newTiles,
@@ -638,30 +667,6 @@ class Dashboard extends Component {
                     {tiles.map(this.createTile)}
                  </div>
                  
-                 <XYPlot
-                  width={300}
-                  height={300} dontCheckIfEmpty={false}>
-                  <VerticalBarSeries plottype={"bar"} data={[
-                                              {x: 1, y: 10},
-                                              {x: 2, y: 5},
-                                              {x: 3, y: 15}
-                                            ]}
-                                            color={"red"}
-                                            svg={true}
-                />
-                <XAxis />
-                <YAxis />
-                </XYPlot>
-             <div style={{"width":"800px"}}>
-                  <ChartControls>
-                      <div name={"A"}>
-                          {"Test"}
-                      </div>
-                      <div name={"B"} >
-                          {"test 2"}
-                      </div>
-                  </ChartControls>
-                </div>
             </div>  
     );
   }
