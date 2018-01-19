@@ -27,13 +27,13 @@ def update_data(iu, event_type, local):
         app.logger.info("Received message from channel {}, payload: {}".format(iu.category, iu.payload))
         payload = dict(iu.payload)
         payload["y"] = json.loads(payload["y"])
-        payload["channel"] = "ipaaca:"+iu.category
+        payload["connection"] = "ipaaca:"+iu.category
         socketio.emit("update_data", payload)
 
 
 def update_data_rsb(event):
     js = json.loads(event.data)
-    js["channel"] = "rsb:"+event.scope.toString().strip("/")
+    js["connection"] = "rsb:"+event.scope.toString().strip("/")
     socketio.emit("update_data", js) 
 
 
@@ -46,51 +46,44 @@ class MyTCPStreamHandler(socketserver.StreamRequestHandler):
             app.logger.error(str(e))
         app.logger.info("Received {} from {}".format(chunk, self.client_address))
         js = json.loads(chunk)
-        js["channel"] = "tcp:"+str(self.server.server_address[1])
+        js["connection"] = "tcp:"+str(self.server.server_address[1])
         socketio.emit("update_data", js)
         app.logger.info("emitted response")
 
-#app.inputBuffer = ipaaca.InputBuffer("Ipaaca_Plot")
-#app.inputBuffer.register_handler(update_data)
-
 app.connectionManager = io.ConnectionManager()
-#app.connectionManager.add_connection("8092", MyTCPStreamHandler, "tcp")
 
 @app.route('/') 
 @app.route('/index')
 def index():
     return render_template('index.html')
  
-#@app.route('/favicon.ico')
-#def serve():
-#    if os.path.exists("static/build/favicon.ico"):
-#        return send_from_directory("static/build/favicon.ico")
-#    else:
-#        return render_template("index.html")
 
-
-@socketio.on("add_channel")
-def add_channel(channel):
-    if ":" in channel:
-        prot, channel = channel.split(":")
+@socketio.on("add_connection")
+def add_connection(connection):
+    if ":" in connection:
+        prot, connection = connection.split(":")
     else:
-        prot = "rsb"
-        channel = channel
-    app.logger.info("adding channel: {}".format(channel))
+        app.logger.debug("Invalid connection specification: {}".format(connection))
+        #TODO Trigger error in frontend!
+        return
+    
+#        prot = "rsb"
+#        connection = connection
+    app.logger.info("adding channel: {}".format(connection))
     if prot == "rsb":
-        app.connectionManager.add_connection(channel, update_data_rsb, prot)
+        app.connectionManager.add_connection(connection, update_data_rsb, prot)
     elif prot == "ipaaca":
-        app.connectionManager.add_connection(channel, update_data, prot)
+        app.connectionManager.add_connection(connection, update_data, prot)
     elif prot == "tcp":
-        app.connectionManager.add_connection(channel, MyTCPStreamHandler, prot)
-#    app.inputBuffer.add_category_interests(channel)
+        app.connectionManager.add_connection(connection, MyTCPStreamHandler, prot)
+    else:
+        app.logger.debug("Ignoring invalid protocol ({})".format(prot))
     
 
-@socketio.on("remove_channel")
-def remove_channel(channel):
-    app.logger.info("removing channel: {}".format(channel))
-    app.connectionManager.remove_connection(channel)
-#    app.inputBuffer.remove_category_interests(channel)
+@socketio.on("remove_connection")
+def remove_connection(connection):
+    app.logger.info("removing connection: {}".format(connection))
+    app.connectionManager.remove_connection(connection)
     
 @socketio.on('connect')
 def connect(): 

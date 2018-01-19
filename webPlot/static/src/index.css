@@ -12,6 +12,19 @@
     width: 800px;
 }
 
+
+.text-tile {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    border: 1px solid;
+}
+
+.channelList {
+    display: flex;
+    flex-direction: column;
+}
+
 .rv-xy-plot__series--line {
   fill: none;
   stroke-width: 2px;
@@ -111,3 +124,4 @@
     border-bottom-color: #fff;
     background: #fff;
 }
+

@@ -38,7 +38,7 @@ try:
     while True:
     
 #        data = {"channel": "test", "y": list(np.random.rand(1))}
-        data = {"y": list(np.random.rand(1))}
+        data = {"y": np.random.rand(1)[0]}
 #        print("Sending data: ", data)
 #        informer.publishData(json.dumps(data))
         
@@ -46,6 +46,12 @@ try:
         try:
             port = 9080
             client("localhost", port, json.dumps(data) + "\n")
+        except:
+            pass
+        
+        try:
+            port = 9081
+            client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}) + "\n")
         except:
             pass
 #        sock.close()
@@ -59,5 +65,6 @@ try:
 #        informer2.publishData(json.dumps(data))
         time.sleep(0.15)
 except KeyboardInterrupt:
-    del informer
+    pass
+#    del informer
 #    del ipaacaOutbuffer

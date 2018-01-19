@@ -102,6 +102,9 @@ class ConnectionManager(object):
          
     def add_connection(self, channel, callback, protocol):
         channelID = protocol + ":" + channel
+        if channelID in self.connections:
+            #Connection already established, do nothing
+            return
         if protocol == "rsb": 
             self.connections[channelID] = RSBConnection(callback, "/" + channel)
         elif protocol == "ipaaca":

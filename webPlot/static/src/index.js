@@ -3,388 +3,188 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import io from "socket.io-client";
 
-import {XYPlot,FlexibleWidthXYPlot, XAxis, YAxis, Borders, Hint, AbstractSeries,
-        LineSeries, LineSeriesCanvas,
-        VerticalBarSeries, VerticalBarSeriesCanvas, 
-        CustomSVGSeries} from "react-vis"; // ./3rdParty/
 
 
 import CollapsibleCard from "./components/collapsibleCard";
-import ChartControls from "./components/chartControls";
+import Chart from "./components/chart";
+import TextOutput from "./components/textOutput";
+
+import ChannelCtrl from "./components/channelCtrl";
 
 //import {VictoryChart, VictoryTheme, VictoryLine} from "victory";
 
 import './index.css';
 
 
-class Series extends AbstractSeries {
-
-    constructor(props) {
-        super(props);
-        
-        this.requiresSVG = this.requiresSVG.bind(this);
-        this.isCanvas = this.isCanvas.bind(this);
-    }
 
 
-    requiresSVG() {
-        return this.props.svg;
-      }
-    
-    isCanvas() {
-        return !this.props.svg;
-    }
-    
-    static renderLayer(props, ctx) {
-        console.log("Props: ", props);
-        if (!props.svg) {
-            if (props.plottype === "line") { 
-                LineSeriesCanvas.renderLayer(props,ctx);
-            } else if (props.plottype === "bar" ) {
-                VerticalBarSeriesCanvas.renderLayer(props,ctx);
-            }
-        }   
-    
-    }
-    
-
-    render() {
-        let {data, plottype, mark, color, svg} = this.props;
-        const props = this.props;
-        if (!svg) {
-            return null;
-        }
-        if (plottype === "line") { 
-                let Line = svg ? LineSeries : LineSeriesCanvas;
-                return <Line data={data} stroke={color} 
-                                //Props passed down from XYPlot
-                                {...this.props}
-                            />
-                
-        } else if (plottype === "bar" ) {
-            let Bar = svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
-            return <Bar data={data} color={color} 
-                                //Props passed down from XYPlot
-                                {...this.props}
-                    />
-            
-        } else {
-            return "Invalid plottype"        
-        }
-        
-    }
-            
-    
-}
-Series.displayName = 'Series';
 
 
-class Chart extends Component {
-
-    constructor(props) {
-        super(props);
-        this.state = {
-                    svg: true,
-                    fixed_x: false,
-                    xRange: null,
-                    yRange: null
-                    };
-                    
-        this.onWheel = this.onWheel.bind(this);
-    }
-    
-    
-    createVictoryChannels(channels) {
-/*        
-        return channels.map( (c) => {
-        
-            if (c.plottype === "line") {
-            
-                return <VictoryLine
-                    style={{
-                      data: { stroke: c.color },
-                      parent: { border: "1px solid #ccc"}
-                    }}
-                    data={c.data}
-                  />
-            
-            }
-        
-        });
-  */  
-    }
-    
-    createChannels(channels) {
-        console.log("channels: ", channels);
-        
-
-                
-                
-        return channels.map( (c) => {
-            /*
-            return <Series  key={c.id}
-                            plottype={c.plottype} 
-                            data={c.data}
-                            color={c.color}
-                            mark={c.mark}
-                            svg={this.state.svg}
-                />
-            */
-            if (c.plottype === "line") { 
-                let Line = this.state.svg ? LineSeries : LineSeriesCanvas;
-                return [c.mark ? <CustomSVGSeries customComponent={c.mark} data={c.data} style={{stroke: 'red', fill: 'orange'}} /> : null,
-                            <Line data={c.data} stroke={c.color} />
-                        ]
-                        
-                
-            } else if (c.plottype === "bar" ) {
-                let Bar = this.state.svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
-                return <Bar data={c.data} color={c.color} />
-                
-            } else {
-                return "Invalid plottype"        
-            }
-          
-        });
-    
-    }
-
-    
-    createChartCtrl(channels, tileIDs) {
-        let options = tileIDs.map( (tile) => {
-                                    return <option value={tile}>{tile}</option>
-                                });
-        options = options.concat(<option value="new">New</option>);
-    
-        let markOptions = ["star", "square", "circle", "diamond", "none"].map( 
-                            (option) => {
-                                 return <option value={option}>{option}</option>   
-                            });
-                            
-                            
-        return (
-            <ChartControls title={"Chart settings"} group={"Series"}>
-                  <div name={"Series"}>
-                      {channels.map( (c) => {
-                          return ([
-                          <div>
-                              <div> Channel: {c.id} </div>
-                             <div> Plottype: {c.plottype} </div> 
-                             <div> Display in panel: <select  
-                                                value={c.tile}
-                                                onInput={ (e) => {
-                                                    this.props.tileChanged(c.id, e.target);
-                                                    }
-                                                }
-                                          >
-                                            {options}
-                                         </select>
-                             </div>
-                             <div> Color:  <input type="color" id="color" 
-                                            value={c.color} 
-                                            onInput={ (e) => {
-                                                this.props.colorChanged(c.id, e.target);
-                                                }
-                                            } />
-                            </div>
-                            <button onClick={ () => {this.props.togglePauseChannel(c) } } >
-                               {c.paused ? "Resume Channel" : "Pause Channel"}
-                             </button>                            
-                             <button onClick={ () => {this.props.removeChannel(c) } } >
-                                Remove Channel
-                             </button>
-                         </div> 
-                         ])})
-                      }
-                  </div>
-                  <div name={"Display"} >
-                      <button onClick={() => this.setState({svg: !this.state.svg})} >
-                            { this.state.svg ? "Render on Canvas" : "Render as svg"}
-                      </button>
-                      <div> Show only last: <input type="text" id="xRange" />
-                          <button onClick={() => {
-                              let xRange = document.getElementById("xRange").value;
-                              
-                              if (xRange === "0") {
-                                  this.setState({xRange: null})
-                              } else {
-                                  this.setState({xRange: xRange})
-                              }
-                          }}>
-                            {"Update"}
-                      </button>
-                      </div>
-                      <div> Y Range min: 
-                          <input type="text" id="yRangeMin"/>
-                          <input type="text" id="yRangeMax"/>
-                          <button onClick={() => {
-                              let yRangeMin = document.getElementById("yRangeMin").value;
-                              let yRangeMax = document.getElementById("yRangeMax").value;
-                              
-                              if (yRangeMin === "") {
-                                  yRangeMin = null;
-                              }
-                              if (yRangeMax === "") {
-                                  yRangeMax = null;
-                              }
-                              let yRange = null;
-                              if (yRangeMin !== null || yRangeMax !== null) {
-                                  yRange = [yRangeMin, yRangeMax];
-                              }
-                              
-                              this.setState({yRange:yRange})
-                      
-                          }}>
-                            {"Update"}
-                      </button>
-                      <button onClick={() => {
-                              this.setState({yRange: null})
-                              document.getElementById("yRangeMin").value = "";
-                              document.getElementById("yRangeMax").value = "";
-                          }}>
-                            {"Clear"}
-                      </button>
-                      </div>
-                  </div>
-              </ChartControls>
-        
-        )
-    }
-    
-    
-    onWheel(event) {
-    
-        console.log("Used MouseWheel on plot");
-        console.log("event: ", event.deltaY);
-    
-    };
-    
-    render() {
-        let {id, channels, tileIDs, width, height} = this.props;
-        let { xRange } = this.state;
-        let min=0, max = 0;
-        let barPresent = false;
-        let numTicks = 0;
-     //   if (this.state.fixed_x) {
-            
-            channels.forEach( (c) => {
-                if (c.data.length > 0) {
-                    min = Math.min(min, c.data[0].x);
-                    max = Math.max(max, c.data[c.data.length-1].x)
-                }
-                if (c.plottype === "bar") {
-                    barPresent = true;  
-                }
-            });
-            
-            if (xRange !== null) {
-                min = Math.max(0, max - xRange);
-                numTicks = max-min > 20 ? null : max-min;
-            } else {
-                min = Math.max(0, max - 10);
-            }
-            
-            max = Math.max(10, max);
-            
-        
-     //   }
-        return (
-            <div className="tile">
-                Chart number: {id}
-                <FlexibleWidthXYPlot height={height}
-                        dontCheckIfEmpty={false}
-                        onWheel={this.onWheel}
-                        xType={barPresent ? "ordinal" : "linear"}
-                        xDomain={this.state.xRange ? [min,max] : null} 
-                        yDomain={this.state.yRange}
-                        margin={{"left": 80, "right": 40}}>
-                    {this.createChannels(channels)}
-                    
-                    <Borders style={{
-                    bottom: {fill: '#fff'},
-                    left: {fill: '#fff'},
-                    right: {fill: '#fff'},
-                    top: {fill: '#fff'}
-                  }}/>
-                    <XAxis tickTotal={this.state.xRange ? numTicks : null} />
-                    <YAxis />
-                </FlexibleWidthXYPlot>
-                <div className="chartCtrl">
-                    { this.createChartCtrl(channels, tileIDs)}
-                </div>
-            </div>
-    );
-  }
-
-}
-
-Chart.propTypes = {
-    width:      PropTypes.number,
-    height:     PropTypes.number,
-    tileIDs:    PropTypes.array
-}
-
-Chart.defaultProps = {
-    channel:    "",
-    color: "black",
-    width: 500,
-    height: 300
-}
-
-
-class ChannelCtrl extends Component {
-
- 
-    render() {
-    
-        let tiles = this.props.tiles;
-        
-        let options = tiles.map( (tile) => {
-                                    return <option value={tile.id}>{tile.id}</option>
-                                });
-        options = options.concat(<option value="new">New</option>);
-    
-        return (
-            <div>
-                Channel: <input type="text" id="channel" />
-                Plottype: <select id="plottype">
-                            <option value="line">Lineplot</option>
-                            <option value="bar">Barplot</option>
-                          </select>     
-                Color:  <input type="color" id="color" />
-                Add to panel: <select id="tile">
-                                {options}
-                            </select>
-                
-                <button onClick={this.props.addChannel} >
-                    Add Channel
-                </button>
-            </div>
-        )
-    }
-}
 
 class Dashboard extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
+            textPlottype: false,
             tiles: [],
+            textTiles: [],
+            tileCounter: 0,
+            textTileCounter: 0,
             channels: [],
-            tileCounter: 0
+            textChannels: [],
+            channelCounter: 0,
+            probeMessage: ""
         };
         
+        this.channelMap = {};
+        this.connectionMap = {};
         
-        //this.channels = [];
         
-        this.addChannel = this.addChannel.bind(this);
+        this.probingConnection = null;
+        
+        this.addSimpleChannel = this.addSimpleChannel.bind(this);
         this.removeChannel = this.removeChannel.bind(this);
         this.createTile = this.createTile.bind(this);
+        this.createTextTile = this.createTextTile.bind(this);
         this.update_data = this.update_data.bind(this);
         this.update_channel_color = this.update_channel_color.bind(this);
         this.update_channel_tile = this.update_channel_tile.bind(this);
         this.update_channel_mark = this.update_channel_mark.bind(this);
         this.togglePauseChannel = this.togglePauseChannel.bind(this);
+        this.selectPlottype = this.selectPlottype.bind(this);
+        
+        this.probeConnection = this.probeConnection.bind(this);
+        this.addNewChannel = this.addNewChannel.bind(this);
+        this.updateChannel = this.updateChannel.bind(this);
+    }
+    
+    updateChannel(connection, channelId, key, plottype, color, tileId) {
+        
+        let possibleChannels = this.connectionMap[connection] ? this.connectionMap[connection] : [];
+        
+        var channel;
+        for (var i=0; i < possibleChannels.length; i++) {
+            let tmpChannel = possibleChannels[i];
+            if (tmpChannel.id == channelId){
+                channel = tmpChannel;
+                break;
+            }
+        }
+        
+        
+        if (!channel) {
+            channel = {
+                id: channelId,
+                connection: connection,
+            }
+            //Add new channel to channel and connection map
+            this.channelMap[channelId] = channel;
+            if (this.connectionMap[connection]) {
+                this.connectionMap[connection].push(channel);
+            } else {
+                this.connectionMap[connection] = [channel];
+            }
+        }
+        
+        
+        //Update channel attributes
+        channel.key = key;
+        channel.plottype = plottype;
+        channel.color = color;
+        
+        //Update tiles
+        const tiles = (plottype  === "text") ? this.state.textTiles : this.state.tiles;
+        const tileCounter = (plottype  === "text") ? this.state.textTileCounter : this.state.tileCounter;
+        const channels = (plottype  === "text") ? this.state.textChannels : this.state.channels;
+        
+        
+        let newTiles, newTileCounter;
+        if (tileId === "new") {
+            tileId = tileCounter;
+            newTiles = tiles.concat([{
+                id: tileCounter, 
+                numChannels: 1}])
+            newTileCounter = tileCounter+1;
+        } else {
+            newTiles = tiles;
+            newTiles.forEach( (t) => {
+                if (t.id === Number(tileId)) {
+                    t.numChannels = t.numChannels+1;
+                }
+            });
+            newTileCounter = tileCounter;
+        }
+        
+        channel.tile = Number(tileId);
+        
+        let newChannels = channels.concat([channel]);
+        
+        console.log("channels after activate: ", newChannels);
+                    
+        if (plottype  === "text") {
+            this.setState( {
+                textTiles: newTiles,
+                textTileCounter: newTileCounter,
+                textChannels: newChannels
+                });
+        } else {
+            this.setState( {
+                tiles: newTiles,
+                tileCounter: newTileCounter,
+                channels: newChannels
+                });
+        
+        }
+        
+    };
+    
+    addNewChannel(connection) {
+        this.socket.emit("add_connection", connection);
+        console.log("adding new channel for connection: ", connection);
+        let emptyChannel = {
+                id: this.state.channelCounter,
+                key: "",
+                connection: connection,
+                plottype: "",
+                tile: -1,
+                color: "",
+                data: [],
+                mark: null,
+                markSize: 5
+        }
+        
+        if (this.connectionMap[connection]) {
+        console.log("adding empty channel");
+            this.connectionMap[connection].push(emptyChannel);
+        } else {
+        console.log("creating new list");
+            this.connectionMap[connection] = [emptyChannel];
+        }
+        
+        
+        //this.forceUpdate();
+        this.setState({
+            channelCounter: this.state.channelCounter+1,
+        })
+    };
+    
+    probeConnection(connection) {
+        console.log("Probing connection: ", connection);
+        
+        this.probingConnection = connection;
+        
+        // Reset probe Message to receive next message
+        this.setState({
+            probeMessage: ""
+        })
+        
+        this.socket.emit("add_connection", connection);
+    }
+    
+    selectPlottype(e) {
+        var type = e.target.value;
+        this.setState({textPlottype: type==="text"})
     }
         
     update_channel_mark(channelId, input) {
@@ -399,11 +199,11 @@ class Dashboard extends Component {
     }
     
     update_channel_tile(channelId, input) {
-        const channels = this.state.channels;
-        //const channels = this.channels;
-        
-        let newTiles = this.state.tiles;
-        const tileCounter = this.state.tileCounter;
+    
+        let channel = this.channelMap[channelId];
+    
+        let newTiles = (channel.plottype === "text") ? this.state.textTiles : this.state.tiles;
+        const tileCounter = (channel.plottype === "text") ? this.state.textTileCounter : this.state.tileCounter;
         let newTileCounter = tileCounter;
         
         let newTile = input.value;
@@ -412,8 +212,7 @@ class Dashboard extends Component {
             
             newTiles = newTiles.concat([{
                 id: tileCounter, 
-                numChannels: 1,
-                channel: channelId }])
+                numChannels: 1 }])
             newTileCounter = tileCounter+1;
         } 
         
@@ -421,13 +220,17 @@ class Dashboard extends Component {
         let oldTile = null;
         
         
+        oldTile = this.channelMap[channelId].tile;
+        this.channelMap[channelId].tile = newTile;
+        
         //Update channel's tile
-        channels.forEach( (c) => {
-            if (c.id === channelId) {
-                oldTile = c.tile;
-                c.tile = newTile;
-            }
-        });
+        //channels.forEach( (c) => {
+        //    if (c.id === channelId) {
+        //        oldTile = c.tile;
+        //        c.tile = newTile;
+        //    }
+        //});
+        
         
         newTiles.forEach( (t) => {
             if (t.id === oldTile) {
@@ -435,43 +238,31 @@ class Dashboard extends Component {
             }
         });
         
-        
         newTiles = newTiles.filter( (t, i, a) => {
             return t.numChannels !== 0;
         })
         
-        console.log("Old tile: ", oldTile);
-        console.log("tiles: ", newTiles);
-        
-        this.setState( {
-            tiles: newTiles,
-            tileCounter: newTileCounter
-        })
-        
-        /* TODO: remove empty tiles */
+        if (channel.plottype === "text")  {
+            this.setState( {
+                textTiles: newTiles,
+                textTileCounter: newTileCounter
+            })
+        } else {
+            this.setState( {
+                tiles: newTiles,
+                tileCounter: newTileCounter
+            })
+        }
     
     }
     
     togglePauseChannel(channel) {
-    
         channel.paused = !channel.paused;
-    
     }
     
     update_channel_color(channelId, input) {
-        //const channels = this.channels;
-        const channels = this.state.channels;
-        channels.forEach( (c) => {
-            if (c.id === channelId) {
-                c.color = input.value;
-            }
-        
-        });
+        this.channelMap[channelId].color = input.value;
         this.forceUpdate();
-     /*   this.setState({
-            channels: channels
-        });
-    */
     }
     
     componentDidMount() {
@@ -485,27 +276,48 @@ class Dashboard extends Component {
     }
     
     update_data(msg) {
-   // console.log("received data: ", msg);
-        let channel = msg.channel;
-        let payload = msg.y;
-        //let channels = this.channels.slice()
-        let channels = this.state.channels.slice();
-        channels.forEach( (c) => {
-            console.log("channel id: ", c.id);
-            if (c.id === channel && !c.paused) {
-                if (c.plottype === "line") {
-                    c.data.push({"x":c.data.length, "y":payload[0], "size":c.markSize, "style":{"fill":c.color}});
-                } else if (c.plottype === "bar") {
-                   // let chars = ["a","b","c","d","e","f"]
-                    c.data = msg.dist.map( (v, i) => { return {"x":i, "y":v}});
+        console.log("received data: ", msg);
+        let connection = msg.connection;
+        
+        if (connection == this.probingConnection) { 
+            //We only want one message, not constantly updating ones
+            if (!this.state.probeMessage) {
+                this.setState({
+                    probeMessage: msg
+                })
+            }
+        }
+        
+        let possibleChannels = this.connectionMap[connection] ? this.connectionMap[connection] :[]; 
+        
+        console.log("possible channels for connection: ", possibleChannels)
+        //Feed data to channels from this connection
+        for (var i=0; i < possibleChannels.length; i++) {
+        
+            let channel = possibleChannels[i];
+            let payload = msg[channel.key];
+            console.log("channel: ", channel);
+            if (channel && !channel.paused) {
+                switch(channel.plottype) {
+                    case "line":
+                        channel.data.push({"x":channel.data.length, "y": payload, "size":channel.markSize, "style":{"fill":channel.color}});
+                        break;
+                    case "bar":
+                        channel.data = payload.map( (v, i) => { return {"x":i, "y":v}});
+                        break;
+                    case "text":
+                        channel.data = payload; 
+                        break;
+                    default:
+                        return "Invalid plottype"
                 }
-            } 
-        });
+                console.log("channel id: ", channel.id);
+                console.log("data after adding: ", channel.data);
+            }
+        } 
         
-        
-        this.setState({
-            channels: channels
-        })
+        //this.forceUpdate();
+        this.setState(this.state);
         
     }
     
@@ -517,28 +329,38 @@ class Dashboard extends Component {
             <Chart 
                 id={tile.id}
                 key={tile.id}
+                channels={channels}
                 removeChannel={this.removeChannel} 
                 togglePauseChannel={this.togglePauseChannel}
-                channels={channels}
-                colorChanged={this.update_channel_color}
                 tileChanged={this.update_channel_tile}
                 markChanged={this.update_channel_mark}
+                colorChanged={this.update_channel_color}
                 tileIDs={this.state.tiles.map( (tile) => {return tile.id})}
             >
             </Chart>
         )
     }
     
-    removeChannel(channel) {
-
-        /* TODO: Handle corner case of the same channel being in one chart 
-                 multiple times. 
-        */
+    createTextTile(tile) {
+        let channels = this.state.textChannels.filter( (c) => {return c.tile === tile.id });
         
-        //filter out all channels with this id
-        let channels = this.state.channels.filter( (c) => {return c !== channel });
-        //let channels = this.channels.filter( (c) => {return c !== channel });
-        let tiles = this.state.tiles;
+        return (
+            <TextOutput
+                id={tile.id}
+                key={tile.id}
+                textChannels={channels}
+                removeChannel={this.removeChannel}
+                colorChanged={this.update_channel_color}
+                togglePauseChannel={this.togglePauseChannel}
+                tileIDs={this.state.textTiles.map( (tile) => {return tile.id})}
+            >
+            </TextOutput>
+        )
+    }
+    
+    removeChannel(channel) {
+       
+        let tiles = (channel.plottype === "text") ? this.state.textTiles : this.state.tiles;
         tiles.forEach( (t) => {
             if (channel.tile === t.id) {
                 t.numChannels = t.numChannels-1;
@@ -547,75 +369,45 @@ class Dashboard extends Component {
         let newTiles = tiles.filter( (t) => {return t.numChannels !== 0});
         
         
-       // console.log("new tiles: ", toRem);
-        this.setState( {
-            channels: channels,
-            tiles: newTiles
-        });
+        let channels = this.state.channels.filter( (c) => {return c !== channel });
         
-        let remChannel = true;
-        channels.forEach( (c) => {
-            if (c.id === channel.id) {
-                remChannel = false;
-            }
-        });
-        if (remChannel) {
-            this.socket.emit("remove_channel", channel.id );
+        if (channel.plottype === "text") {
+            this.setState( {
+                textChannels: channels,
+                textTiles: newTiles
+            });    
+        } else {
+            this.setState( {
+                channels: channels,
+                tiles: newTiles
+            });
+        }
+        let connection = channel.connection;
+        this.connectionMap[connection] = this.connectionMap[connection].filter( (c) => { return c.connection != connection})
+        
+        if (this.connectionMap[connection].length == 0) {
+            this.socket.emit("remove_connection", channel.connection );
         }
     
     }
     
-    removeChannel_old(tileId) {
-        let tiles = this.state.tiles;
-        
-        var toRem = -1;
-        let removedChannel = "";
-        for (var i=0; i<tiles.length; i++) {
-            if (tiles[i].id === tileId) {
-                removedChannel = tiles[i].channel;
-                toRem = i;
-                break;
-            }
-        }
-        
-        if (toRem > -1) {
-            
-            tiles.splice(toRem, 1);
-        }
-        
-       // console.log("new tiles: ", toRem);
-        this.setState( {
-            tiles: tiles
-        });
-        
-        this.socket.emit("remove_channel", removedChannel );
-    
-    }
-    
-    addChannel() {
+    addSimpleChannel(connection, plottype, color, tileId) {
         console.log("Add channel pressed");
-        let channel = document.getElementById("channel").value;
         
-        if (channel.indexOf(":") === -1) {
-            channel = "rsb:" + channel;
+        if (connection.indexOf(":") === -1) {
+            connection = "rsb:" + connection;
         }
-        let plottype = document.getElementById("plottype").value;
-        let color = document.getElementById("color").value;
-        let tileId = document.getElementById("tile").value;
         
-        const tiles = this.state.tiles;
-        const tileCounter = this.state.tileCounter;
-        //const channels = this.channels;
-        
-        const channels = this.state.channels;
+        const tiles = (plottype  === "text") ? this.state.textTiles : this.state.tiles;
+        const tileCounter = (plottype  === "text") ? this.state.textTileCounter : this.state.tileCounter;
+        const channels = (plottype  === "text") ? this.state.textChannels : this.state.channels;
         
         let newTiles, newTileCounter;
         if (tileId === "new") {
             tileId = tileCounter;
             newTiles = tiles.concat([{
                 id: tileCounter, 
-                numChannels: 1,
-                channel: channel }])
+                numChannels: 1}])
             newTileCounter = tileCounter+1;
         } else {
             newTiles = tiles;
@@ -627,30 +419,66 @@ class Dashboard extends Component {
             newTileCounter = tileCounter;
         }
         
-        let newChannels = channels.concat([{
-                    id: channel,
+        var key;
+        switch (plottype) {
+            case "line":
+                key = "y";
+                break;
+            case "bar":
+                key = "dist";
+                break;
+            case "text":
+                key = "txt";
+                break;
+        }
+        
+        var newChannel = {
+                    id: this.state.channelCounter, //plottype + "_" + channels.length,
+                    key: key,
+                    connection: connection,
                     plottype: plottype,
                     tile: Number(tileId),
                     color: color,
                     data: [],
                     mark: null,
-                    markSize: 5}]);
+                    markSize: 5}
                     
-        this.setState( {
-            tiles: newTiles,
-            tileCounter: newTileCounter,
-            channels: newChannels
-            });
-            
-        //this.channels = newChannels;
-            
-        this.socket.emit("add_channel", channel);
+        this.channelMap[newChannel.id] = newChannel;
+        if (this.connectionMap[connection]) {
+            this.connectionMap[connection].push(newChannel);
+        } else {
+            this.connectionMap[connection] = [newChannel];
+        }
         
+        let newChannels = channels.concat([newChannel]);
+                    
+        if (plottype  === "text") {
+            this.setState( {
+                textTiles: newTiles,
+                textTileCounter: newTileCounter,
+                textChannels: newChannels,
+                channelCounter: this.state.channelCounter + 1,
+                });
+        } else {
+            this.setState( {
+                tiles: newTiles,
+                tileCounter: newTileCounter,
+                channels: newChannels,
+                channelCounter: this.state.channelCounter + 1,
+                });
+        
+        }
+        this.socket.emit("add_connection", connection);
+        //TODO Trigger and handle incorrect connection specifications!
     }
   
     render() {
   
-        let tiles = this.state.tiles
+        let tiles = this.state.tiles;
+        let textTiles = this.state.textTiles;
+        let advancedChannels = this.connectionMap[this.probingConnection] ? this.connectionMap[this.probingConnection].slice() : []
+        
+        console.log("master render, advancedChannels: ", advancedChannels);
         return (
             <div>
                 <div className="header">
@@ -659,14 +487,24 @@ class Dashboard extends Component {
                     </div>
                     <div className="ctrl">
                         <ChannelCtrl 
-                            addChannel={this.addChannel} 
-                            tiles={this.state.tiles}
+                            addSimpleChannel={this.addSimpleChannel} 
+                            changePlottype={this.selectPlottype}
+                            probeConnection={this.probeConnection}
+                            tiles={this.state.textPlottype ? this.state.textTiles : this.state.tiles}
+                            probeMessage={this.state.probeMessage}
+                            advancedChannels={advancedChannels}          
+                            addNewChannel={this.addNewChannel}     
+                            updateChannel={this.updateChannel} 
                         />
                     </div>
                  </div>
                  <div className="tile-board">
                     {tiles.map(this.createTile)}
                  </div>
+                 <div className="TextTile-board">
+                    {textTiles.map(this.createTextTile)}
+                 </div>
+                 
                  
             </div>  
     );
