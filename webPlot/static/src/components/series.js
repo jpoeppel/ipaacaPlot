@@ -39,7 +39,7 @@ export default class Series extends AbstractSeries {
 
     constructor(props) {
         super(props);
-        
+        console.log("Series constructor");
         this.requiresSVG = this.requiresSVG.bind(this);
         this.isCanvas = this.isCanvas.bind(this);
     }
@@ -67,6 +67,7 @@ export default class Series extends AbstractSeries {
     
 
     render() {
+        console.log("Rendering series");
         let {data, plottype, mark, color, svg} = this.props;
         const props = this.props;
         if (!svg) {

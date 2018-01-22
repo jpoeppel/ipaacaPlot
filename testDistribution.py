@@ -39,6 +39,7 @@ try:
     
 #        data = {"channel": "test", "y": list(np.random.rand(1))}
         data = {"y": np.random.rand(1)[0]}
+        data["dist"] = list(np.random.rand(5))
 #        print("Sending data: ", data)
 #        informer.publishData(json.dumps(data))
         

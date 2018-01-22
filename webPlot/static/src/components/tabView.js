@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 
 import classNames from 'classnames';
 
@@ -20,7 +19,7 @@ export default class TabView extends PureComponent {
 
     render() {
     
-        const { children: groups, title } = this.props;
+        const { children: groups } = this.props;
         const { openedGroup } = this.state;
         
         

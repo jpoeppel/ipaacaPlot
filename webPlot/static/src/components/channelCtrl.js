@@ -16,13 +16,14 @@ export default class ChannelCtrl extends PureComponent {
         this.createSingleChannelSettings = this.createSingleChannelSettings.bind(this);
         
         this.activateChannel = this.activateChannel.bind(this);
+        this.removeChannel = this.removeChannel.bind(this);
     }
     
     activateChannel(e) {
-        console.log("pressed button for channel: ", e.target.id);
+        //console.log("pressed button for channel: ", e.target.id);
         
         let connection = document.getElementById("connection").value;
-        let channelId = e.target.id.split("_")[0];
+        let channelId = Number(e.target.id.split("_")[0]);
         
         let key = document.getElementById(channelId+"_key").value;
         let plottype = document.getElementById(channelId+"_plottype").value;
@@ -30,6 +31,14 @@ export default class ChannelCtrl extends PureComponent {
         let tileId = document.getElementById(channelId+"_tile").value;
         
         this.props.updateChannel(connection, channelId, key, plottype, color, tileId);
+    }
+    
+    removeChannel(e) {
+        //let connection = document.getElementById("connection").value;
+        let channelId = e.target.id.split("_")[0];
+        
+        this.props.removeChannel(channelId);
+    
     }
     
     
@@ -72,6 +81,9 @@ export default class ChannelCtrl extends PureComponent {
                 
                 <button id={channel.id + "_activateBtn"} onClick={this.activateChannel} >
                     Activate
+                </button>
+                <button id={channel.id + "_removeBtn"} onClick={this.removeChannel} >
+                    Remove
                 </button>
             </div>
         )    

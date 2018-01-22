@@ -5,13 +5,6 @@ import ChartControls from "./chartControls";
 import Text from "./textplot";
 
 export default class TextOutput extends PureComponent {
-
-    constructor(props) {
-        super(props);
-                    
-    }
-    
-    
     
     createTextChannels(channels) {
         return channels.map( (c) => {
@@ -25,10 +18,11 @@ export default class TextOutput extends PureComponent {
     }
     
     createChartCtrl(channels, tileIDs) {
-        let options = tileIDs.map( (tile) => {
+        /*let options = tileIDs.map( (tile) => {
                                     return <option value={tile}>{tile}</option>
                                 });
         options = options.concat(<option value="new">New</option>);
+        */
         return (
             <ChartControls title={"TextOutput settings"} group={"Text series"}>
                   <div name={"Text series"}>
@@ -46,7 +40,7 @@ export default class TextOutput extends PureComponent {
                             <button onClick={ () => {this.props.togglePauseChannel(c) } } >
                                {c.paused ? "Resume Channel" : "Pause Channel"}
                              </button>                            
-                             <button onClick={ () => {this.props.removeChannel(c) } } >
+                             <button onClick={ () => {this.props.removeChannel(c.id) } } >
                                 Remove Channel
                              </button>
                          </div> 

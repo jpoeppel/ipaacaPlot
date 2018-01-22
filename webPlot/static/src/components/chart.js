@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-import {XYPlot,FlexibleWidthXYPlot, XAxis, YAxis, Borders, Hint, AbstractSeries,
+import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
         LineSeries, LineSeriesCanvas, 
         VerticalBarSeries, VerticalBarSeriesCanvas, 
         CustomSVGSeries} from "react-vis"; // ./3rdParty/
@@ -10,7 +10,7 @@ import {XYPlot,FlexibleWidthXYPlot, XAxis, YAxis, Borders, Hint, AbstractSeries,
 import ChartControls from "./chartControls";
 import Text from "./textplot";
 
-export default class Chart extends Component {
+export default class Chart extends PureComponent {
 
     constructor(props) {
         super(props);
@@ -24,10 +24,11 @@ export default class Chart extends Component {
         this.onWheel = this.onWheel.bind(this);
     }
     
-
+/*
     componentWillReceiveProps(nextProps){
         console.log("new chart props: ", this.props == nextProps);
     }
+  */
     
     createTextChannels(channels) {
         return channels.map( (c) => {
@@ -40,9 +41,10 @@ export default class Chart extends Component {
     }
     
     createChannels(channels) {
-                
+        
         return channels.map( (c) => {
-            /*
+            
+            /*            
             return <Series  key={c.id}
                             plottype={c.plottype} 
                             data={c.data}
@@ -59,14 +61,14 @@ export default class Chart extends Component {
                     return [c.mark ? <CustomSVGSeries customComponent={c.mark} data={c.data} style={{stroke: 'red', fill: 'orange'}} /> : null,
                                 <Line data={c.data} stroke={c.color} />
                             ]
-                    break;
                 case "bar":
                     let Bar = this.state.svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
                     return <Bar data={c.data} color={c.color} />
-                    break;
                 default:
                     return "Invalid plottype";
             }
+            
+            
           
         });
     
@@ -79,11 +81,12 @@ export default class Chart extends Component {
                                 });
         options = options.concat(<option value="new">New</option>);
     
+    /*
         let markOptions = ["star", "square", "circle", "diamond", "none"].map( 
                             (option) => {
                                  return <option value={option}>{option}</option>   
                             });
-                            
+                   */         
                             
         return (
             <ChartControls title={"Chart settings"} group={"Series"}>
@@ -113,7 +116,7 @@ export default class Chart extends Component {
                             <button onClick={ () => {this.props.togglePauseChannel(c) } } >
                                {c.paused ? "Resume Channel" : "Pause Channel"}
                              </button>                            
-                             <button onClick={ () => {this.props.removeChannel(c) } } >
+                             <button onClick={ () => {this.props.removeChannel(c.id) } } >
                                 Remove Channel
                              </button>
                          </div> 
@@ -183,7 +186,7 @@ export default class Chart extends Component {
     };
     
     render() {
-        let {id, channels, tileIDs, width, height} = this.props;
+        let {id, channels, tileIDs, height} = this.props;
         let { xRange } = this.state;
         let min=0, max = 0;
         let barPresent = false;
@@ -192,6 +195,7 @@ export default class Chart extends Component {
      //   if (this.state.fixed_x) {
             
             channels.forEach( (c) => {
+                //console.log("channel: ", c)
                 if (c.data.length > 0) {
                     min = Math.min(min, c.data[0].x);
                     max = Math.max(max, c.data[c.data.length-1].x)
@@ -239,6 +243,7 @@ export default class Chart extends Component {
                     <XAxis tickTotal={this.state.xRange ? numTicks : null} />
                     <YAxis />
                 </FlexibleWidthXYPlot>
+                
                 <div className="textPlots">
                     {this.createTextChannels(textChannels)}
                 </div>
@@ -252,7 +257,6 @@ export default class Chart extends Component {
 }
 
 Chart.propTypes = {
-    width:      PropTypes.number,
     height:     PropTypes.number,
     tileIDs:    PropTypes.array
 }
@@ -260,6 +264,5 @@ Chart.propTypes = {
 Chart.defaultProps = {
     channel:    "",
     color: "black",
-    width: 500,
     height: 300
 }

@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import PropTypes from 'prop-types';
+//import PropTypes from 'prop-types';
 import io from "socket.io-client";
 
 
-
-import CollapsibleCard from "./components/collapsibleCard";
 import Chart from "./components/chart";
 import TextOutput from "./components/textOutput";
 
@@ -15,12 +13,12 @@ import ChannelCtrl from "./components/channelCtrl";
 
 import './index.css';
 
-
-
-
-
-
-
+/*
+if (process.env.NODE_ENV !== 'production') {
+  const {whyDidYouUpdate} = require('why-did-you-update')
+  whyDidYouUpdate(React)
+}
+*/
 class Dashboard extends Component {
 
     constructor(props) {
@@ -66,7 +64,7 @@ class Dashboard extends Component {
         var channel;
         for (var i=0; i < possibleChannels.length; i++) {
             let tmpChannel = possibleChannels[i];
-            if (tmpChannel.id == channelId){
+            if (tmpChannel.id === channelId){
                 channel = tmpChannel;
                 break;
             }
@@ -92,6 +90,7 @@ class Dashboard extends Component {
         channel.key = key;
         channel.plottype = plottype;
         channel.color = color;
+        channel.paused = false;
         
         //Update tiles
         const tiles = (plottype  === "text") ? this.state.textTiles : this.state.tiles;
@@ -120,7 +119,7 @@ class Dashboard extends Component {
         
         let newChannels = channels.concat([channel]);
         
-        console.log("channels after activate: ", newChannels);
+        //console.log("channels after activate: ", newChannels);
                     
         if (plottype  === "text") {
             this.setState( {
@@ -141,7 +140,7 @@ class Dashboard extends Component {
     
     addNewChannel(connection) {
         this.socket.emit("add_connection", connection);
-        console.log("adding new channel for connection: ", connection);
+        //console.log("adding new channel for connection: ", connection);
         let emptyChannel = {
                 id: this.state.channelCounter,
                 key: "",
@@ -151,16 +150,17 @@ class Dashboard extends Component {
                 color: "",
                 data: [],
                 mark: null,
-                markSize: 5
+                markSize: 5,
+                paused: true
         }
         
         if (this.connectionMap[connection]) {
-        console.log("adding empty channel");
             this.connectionMap[connection].push(emptyChannel);
         } else {
-        console.log("creating new list");
             this.connectionMap[connection] = [emptyChannel];
         }
+        
+        this.channelMap[emptyChannel.id] = emptyChannel;
         
         
         //this.forceUpdate();
@@ -170,7 +170,7 @@ class Dashboard extends Component {
     };
     
     probeConnection(connection) {
-        console.log("Probing connection: ", connection);
+        //console.log("Probing connection: ", connection);
         
         this.probingConnection = connection;
         
@@ -276,10 +276,10 @@ class Dashboard extends Component {
     }
     
     update_data(msg) {
-        console.log("received data: ", msg);
+        //console.log("received data: ", msg);
         let connection = msg.connection;
         
-        if (connection == this.probingConnection) { 
+        if (connection === this.probingConnection) { 
             //We only want one message, not constantly updating ones
             if (!this.state.probeMessage) {
                 this.setState({
@@ -290,17 +290,19 @@ class Dashboard extends Component {
         
         let possibleChannels = this.connectionMap[connection] ? this.connectionMap[connection] :[]; 
         
-        console.log("possible channels for connection: ", possibleChannels)
+        //console.log("possible channels for connection: ", possibleChannels)
         //Feed data to channels from this connection
         for (var i=0; i < possibleChannels.length; i++) {
         
             let channel = possibleChannels[i];
             let payload = msg[channel.key];
-            console.log("channel: ", channel);
+            //console.log("channel: ", channel);
             if (channel && !channel.paused) {
                 switch(channel.plottype) {
                     case "line":
-                        channel.data.push({"x":channel.data.length, "y": payload, "size":channel.markSize, "style":{"fill":channel.color}});
+                        channel.data.push({"x":channel.data.length, "y": payload, 
+                                    "size":channel.markSize, 
+                                    "style":{"fill":channel.color}});
                         break;
                     case "bar":
                         channel.data = payload.map( (v, i) => { return {"x":i, "y":v}});
@@ -311,13 +313,15 @@ class Dashboard extends Component {
                     default:
                         return "Invalid plottype"
                 }
-                console.log("channel id: ", channel.id);
-                console.log("data after adding: ", channel.data);
+                //console.log("channel id: ", channel.id);
+                //console.log("data after adding: ", channel.data);
             }
         } 
         
-        //this.forceUpdate();
-        this.setState(this.state);
+        this.forceUpdate();
+        //this.setState(this.state);
+        
+        //Notify tiles
         
     }
     
@@ -358,7 +362,14 @@ class Dashboard extends Component {
         )
     }
     
-    removeChannel(channel) {
+    removeChannel(channelId) {
+    
+        let channel = this.channelMap[channelId];
+        
+        //Make sure channel already exists.
+        if (!channel) {
+            return;
+        }
        
         let tiles = (channel.plottype === "text") ? this.state.textTiles : this.state.tiles;
         tiles.forEach( (t) => {
@@ -369,7 +380,7 @@ class Dashboard extends Component {
         let newTiles = tiles.filter( (t) => {return t.numChannels !== 0});
         
         
-        let channels = this.state.channels.filter( (c) => {return c !== channel });
+        let channels = this.state.channels.filter( (c) => {return c.id !== channel.id });
         
         if (channel.plottype === "text") {
             this.setState( {
@@ -383,16 +394,16 @@ class Dashboard extends Component {
             });
         }
         let connection = channel.connection;
-        this.connectionMap[connection] = this.connectionMap[connection].filter( (c) => { return c.connection != connection})
+        this.connectionMap[connection] = this.connectionMap[connection].filter( (c) => { return c.id !== channel.id})
         
-        if (this.connectionMap[connection].length == 0) {
+        if (this.connectionMap[connection].length === 0) {
             this.socket.emit("remove_connection", channel.connection );
         }
     
     }
     
     addSimpleChannel(connection, plottype, color, tileId) {
-        console.log("Add channel pressed");
+        //console.log("Add channel pressed");
         
         if (connection.indexOf(":") === -1) {
             connection = "rsb:" + connection;
@@ -430,6 +441,8 @@ class Dashboard extends Component {
             case "text":
                 key = "txt";
                 break;
+            default:
+                console.log("Invalid plottype: ", plottype);
         }
         
         var newChannel = {
@@ -478,7 +491,7 @@ class Dashboard extends Component {
         let textTiles = this.state.textTiles;
         let advancedChannels = this.connectionMap[this.probingConnection] ? this.connectionMap[this.probingConnection].slice() : []
         
-        console.log("master render, advancedChannels: ", advancedChannels);
+        //console.log("master render, advancedChannels: ", advancedChannels);
         return (
             <div>
                 <div className="header">
@@ -495,6 +508,7 @@ class Dashboard extends Component {
                             advancedChannels={advancedChannels}          
                             addNewChannel={this.addNewChannel}     
                             updateChannel={this.updateChannel} 
+                            removeChannel={this.removeChannel}
                         />
                     </div>
                  </div>
