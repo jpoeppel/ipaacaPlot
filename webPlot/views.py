@@ -6,13 +6,11 @@ Created on Thu May 18 14:11:56 2017
 @author: jpoeppel
 """
 
-from flask import render_template, send_from_directory
+from flask import render_template
 
 from . import app
 from . import socketio
 from . import io
-
-import os
 
 try:
     import SocketServer as socketserver
@@ -45,10 +43,13 @@ class MyTCPStreamHandler(socketserver.StreamRequestHandler):
         except Exception as e:
             app.logger.error(str(e))
         app.logger.info("Received {} from {}".format(chunk, self.client_address))
-        js = json.loads(chunk)
-        js["connection"] = "tcp:"+str(self.server.server_address[1])
-        socketio.emit("update_data", js)
-        app.logger.info("emitted response")
+        try:
+            js = json.loads(chunk)
+            js["connection"] = "tcp:"+str(self.server.server_address[1])
+            socketio.emit("update_data", js)
+            app.logger.info("emitted response")
+        except json.decoder.JSONDecodeError:
+            app.logger.debug("decoding error")
 
 app.connectionManager = io.ConnectionManager()
 

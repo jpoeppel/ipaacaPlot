@@ -276,7 +276,7 @@ class Dashboard extends Component {
     }
     
     update_data(msg) {
-        //console.log("received data: ", msg);
+        console.log("received data: ", msg);
         let connection = msg.connection;
         
         if (connection === this.probingConnection) { 

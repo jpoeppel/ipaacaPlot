@@ -7,17 +7,19 @@ Abstracts multiple connection possibilities away.
 
 from . import app
 
-try:
-    import ipaaca
-    ipaacaAvailable = True
-except ImportError:
-    ipaacaAvailable = False
+
+#TODO Figure out, why import freezes my machine before enabling this again!
+#try:
+#    import ipaaca
+#    ipaacaAvailable = True
+#except (ImportError, SyntaxError):
+ipaacaAvailable = False
     
-try:
-    import rsb
-    rsbAvailable = True
-except ImportError:
-    rsbAvailable = False
+#try:
+#    import rsb
+#    rsbAvailable = True
+#except (ImportError, SyntaxError):
+rsbAvailable = False
 
 
 import socket
