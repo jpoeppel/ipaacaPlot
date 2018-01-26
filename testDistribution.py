@@ -43,7 +43,6 @@ try:
 #        print("Sending data: ", data)
 #        informer.publishData(json.dumps(data))
         
-#        sock.connect(("localhost", 8091))
         try:
             port = 9080
             client("localhost", port, json.dumps(data) + "\n")

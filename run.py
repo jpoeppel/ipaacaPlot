@@ -1,6 +1,12 @@
-import sys
+#import sys
 
 #sys.path.append("/homes/jpoeppel/repo/ipaaca/ipaacalib/python/build")
+
+try:
+    import eventlet
+    eventlet.monkey_patch()
+except ImportError:
+    pass
 
 from webPlot import app
 from webPlot import socketio
