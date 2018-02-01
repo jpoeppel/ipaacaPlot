@@ -12,6 +12,10 @@
     width: 800px;
 }
 
+.draggable {
+    position: absolute;
+    cursor: move;
+}
 
 .text-tile {
     display: flex;

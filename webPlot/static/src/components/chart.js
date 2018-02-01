@@ -1,4 +1,6 @@
 import React, { PureComponent } from 'react';
+import ReactDOM from 'react-dom';
+
 import PropTypes from 'prop-types';
 
 import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
@@ -10,6 +12,8 @@ import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
 import ChartControls from "./chartControls";
 import Text from "./textplot";
 
+import classNames from 'classnames';
+
 export default class Chart extends PureComponent {
 
     constructor(props) {
@@ -18,12 +22,71 @@ export default class Chart extends PureComponent {
                     svg: true,
                     fixed_x: false,
                     xRange: null,
-                    yRange: null
+                    yRange: null,
+                    absPos: false,
+                    pos: {x:0, y:0},
+                    rel: null,
+                    dragging: false
                     };
                     
         this.onWheel = this.onWheel.bind(this);
+        
+        this.togglePos = this.togglePos.bind(this);
+        
+        this.onMouseDown = this.onMouseDown.bind(this);
+        this.onMouseUp = this.onMouseUp.bind(this);
+        this.onMouseMove = this.onMouseMove.bind(this);
     }
     
+    
+    componentDidMount() {
+        var pos = ReactDOM.findDOMNode(this).getBoundingClientRect();
+        this.setState({pos: {x: pos.left, y: pos.top}})
+    }
+    
+    
+    // calculate relative position to the mouse and set dragging=true
+    onMouseDown(e) {
+        // only left mouse button
+        if (e.button !== 0) return
+        var pos = ReactDOM.findDOMNode(this).getBoundingClientRect()
+        this.setState({
+          dragging: true,
+          rel: {
+            x: e.pageX - (pos.left + window.scrollX),
+            y: e.pageY - (pos.top + window.scrollY)
+          }
+        })
+        e.stopPropagation()
+        e.preventDefault()
+    }
+    
+    
+    onMouseUp(e) {
+        this.setState({dragging: false})
+        e.stopPropagation()
+        e.preventDefault()
+    }
+    
+    
+    onMouseMove(e) {
+        if (!this.state.dragging) return
+        this.setState({
+          pos: {
+            x: e.pageX - this.state.rel.x,
+            y: e.pageY - this.state.rel.y
+          }
+        })
+        e.stopPropagation()
+        e.preventDefault()
+    }
+    
+    togglePos(e) {
+        this.setState({
+            absPos: !this.state.absPos
+        })
+    
+    }
 /*
     componentWillReceiveProps(nextProps){
         console.log("new chart props: ", this.props == nextProps);
@@ -171,6 +234,9 @@ export default class Chart extends PureComponent {
                             {"Clear"}
                       </button>
                       </div>
+                      <div>
+                          <input type="checkbox" name="absPos" value="test" checked={this.state.absPos} onClick={this.togglePos}/> Use absolute position
+                      </div>
                   </div>
               </ChartControls>
         
@@ -220,10 +286,14 @@ export default class Chart extends PureComponent {
         
         max = Math.max(10, max);
             
-        
+        let className = classNames("tile", {"draggable": this.state.absPos, "fixed": !this.state.absPos})
+        let style = {left: this.state.pos.x, top: this.state.pos.y}
      //   }
         return (
-            <div className="tile">
+            <div className={className} style={style} 
+                onMouseDown={this.onMouseDown}
+                onMouseUp={this.onMouseUp}
+                onMouseMove={this.onMouseMove}>
                 Chart number: {id}
                 <FlexibleWidthXYPlot height={height}
                         dontCheckIfEmpty={false}
