@@ -8,18 +8,17 @@ Abstracts multiple connection possibilities away.
 from . import app
 
 
-#TODO Figure out, why import freezes my machine before enabling this again!
-#try:
-#    import ipaaca
-#    ipaacaAvailable = True
-#except (ImportError, SyntaxError):
-ipaacaAvailable = False
+try:
+    import ipaaca
+    ipaacaAvailable = True
+except (ImportError, SyntaxError):
+    ipaacaAvailable = False
     
-#try:
-#    import rsb
-#    rsbAvailable = True
-#except (ImportError, SyntaxError):
-rsbAvailable = False
+try:
+    import rsb
+    rsbAvailable = True
+except (ImportError, SyntaxError):
+    rsbAvailable = False
 
 
 import socket
@@ -107,14 +106,17 @@ class ConnectionManager(object):
         if channelID in self.connections:
             #Connection already established, do nothing
             return
-        if protocol == "rsb": 
+        if protocol == "rsb" and rsbAvailable: 
             self.connections[channelID] = RSBConnection(callback, "/" + channel)
-        elif protocol == "ipaaca":
+        elif protocol == "ipaaca" and ipaacaAvailable:
             self.connections[channelID] = IpaacaConnection(callback, channel)
         elif protocol == "tcp":
             #Use port as channel in the tcp case for now
             #The callback needs to be a HandlerClass!
             self.connections[channelID] = SocketConnection(callback, int(channel))
+        else:
+            app.logger.error("Could not add connection for protocol {}. Is this \
+                             protocol available?".format(protocol))
             
     def remove_connection(self, channel):
         app.logger.info("removing connection for channel: {}".format(channel))

@@ -7,11 +7,13 @@ Created on Sat Jun 24 00:45:04 2017
 
 import numpy as np
 import time
-import rsb
+#import rsb
 
 import socket
 
 import json
+
+from builtins import bytes
 
 #informer = rsb.createInformer("/test")
 
@@ -27,7 +29,7 @@ import json
 def client(ip, port, message):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((ip, port))
-    sock.sendall(message)
+    sock.sendall(bytes(message + "\n", "utf-8"))
     sock.close()
 
 #sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,13 +47,13 @@ try:
         
         try:
             port = 9080
-            client("localhost", port, json.dumps(data) + "\n")
+            client("localhost", port, json.dumps(data))
         except:
             pass
         
         try:
             port = 9081
-            client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}) + "\n")
+            client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}))
         except:
             pass
 #        sock.close()
