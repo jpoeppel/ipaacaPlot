@@ -17,7 +17,7 @@ try:
 except:
     import socketserver 
 
-
+import atexit
 import json
 
 def update_data(iu, event_type, local):
@@ -34,6 +34,10 @@ def update_data_rsb(event):
     js["connection"] = "rsb:"+event.scope.toString().strip("/")
     socketio.emit("update_data", js) 
 
+
+def handle_zmq(msg):
+    app.logger.info("emitting to socketio: {}".format(msg))
+    socketio.emit("update_data", msg)
 
 class MyTCPStreamHandler(socketserver.StreamRequestHandler):
     
@@ -52,6 +56,9 @@ class MyTCPStreamHandler(socketserver.StreamRequestHandler):
             app.logger.debug("decoding error")
 
 app.connectionManager = io.ConnectionManager()
+
+app.connectionManager.add_connection("5057", handle_zmq, "zmq")
+app.logger.info("Finished setting up zmq")
 
 @app.route('/') 
 @app.route('/index')
