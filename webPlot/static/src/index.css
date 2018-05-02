@@ -24,6 +24,11 @@
     border: 1px solid;
 }
 
+.webblocks-container {
+    /* display: flex; */
+    /* flex-direction: column; */
+}
+
 .channelList {
     display: flex;
     flex-direction: column;
