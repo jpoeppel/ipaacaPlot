@@ -13,6 +13,12 @@ class Condition extends Component {
     }
 
 
+    componentDidMount() {
+        if (this.props.count > 0) {
+            this.option = 1;
+        }
+    }
+
     render() {
 
         const {name, count} = this.props;
@@ -58,6 +64,8 @@ export default class ConditionSelection extends Component {
         for (var key in dict) {
             keys = keys.concat([key]);
         }
+
+        keys = keys.sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
 
         return keys.map(key => {
             return <Condition onSelect={this.props.onSelect} name={key} count={dict[key]} />

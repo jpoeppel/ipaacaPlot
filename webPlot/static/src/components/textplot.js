@@ -13,7 +13,9 @@ export default class Text extends PureComponent {
         
         return (
                 <div style={style}>
-                    {data}
+                    <pre>
+                        {JSON.stringify(data)}
+                    </pre>
                 </div>
                )
     }

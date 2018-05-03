@@ -21,14 +21,16 @@ except (ImportError, SyntaxError):
     rsbAvailable = False
 
 try:
-    import zmq
+    import eventlet.green.zmq as zmq
     zmqAvailable = True
 except (ImportError):
     zmqAvailable = False
 
 
-import socket
-import threading
+# import socket
+from eventlet.green import socket
+# import threading
+from eventlet.green import threading
 from . import socketio
 
 
@@ -102,34 +104,46 @@ class RSBConnection(Connection):
         self.listener.deactivate()
         del self.listener
 
-class ZMQReply(object):
+class ZMQRouter(object):
     def __init__(self, handler, port, protocol="tcp"):
         # serverName = "localhost"
         serverName = "127.0.0.1"
+
+        self.clients = []
+
         self.port = port
         app.logger.info("Setting up ZMQ server")
         self.handler = handler
         self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REP)
+        self.socket = self.context.socket(zmq.ROUTER)
         self.socket.bind("{}://{}:{}".format(protocol, serverName, port))
         self.server_thread = threading.Thread(target=self.serve_forever)
         self.server_thread.daemon = True
         self.running = True
-        app.logger.info("before thread start")
         self.server_thread.start()
-        app.logger.info("after thread start")
+
+        self.ident = None
 
 
     def serve_forever(self):
         while self.running:
             socketio.sleep(0.001)
-            message = self.socket.recv()
-            app.logger.info("zmqserver received: {}".format(message))
-            self.socket.send_json("acknowledged")
-            message = json.loads(message)
+            ident, msg = self.socket.recv_multipart()
+            self.clients.append(ident)
+            self.ident = ident
+
+
+            # message = self.socket.recv_json()
+            # self.socket.send_json("acknowledged")
+            message = json.loads(msg.decode('string-escape').strip('"'))
+            app.logger.info("received data: {}, loaded type: {}".format(message, type(message)))
             message["connection"] = "zmq:{}".format(self.port)
             self.handler(message)
 
+
+    def send(self, msg):
+        app.logger.info("sending message {} to {}".format(msg, self.ident))
+        self.socket.send_multipart([self.ident, msg])
 
     def __del__(self):
         self.running = False
@@ -159,7 +173,7 @@ class ConnectionManager(object):
             #The callback needs to be a HandlerClass!
             self.connections[channelID] = SocketConnection(callback, int(channel))
         elif protocol == "zmq":
-            self.connections[channelID] = ZMQReply(callback, int(channel))
+            self.connections[channelID] = ZMQRouter(callback, int(channel))
         else:
             app.logger.error("Could not add connection for protocol {}. Is this \
                              protocol available?".format(protocol))
@@ -175,6 +189,12 @@ class ConnectionManager(object):
         except KeyError:
             app.logger.debug("Key error when removing channel: {}".format(channel))
             pass
+
+    def notify(self, channel, msg):
+        if channel in self.connections:
+            self.connections[channel].send(msg)
+        else:
+            app.logger.debug("Cannot notify channel {}. Channel unknown".format(channel))
         
     def clear(self):
         for con in list(self.connections.keys()):

@@ -55,9 +55,11 @@ class MyTCPStreamHandler(socketserver.StreamRequestHandler):
         except json.decoder.JSONDecodeError:
             app.logger.debug("decoding error")
 
-app.connectionManager = io.ConnectionManager()
+app.connection_manager = io.ConnectionManager()
 
-app.connectionManager.add_connection("5057", handle_zmq, "zmq")
+app.connection_manager.add_connection("5057", handle_zmq, "zmq")
+
+app.last_condition = None
 app.logger.info("Finished setting up zmq")
 
 @app.route('/') 
@@ -79,11 +81,11 @@ def add_connection(connection):
 #        connection = connection
     app.logger.info("adding channel: {}".format(connection))
     if prot == "rsb":
-        app.connectionManager.add_connection(connection, update_data_rsb, prot)
+        app.connection_manager.add_connection(connection, update_data_rsb, prot)
     elif prot == "ipaaca":
-        app.connectionManager.add_connection(connection, update_data, prot)
+        app.connection_manager.add_connection(connection, update_data, prot)
     elif prot == "tcp":
-        app.connectionManager.add_connection(connection, MyTCPStreamHandler, prot)
+        app.connection_manager.add_connection(connection, MyTCPStreamHandler, prot)
     else:
         app.logger.debug("Ignoring invalid protocol ({})".format(prot))
     
@@ -91,9 +93,21 @@ def add_connection(connection):
 @socketio.on("remove_connection")
 def remove_connection(connection):
     app.logger.info("removing connection: {}".format(connection))
-    app.connectionManager.remove_connection(connection)
+    app.connection_manager.remove_connection(connection)
     
 @socketio.on('connect')
 def connect(): 
     app.logger.info("client connected")
+
+    modelstring = "zmq:5057"
+    if app.connection_manager.connections[modelstring].ident:
+        app.connection_manager.notify(modelstring, json.dumps({"conditionRequest": ""}))
     return 
+
+
+@socketio.on("select_condition")
+def select_condition(condition, runNr, condition_src):
+    app.logger.info("selected condition {} run {}, src: {}".format(condition, runNr, condition_src))
+
+    app.last_condition=condition
+    app.connection_manager.notify(condition_src, json.dumps({"selection": {"condition": condition, "runNr": runNr}}))
