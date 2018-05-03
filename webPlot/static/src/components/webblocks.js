@@ -98,7 +98,14 @@ export default class Webblocks extends Component {
                     {this.state.conditions ? <ConditionSelection onSelect={this.onConditionSelect} conditions={this.state.conditions}/>: ""}
                 </Element>
                 <Element>
-                    {map ? <CanvasComponent conditionName={this.conditionName} bgname={"bg"} fgname={"fg"} width={600} height={400} map={map} pos={agentPositions[stepNr]}/> : ""}
+                    {map ? <CanvasComponent conditionName={this.conditionName} 
+                                            bgname={"bg"} 
+                                            fgname={"fg"} 
+                                            width={600} 
+                                            height={400} 
+                                            map={map} 
+                                            pos={agentPositions[stepNr]}
+                                            beliefs={samples[stepNr][1]}/> : ""}
                 </Element>
                 <Element>
                     {agentPositions ? <div>

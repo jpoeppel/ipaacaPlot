@@ -7,12 +7,14 @@ class CanvasComponent extends Component {
         this.state = {
           showTargets: false,
           showTrueColor: false,
-          showTrueTarget: false
+          showTrueTarget: false,
+          showBeliefSymbols: false
         }
 
         this.onChangeShowTargets = this.onChangeShowTargets.bind(this);
-        this.onChangeshowTrueColor = this.onChangeshowTrueColor.bind(this);
-        this.onChangeshowTrueTarget = this.onChangeshowTrueTarget.bind(this);
+        this.onChangeShowTrueColor = this.onChangeShowTrueColor.bind(this);
+        this.onChangeShowTrueTarget = this.onChangeShowTrueTarget.bind(this);
+        this.onChangeShowBeliefSymbols = this.onChangeShowBeliefSymbols.bind(this);
     }
 
     componentDidMount() {
@@ -44,23 +46,37 @@ class CanvasComponent extends Component {
         let renderTile = this.renderTile;
 
         const showTrueTarget = this.state.showTrueTarget;
+        const showBeliefSymbols = this.state.showBeliefSymbols;
         const goalPos = this.props.map.goalPos;
+        const targets = this.props.map.targets;
+        const beliefs = this.props.beliefs.goal;
         console.log("goalpos: ", goalPos)
         map.forEach(function(row,i, arr) {
             row.forEach(function(tile, j, row) { 
                 // if (tile.color != "") {
+                    tile = Object.assign({}, tile);
                     if (showTrueTarget && i === goalPos[0] && j === goalPos[1]) {
-                        tile = Object.assign({}, tile)
+                        
                         tile.color = "green";
                         tile.symbol = "T";
                     }   
+
+                    if (showBeliefSymbols) {
+                        for (var ti=0; ti<targets.length; ti++) {
+                            let pos = targets[ti].key;
+                            if (i == pos[0] && j == pos[1]) {
+                                tile.symbol = beliefs[ti];
+                            }
+
+                        }
+                    }
                     renderTile(context, tile, tileSize, j, i);
                 // }
             })
         })
 
         if (this.state.showTargets) {
-            this.props.map.targets.forEach( tile => {
+            targets.forEach( tile => {
                 let pos = tile.key;
                 let tileContent = Object.assign({}, tile.val);
                 if (!this.state.showTrueColor) {
@@ -74,9 +90,8 @@ class CanvasComponent extends Component {
             })
         }
 
-        if (this.state.showTrueTarget) {
 
-        }
+
 
         this.tileSize = tileSize;
     }
@@ -142,15 +157,21 @@ class CanvasComponent extends Component {
         })
     }
 
-    onChangeshowTrueColor() {
+    onChangeShowTrueColor() {
         this.setState({
             showTrueColor: !this.state.showTrueColor
         })
     }
 
-    onChangeshowTrueTarget() {
+    onChangeShowTrueTarget() {
         this.setState({
             showTrueTarget: !this.state.showTrueTarget
+        })
+    }
+
+    onChangeShowBeliefSymbols() {
+        this.setState({
+            showBeliefSymbols: !this.state.showBeliefSymbols
         })
     }
 
@@ -166,11 +187,15 @@ class CanvasComponent extends Component {
                 </div>
                 <div>
                     Show True Color:
-                    <input type="checkbox" value={this.state.showTrueColor} onChange={this.onChangeshowTrueColor} />
+                    <input type="checkbox" value={this.state.showTrueColor} onChange={this.onChangeShowTrueColor} />
                 </div>
                 <div>
                     Show True Target:
-                    <input type="checkbox" value={this.state.showTrueTarget} onChange={this.onChangeshowTrueTarget} />
+                    <input type="checkbox" value={this.state.showTrueTarget} onChange={this.onChangeShowTrueTarget} />
+                </div>
+                <div>
+                    Show Belief Symbols:
+                    <input type="checkbox" value={this.state.showBeliefSymbols} onChange={this.onChangeShowBeliefSymbols} />
                 </div>
                 {/* <canvas className={"agentcanvas canvas"} ref={fgname} width={width} height={height} /> */}
             </div>
