@@ -33,7 +33,7 @@ class Condition extends Component {
         }
 
         return (
-            <li>
+            <li><span>
                 <span name="conditionName">{name}</span>
                 <span align="right">
                     <select id={"visSelect_"+name} onChange={this.optionChanged}>
@@ -42,6 +42,7 @@ class Condition extends Component {
                 </span>
                 <span> 
                     <input id={"btn"+name} type="button" value="Visualize" onClick={() => this.props.onSelect(name, this.option)} /> 
+                </span>
                 </span>
             </li>
 
@@ -68,7 +69,7 @@ export default class ConditionSelection extends Component {
         keys = keys.sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
 
         return keys.map(key => {
-            return <Condition onSelect={this.props.onSelect} name={key} count={dict[key]} />
+            return <Condition key={key} onSelect={this.props.onSelect} name={key} count={dict[key]} />
         });
     }
 
@@ -77,7 +78,9 @@ export default class ConditionSelection extends Component {
 
         return (
             <div className="condition-list">
+                <ul>
                     {this.create_list(conditions)}
+                </ul>
             </div>
         )
     }

@@ -11,6 +11,12 @@ import Text from "./textplot.js"
 
 import map from "../map.js";
 
+
+// import { Resizable, ResizableBox } from 'react-resizable';
+
+import { Responsive as ResponsiveGridLayout } from 'react-grid-layout';
+import GridLayout from 'react-grid-layout';
+
 export default class Webblocks extends Component {
 
     constructor(props) {
@@ -25,11 +31,19 @@ export default class Webblocks extends Component {
         this.update_data = this.update_data.bind(this);
         this.reduceStepNr = this.reduceStepNr.bind(this);
         this.increaseStepNr = this.increaseStepNr.bind(this);
+        this.replay = this.replay.bind(this);
 
-        this.conditionSrc = "zmq:5555";
-        this.conditions = {"test1": 2, "test2": 3};
+        this.onLayoutChange = this.onLayoutChange.bind(this);
 
+
+        this.curLayout = [
+            {i: "sel", x:0, y:0, w: 5, h: 5},
+            {i: "grid", x:0, y:3, w: 3, h: 10},
+            {i: "slider", x:3, y:4, w: 2, h: 2},
+            {i: "text", x:3, y:3, w: 2, h: 1},
+        ];
     }
+
     componentDidMount() {
         this.socket = io.connect("http://localhost:5000", {transport:["websocket"]});
         
@@ -57,6 +71,19 @@ export default class Webblocks extends Component {
                 samples: data.runData.sampleList
             })
         }
+
+        if (data.position_update) {
+            let newPos = data.position_update.pos;
+            let idx = data.position_update.idx;
+
+            let newPositions = this.state.agentPositions.slice();
+            newPositions[idx] = newPos;
+
+            this.setState({
+                agentPositions: newPositions,
+                stepNr: idx
+            })
+        }
     }
 
     onSliderChange(value) {
@@ -69,7 +96,8 @@ export default class Webblocks extends Component {
         console.log("Selected: ", condition, runNr);
         let conditionSrc = this.conditionSrc;
         this.conditionName = condition;
-        this.socket.emit("select_condition", condition, runNr, conditionSrc)
+        this.selectedConditionRun = runNr;
+        this.socket.emit("message", conditionSrc, JSON.stringify({"selection": {"condition": condition, "runNr": runNr}}))
     }
 
     reduceStepNr(){
@@ -84,20 +112,42 @@ export default class Webblocks extends Component {
         })
     }
 
+    replay() {
+        // this.socket.emit("replay_condition", this.conditionName, this.selectedConditionRun);
+        this.socket.emit("message", this.conditionSrc, 
+                            JSON.stringify({"replay": {"condition": this.conditionName, 
+                            "runNr": this.selectedConditionRun, 
+                            "startStep": 0, //this.state.stepNr
+                            "showVision": true,
+                            "speedup": 2}}));
+    }
+
+    // pause() {
+    //     this.socket.emit("message", conditionSrc, JSON.stringify({"pause": ""}));
+    // }
+
+
+    onLayoutChange(newLayout) {
+        // TODO Allow saving the current layout
+        this.curLayout = newLayout;
+    }
+
     render() {
 
         let {stepNr, map, agentPositions, samples} = this.state;
-        const agentPos = [[3,3], [5,5], [3,10], [7,2], [4,8]];
-
 
 
         return(
-            <div className="webblocks-container">
-                <Element>
+            // <div className="webblocks-container">
+                <GridLayout className="layout" layout={this.curLayout} cols={5} 
+                            rowHeight={50} width={1400} 
+                            draggableHandle=".element_handle"
+                            onLayoutChange={this.onLayoutChange}>
+                <Element key="sel" id="sel">
                     {/* All the finished conditions */}
                     {this.state.conditions ? <ConditionSelection onSelect={this.onConditionSelect} conditions={this.state.conditions}/>: ""}
                 </Element>
-                <Element>
+                 <Element key="grid" id="grid">
                     {map ? <CanvasComponent conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
@@ -107,17 +157,19 @@ export default class Webblocks extends Component {
                                             pos={agentPositions[stepNr]}
                                             beliefs={samples[stepNr][1]}/> : ""}
                 </Element>
-                <Element>
+                <Element key="slider" id="slider">
                     {agentPositions ? <div>
                                         <button onClick={this.reduceStepNr} >{"<"}</button>
                                         <button onClick={this.increaseStepNr} >{">"}</button>
+                                        <button onClick={this.replay} >Replay</button>
                                         <CustomSlider value={stepNr} min={0} max={agentPositions.length-1} onSliderChange={this.onSliderChange}/>
                                     </div>: ""}
                 </Element>
-                <Element>
+                <Element key="text" id="text">
                     {samples ? <Text data={samples[stepNr]}/> : ""}
                 </Element>
-            </div>
+                </GridLayout>
+            // </div>
         )
 
     }

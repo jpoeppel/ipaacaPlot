@@ -111,3 +111,9 @@ def select_condition(condition, runNr, condition_src):
 
     app.last_condition=condition
     app.connection_manager.notify(condition_src, json.dumps({"selection": {"condition": condition, "runNr": runNr}}))
+
+
+@socketio.on("message")
+def message(address, msg):
+    msgObj = json.loads(msg)
+    app.connection_manager.notify(address, json.dumps(msgObj))
