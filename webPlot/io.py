@@ -135,7 +135,8 @@ class ZMQRouter(object):
 
             # message = self.socket.recv_json()
             # self.socket.send_json("acknowledged")
-            message = json.loads(msg.decode('string-escape').strip('"'))
+            message = json.loads(msg.decode('unicode_escape').strip('"'))
+            # message = json.loads(msg.strip('"'))
             app.logger.info("received data: {}, loaded type: {}".format(message, type(message)))
             message["connection"] = "zmq:{}".format(self.port)
             self.handler(message)
@@ -143,7 +144,7 @@ class ZMQRouter(object):
 
     def send(self, msg):
         app.logger.info("sending message {} to {}".format(msg, self.ident))
-        self.socket.send_multipart([self.ident, msg])
+        self.socket.send_multipart([self.ident, bytes(msg, 'utf-8')])
 
     def __del__(self):
         self.running = False
