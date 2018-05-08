@@ -8,6 +8,7 @@ import Element from "./element.js";
 import CustomSlider from "./slider.js";
 import ConditionSelection from "./conditionSelection.js"
 import Text from "./textplot.js"
+import Chart from "./chart.js"
 
 import map from "../map.js";
 
@@ -16,6 +17,10 @@ import map from "../map.js";
 
 import { Responsive as ResponsiveGridLayout } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
+import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
+    LineSeries, LineSeriesCanvas, 
+    VerticalBarSeries, VerticalBarSeriesCanvas, 
+    CustomSVGSeries} from "react-vis"; // ./3rdParty/
 
 export default class Webblocks extends Component {
 
@@ -41,6 +46,7 @@ export default class Webblocks extends Component {
             {i: "grid", x:0, y:3, w: 3, h: 10},
             {i: "slider", x:3, y:4, w: 2, h: 2},
             {i: "text", x:3, y:3, w: 2, h: 1},
+            {i: "ratings", x:3, y:5, w: 2, h: 1},
         ];
     }
 
@@ -68,7 +74,8 @@ export default class Webblocks extends Component {
                 map: {"map": data.runData.map, "targets": data.runData.targets, "goalPos": data.runData.goalPos},
                 agentPositions: data.runData.agentPositions,
                 stepNr: 0,
-                samples: data.runData.sampleList
+                samples: data.runData.sampleList,
+                ratings: data.runData.ratingList
             })
         }
 
@@ -89,7 +96,12 @@ export default class Webblocks extends Component {
     onSliderChange(value) {
         console.log("New slider value: ", value);
         this.setState({stepNr: value})
-        // this.socket.emit("slider_changed", value);
+        this.socket.emit("message", this.conditionSrc,
+                            JSON.stringify({"pause": ""}));
+        var playBtn = document.getElementById("togglePlay");
+        if (playBtn) {
+            playBtn.innerText = "Replay";
+        }
     }
 
     onConditionSelect(condition, runNr) {
@@ -97,29 +109,55 @@ export default class Webblocks extends Component {
         let conditionSrc = this.conditionSrc;
         this.conditionName = condition;
         this.selectedConditionRun = runNr;
-        this.socket.emit("message", conditionSrc, JSON.stringify({"selection": {"condition": condition, "runNr": runNr}}))
+        this.socket.emit("message", conditionSrc, JSON.stringify({"selection": {"condition": condition, "runNr": runNr}}));
+        var playBtn = document.getElementById("togglePlay");
+        if (playBtn) {
+            playBtn.innerText = "Replay";
+        }
     }
 
     reduceStepNr(){
         this.setState({
             stepNr: this.state.stepNr > 0 ? this.state.stepNr-1 : 0
         })
+        this.socket.emit("message", this.conditionSrc,
+                            JSON.stringify({"pause": ""}));
+        var playBtn = document.getElementById("togglePlay");
+        if (playBtn) {
+            playBtn.innerText = "Replay";
+        }
     }
 
     increaseStepNr(){
         this.setState({
             stepNr: this.state.stepNr < this.state.agentPositions.length-1 ? this.state.stepNr+1 : this.state.agentPositions.length-1
         })
+        this.socket.emit("message", this.conditionSrc,
+                            JSON.stringify({"pause": ""}));
+        var playBtn = document.getElementById("togglePlay");
+        if (playBtn) {
+            playBtn.innerText = "Replay";
+        }
     }
 
-    replay() {
+    replay(event) {
         // this.socket.emit("replay_condition", this.conditionName, this.selectedConditionRun);
-        this.socket.emit("message", this.conditionSrc, 
+
+        // if (event.target)
+        console.log("target: ", event.target.innerText);
+        if (event.target.innerText === "Replay") {
+            this.socket.emit("message", this.conditionSrc, 
                             JSON.stringify({"replay": {"condition": this.conditionName, 
                             "runNr": this.selectedConditionRun, 
-                            "startStep": 0, //this.state.stepNr
+                            "startStep": this.state.stepNr,
                             "showVision": true,
                             "speedup": 2}}));
+            event.target.innerText = "Pause";
+        } else {
+            this.socket.emit("message", this.conditionSrc,
+                            JSON.stringify({"pause": ""}));
+            event.target.innerText = "Replay";
+        }
     }
 
     // pause() {
@@ -130,13 +168,17 @@ export default class Webblocks extends Component {
     onLayoutChange(newLayout) {
         // TODO Allow saving the current layout
         this.curLayout = newLayout;
+        console.log("new layout: ", newLayout);
     }
 
     render() {
 
-        let {stepNr, map, agentPositions, samples} = this.state;
+        let {stepNr, map, agentPositions, samples, ratings} = this.state;
 
-
+        // if (ratings) {
+        // var ratingObjects = 
+        // })
+        // }   
         return(
             // <div className="webblocks-container">
                 <GridLayout className="layout" layout={this.curLayout} cols={5} 
@@ -161,12 +203,29 @@ export default class Webblocks extends Component {
                     {agentPositions ? <div>
                                         <button onClick={this.reduceStepNr} >{"<"}</button>
                                         <button onClick={this.increaseStepNr} >{">"}</button>
-                                        <button onClick={this.replay} >Replay</button>
+                                        <button id="togglePlay" onClick={this.replay} >Replay</button>
                                         <CustomSlider value={stepNr} min={0} max={agentPositions.length-1} onSliderChange={this.onSliderChange}/>
                                     </div>: ""}
                 </Element>
                 <Element key="text" id="text">
                     {samples ? <Text data={samples[stepNr]}/> : ""}
+                </Element>
+                <Element key="ratings" id="ratings">
+                    {ratings ? <FlexibleWidthXYPlot height={400} width={600}
+                        dontCheckIfEmpty={true}
+                        margin={{"left": 80, "right": 40}}>
+                    <LineSeries data={ratings.map((el, i) => {
+                        if (i > stepNr) {return []}
+                        return {"x": i, "y": el}})} stroke={"red"} />
+                    <Borders style={{
+                    bottom: {fill: '#fff'},
+                    left: {fill: '#fff'},
+                    right: {fill: '#fff'},
+                    top: {fill: '#fff'}
+                  }}/>
+                    <XAxis />
+                    <YAxis />
+                </FlexibleWidthXYPlot> : ""}
                 </Element>
                 </GridLayout>
             // </div>

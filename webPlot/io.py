@@ -144,7 +144,7 @@ class ZMQRouter(object):
 
     def send(self, msg):
         app.logger.info("sending message {} to {}".format(msg, self.ident))
-        self.socket.send_multipart([self.ident, bytes(msg, 'utf-8')])
+        self.socket.send_multipart([self.ident, msg.encode('utf-8')])
 
     def __del__(self):
         self.running = False
