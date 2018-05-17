@@ -8,9 +8,6 @@ export default class Text extends PureComponent {
         const { data } = this.props;
         
         var style = {overflow: "auto"};
-        console.log("Render text data: ", data);
-     
-        
         return (
                 <div style={style}>
                     <pre>

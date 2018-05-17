@@ -5,16 +5,20 @@ class CanvasComponent extends Component {
     constructor (props, context) {
         super(props, context)
         this.state = {
-          showTargets: false,
-          showTrueColor: false,
+          showTargets: props.beliefs ? false : true,
+          showTrueColor: props.beliefs ? false : true,
           showTrueTarget: false,
-          showBeliefSymbols: false
+          showBeliefSymbols: props.beliefs ? true : false,
+          showPath: false,
+          showVisibles: false
         }
 
         this.onChangeShowTargets = this.onChangeShowTargets.bind(this);
         this.onChangeShowTrueColor = this.onChangeShowTrueColor.bind(this);
         this.onChangeShowTrueTarget = this.onChangeShowTrueTarget.bind(this);
         this.onChangeShowBeliefSymbols = this.onChangeShowBeliefSymbols.bind(this);
+        this.onChangeShowPath = this.onChangeShowPath.bind(this);
+        this.onChangeShowVisibles = this.onChangeShowVisibles.bind(this);
     }
 
     componentDidMount() {
@@ -27,7 +31,6 @@ class CanvasComponent extends Component {
 
     renderMap() {
         let map = this.props.map.map;
-        console.log("render map");
         let canvas = this.refs[this.props.bgname];
         // let canvas = document.getElementById(this.props.name);
         let context = canvas.getContext('2d');
@@ -49,36 +52,67 @@ class CanvasComponent extends Component {
         const showBeliefSymbols = this.state.showBeliefSymbols;
         const goalPos = this.props.map.goalPos;
         const targets = this.props.map.targets;
-        const beliefs = this.props.beliefs.goal;
-        console.log("goalpos: ", goalPos)
-        map.forEach(function(row,i, arr) {
-            row.forEach(function(tile, j, row) { 
-                // if (tile.color != "") {
-                    tile = Object.assign({}, tile);
-                    if (showTrueTarget && i === goalPos[0] && j === goalPos[1]) {
-                        
-                        tile.color = "green";
-                        tile.symbol = "T";
-                    }   
+        const beliefs = this.props.beliefs ? this.props.beliefs.goal: null;
 
-                    if (showBeliefSymbols) {
-                        for (var ti=0; ti<targets.length; ti++) {
-                            let pos = targets[ti].key;
-                            if (i == pos[0] && j == pos[1]) {
-                                tile.symbol = beliefs[ti];
-                            }
+        const showVisibles = this.state.showVisibles;
+        const visibles = this.props.visibles;
 
-                        }
-                    }
-                    renderTile(context, tile, tileSize, j, i);
-                // }
+
+        if (showVisibles && visibles) {
+            // Render everything black and only render visible tiles!
+            context.fillStyle = "black";
+            context.fillRect(0,0, canvas.width, canvas.height);
+            visibles.forEach(function(el) {
+                let tile = Object.assign({}, map[el[0]][el[1]]);
+                renderTile(context, tile, tileSize, el[1], el[0]);
             })
-        })
+        } else {
+            map.forEach(function(row,i, arr) {
+                row.forEach(function(tile, j, row) { 
+                        tile = Object.assign({}, tile);
+                        if ((showTrueTarget) && i === goalPos[0] && j === goalPos[1]) {
+                            
+                            tile.color = "green";
+                            tile.symbol = "T";
+                        }   
+                        renderTile(context, tile, tileSize, j, i);
+                })
+            })
+
+        }
+
+        if (showBeliefSymbols && beliefs) {
+            for (var i=0; i<targets.length; i++) {
+                let pos = targets[i].key;
+                let tile = Object.assign({}, map[pos[0]][pos[1]]);
+                tile.symbol = beliefs[i];
+                tile.color = "lightblue";
+                renderTile(context, tile, tileSize, pos[1], pos[0]);
+            }
+        }
+
+        if (beliefs) {
+            targets.forEach( (tile,i) => {
+                let pos = tile.key;
+                let symbol = tile.val.symbol;
+                let beliefSymbol = beliefs[i];
+                if (beliefSymbol == this.props.beliefs.desire) {
+                    let tileContent = Object.assign({}, tile.val);
+                    tileContent.color = "lightgreen";
+                    tileContent.symbol = beliefSymbol;
+                    renderTile(context, tileContent, tileSize, pos[1], pos[0]);
+                }
+            });
+        }
 
         if (this.state.showTargets) {
             targets.forEach( tile => {
                 let pos = tile.key;
+                let symbold = tile.val.symbol;
                 let tileContent = Object.assign({}, tile.val);
+
+
+
                 if (!this.state.showTrueColor) {
                     tileContent.color = "green";
                     tileContent.symbol = "";
@@ -106,7 +140,6 @@ class CanvasComponent extends Component {
     }
 
     renderAgent() {
-        console.log("render agent");
         // tileSize = sizeInfo[0];
         // canvas.width = sizeInfo[1];
         // canvas.height = sizeInfo[2];
@@ -115,6 +148,7 @@ class CanvasComponent extends Component {
         let posY = this.props.pos[0];
         const canvas = this.refs[this.props.bgname];
         var context = canvas.getContext("2d");
+        context.strokeStyle = "black";
         // context.clearRect(0, 0, canvas.width, canvas.height);
         context.beginPath();
         let centerX = posX*tileSize + tileSize/2;
@@ -127,7 +161,7 @@ class CanvasComponent extends Component {
         
         let eyeSize = tileSize/16;
         //Draw left eye
-            context.fillStyle = "black";
+        context.fillStyle = "black";
         context.beginPath();
         context.arc(centerX-tileSize/7, centerY-tileSize/12, eyeSize, 0, 2*Math.PI);
         context.fill();
@@ -146,9 +180,34 @@ class CanvasComponent extends Component {
         
     }
 
+    renderPath() {
+        const canvas = this.refs[this.props.bgname];
+        let tileSize = this.tileSize;
+        let traj = this.props.traj;
+        
+        var context = canvas.getContext("2d");         
+        context.strokeStyle = "red";
+        context.beginPath();
+        traj.forEach(function(pos, i, traj) {
+            
+            let centerX = pos[1]*tileSize + tileSize/2; // +offX;
+            let centerY = pos[0]*tileSize + tileSize/2; // +offY;
+            if (i == 0) {
+                context.moveTo(centerX, centerY);   
+            } else {
+                context.lineTo(centerX,centerY);
+            }
+            
+        })
+        context.stroke();       
+    }
+
     updateCanvas() {
-        this.renderMap()
-        this.renderAgent()
+        this.renderMap();
+        if (this.state.showPath) {
+            this.renderPath()
+        }
+        this.renderAgent();
     }
 
     onChangeShowTargets() {
@@ -175,27 +234,50 @@ class CanvasComponent extends Component {
         })
     }
 
+    onChangeShowPath() {
+        this.setState({
+            showPath: !this.state.showPath
+        })
+    }
+
+    onChangeShowVisibles() {
+        this.props.requestVisibles()
+        this.setState({
+            showVisibles: !this.state.showVisibles
+        })
+    }
+
     render() {
         let { bgname, fgname, width, height, conditionName } = this.props;
         return (
             <div>
                 <h2>{conditionName}</h2>
                 <canvas ref={bgname} width={width} height={height} />
-                <div>
-                    Show Targets:
-                    <input type="checkbox" value={this.state.showTargets} onChange={this.onChangeShowTargets} />
-                </div>
-                <div>
-                    Show True Color:
-                    <input type="checkbox" value={this.state.showTrueColor} onChange={this.onChangeShowTrueColor} />
-                </div>
-                <div>
-                    Show True Target:
-                    <input type="checkbox" value={this.state.showTrueTarget} onChange={this.onChangeShowTrueTarget} />
-                </div>
-                <div>
-                    Show Belief Symbols:
-                    <input type="checkbox" value={this.state.showBeliefSymbols} onChange={this.onChangeShowBeliefSymbols} />
+                <div className={"flex"}>
+                    <div>
+                        Show Targets:
+                        <input type="checkbox" value={this.state.showTargets} onChange={this.onChangeShowTargets} />
+                    </div>
+                    <div>
+                        Show True Color:
+                        <input type="checkbox" value={this.state.showTrueColor} onChange={this.onChangeShowTrueColor} />
+                    </div>
+                    <div>
+                        Show True Target:
+                        <input type="checkbox" value={this.state.showTrueTarget} onChange={this.onChangeShowTrueTarget} />
+                    </div>
+                    <div>
+                        Show Belief Symbols:
+                        <input type="checkbox" defaultChecked={this.state.showBeliefSymbols} value={this.state.showBeliefSymbols} onChange={this.onChangeShowBeliefSymbols} />
+                    </div>
+                    {this.props.traj ? <div>
+                        Show Path:
+                        <input type="checkbox" value={this.state.showPath} onChange={this.onChangeShowPath} />
+                    </div> : ""}
+                    {this.props.beliefs ? <div>
+                        Show Visible area:
+                        <input type="checkbox" value={this.state.showVisibles} onChange={this.onChangeShowVisibles} />
+                    </div> : ""}
                 </div>
                 {/* <canvas className={"agentcanvas canvas"} ref={fgname} width={width} height={height} /> */}
             </div>
