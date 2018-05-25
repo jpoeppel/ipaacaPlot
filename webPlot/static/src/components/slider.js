@@ -21,13 +21,6 @@ class CustomSlider extends Component {
   };
 
 
-  onWheel(mode, deltaX, deltaY, deltaZ) {
-    console.log("Mode: ", mode);
-    console.log("deltaX: ", deltaX);
-    console.log("deltaY: ", deltaY);
-    console.log("deltaZ: ", deltaZ);
-
-  }
 
   render () {
     // const { value } = this.state
@@ -50,9 +43,9 @@ class CustomSlider extends Component {
           max={max}
           value={value}
           labels={labels}
-          handleLabel={value}
+          // handleLabel={value}
           onChange={this.handleChangeSlider}
-          onWheel={this.onWheel}
+          
         />
         <div className='value'>{value}</div>
       </div>

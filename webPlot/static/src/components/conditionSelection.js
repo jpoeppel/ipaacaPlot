@@ -26,7 +26,7 @@ class Condition extends Component {
         var options = [];
         for (var i=1; i<= count; i++) {
             options.push(
-                <option value={i}>
+                <option key={i} value={i}>
                     {i}
                 </option>
             )

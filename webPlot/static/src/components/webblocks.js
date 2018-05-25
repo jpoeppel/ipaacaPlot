@@ -10,17 +10,20 @@ import ConditionSelection from "./conditionSelection.js"
 import Text from "./textplot.js"
 import Chart from "./chart.js"
 
+import {ConfigLoader, ConfigSaver}  from "./configIO.js"
+
 import map from "../map.js";
 
 
-// import { Resizable, ResizableBox } from 'react-resizable';
-
-import { Responsive as ResponsiveGridLayout } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
+
 import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
     LineSeries, LineSeriesCanvas, 
     VerticalBarSeries, VerticalBarSeriesCanvas, 
     CustomSVGSeries, DiscreteColorLegend} from "react-vis"; // ./3rdParty/
+
+
+
 
 export default class Webblocks extends Component {
 
@@ -29,7 +32,23 @@ export default class Webblocks extends Component {
 
         this.state = {
             stepNr : 0,
-            visibleList : []
+            visibleList : [],
+            requests: {sampling: false,
+                        twg: false,
+                        tw: false,
+                        tg: false,
+                        na: false},
+            runResults: {},
+            layout: [
+                { "i": "sel", "w": 18, "h": 4, "x": 0, "y": 0 },
+                { "i": "gridGroundTruth", "w": 6, "h": 10, "x": 0, "y": 4 },
+                { "i": "gridAgentsBelief", "w": 6, "h": 10, "x": 6, "y": 4 },
+                { "i": "slider", "w": 12, "h": 2, "x": 0, "y": 14 },
+                { "i": "text", "w": 6, "h": 1, "x": 12, "y": 4 },
+                { "i": "Model selection", "w": 6, "h": 2, "x": 12, "y": 5 },
+                { "i": "ratings", "w": 6, "h": 8, "x": 12, "y": 7 },
+                { "i": "Options", "w": 6, "h": 1, "x": 12, "y": 15 }
+              ]
         }
 
         this.onSliderChange = this.onSliderChange.bind(this);
@@ -40,28 +59,13 @@ export default class Webblocks extends Component {
         this.replay = this.replay.bind(this);
         this.requestVisibles = this.requestVisibles.bind(this);
 
+        this.onChangeRequestMethods = this.onChangeRequestMethods.bind(this);
+
         this.onLayoutChange = this.onLayoutChange.bind(this);
+        this.layoutLoaded = this.layoutLoaded.bind(this);
 
         this.onWheel = this.onWheel.bind(this);
 
-
-        // this.curLayout = [
-        //     {i: "sel", x:0, y:0, w: 5, h: 5},
-        //     {i: "gridAgentsBelief", x:0, y:3, w: 3, h: 10},
-        //     {i: "gridGroundTruth", x:0, y:3, w: 3, h: 10},
-        //     {i: "slider", x:3, y:4, w: 2, h: 2},
-        //     {i: "text", x:3, y:3, w: 2, h: 1},
-        //     {i: "ratings", x:3, y:5, w: 2, h: 1},
-        // ];
-
-        this.curLayout = [ 
-            { "i": "sel", "w": 20, "h": 5, "x": 0, "y": 0 },
-            { "i": "gridGroundTruth", "w": 7, "h": 10, "x": 0, "y": 5},
-            { "i": "gridAgentsBelief", "w": 7, "h": 10, "x": 7, "y": 5},
-            { "i": "slider", "w": 6, "h": 2, "x": 14, "y": 6},
-            { "i": "text", "w": 6, "h": 1, "x": 14, "y": 5},
-            { "i": "ratings", "w": 6, "h": 7, "x": 14, "y": 8}
-          ];
     }
 
     componentDidMount() {
@@ -84,16 +88,24 @@ export default class Webblocks extends Component {
             this.conditionSrc = data.connection;
         }
         if (data.runData) {
+
+            let newRunResults = Object.assign({}, this.state.runResults);
+            for (var key in data.runData.methodResults) {
+                newRunResults[key] = data.runData.methodResults[key];
+            }
+
             this.setState({
                 map: {"map": data.runData.map, "targets": data.runData.targets, "goalPos": data.runData.goalPos},
                 agentPositions: data.runData.agentPositions,
                 stepNr: 0,
-                samples: data.runData.sampleList,
-                ratingsSamples: data.runData.ratingListSamples,
-                ratingsM1: data.runData.ratingListM1,
-                ratingsM2: data.runData.ratingListM2,
-                ratingsM3: data.runData.ratingListM3,
-                ratingsM4: data.runData.ratingListM4
+                // samples: data.runData.sampleList,
+                // ratingsSamples: data.runData.ratingListSamples,
+                runResults: newRunResults, //data.runData.methodResults,
+                // ratingsM1: data.runData.ratingListM1,
+                // ratingsM2: data.runData.ratingListM2,
+                // ratingsM3: data.runData.ratingListM3,
+                // ratingsM4: data.runData.ratingListM4,
+                visibleList: [],
             })
         }
 
@@ -111,7 +123,6 @@ export default class Webblocks extends Component {
         }
 
         if (data.visibles) {
-            console.log("Visible list: ", data.visibles)
             this.setState({
                 visibleList: data.visibles
             })
@@ -129,10 +140,9 @@ export default class Webblocks extends Component {
     }
 
     onConditionSelect(condition, runNr) {
-        let conditionSrc = this.conditionSrc;
         this.conditionName = condition;
         this.selectedConditionRun = runNr;
-        this.socket.emit("message", conditionSrc, JSON.stringify({"selection": {"condition": condition, "runNr": runNr}}));
+        this.socket.emit("message", this.conditionSrc, JSON.stringify({"selection": {"condition": condition, "runNr": runNr, "methods": this.state.requests}}));
         var playBtn = document.getElementById("togglePlay");
         if (playBtn) {
             playBtn.innerText = "Replay";
@@ -189,37 +199,90 @@ export default class Webblocks extends Component {
 
     onLayoutChange(newLayout) {
         // TODO Allow saving the current layout
-        this.curLayout = newLayout;
         console.log("new layout: ", newLayout);
+        this.setState({
+            layout: newLayout
+        })
     }
 
     requestVisibles() {
+        if (this.state.visibleList.length === 0) {
         this.socket.emit("message", this.conditionSrc,
                         JSON.stringify({"visibles": {"condition": this.conditionName, 
                         "runNr": this.selectedConditionRun}}) )
+        }
     }
 
 
 
-  onWheel(e) {
-    if (e.deltaY < 0) {
-        this.increaseStepNr();
-    } else {
-        this.reduceStepNr();
+    onWheel(e) {
+        if (e.deltaY < 0) {
+            this.increaseStepNr();
+        } else {
+            this.reduceStepNr();
+        }
+        e.preventDefault();
     }
-  }
+
+    onChangeRequestMethods(e) {
+        let method = e.target.id.slice(0,-5);
+        let newRequests = Object.assign({}, this.state.requests);
+        newRequests[method] = !newRequests[method];
+ 
+        let a = {};
+        a[method] = true;        
+
+        if (newRequests[method] && !this.state.runResults[method]) {
+            this.socket.emit("message", this.conditionSrc, JSON.stringify({"selection": {"condition": this.conditionName, 
+                                                "runNr": this.selectedConditionRun, "methods": a}}));
+        }
+
+        this.setState({
+            requests: newRequests
+        })
+    }
+
+    layoutLoaded(newLayout) {
+        this.setState({
+            layout: newLayout
+        })
+    }
 
     render() {
 
-        let {stepNr, map, agentPositions, samples, ratingsSamples, ratingsM1, ratingsM2, ratingsM3, ratingsM4} = this.state;
+        let {stepNr, map, agentPositions, requests, runResults} = this.state; //, samples, ratingsSamples, ratingsM1, ratingsM2, ratingsM3, ratingsM4} = this.state;
         // if (ratings) {
         // var ratingObjects = 
         // })
-        // }   
+        // } 
+
+        const colors = {"twg": "blue",
+                        "tw": "green",
+                        "tg": "yellow",
+                        "na": "black",
+                        "sampling": "red"}
+
+        let lines = [];
+        for (var key in requests) {
+            if (requests[key] && runResults[key]) {
+                lines.push(<LineSeries key={key} data={runResults[key].ratingList.map((el, i) => {
+                    if (i > stepNr) {return []}
+                    return {"x": i, "y": el}})} stroke={colors[key]} />)
+            }
+        }
+
+
+        let samples = runResults.sampling ? runResults.sampling.sampleList : null;
+
+        let width = window.innerWidth*0.85;
+        let cols = Math.floor(width/100);
+
         return(
             // <div className="webblocks-container">
-                <GridLayout className="layout" layout={this.curLayout} cols={20} 
-                            rowHeight={50} width={1800} 
+                <GridLayout className="layout" layout={this.state.layout} 
+                            cols={cols} 
+                            rowHeight={50} 
+                            width={width} 
                             draggableHandle=".element_handle"
                             onLayoutChange={this.onLayoutChange}>
                 <Element key="sel" id="sel">
@@ -241,7 +304,7 @@ export default class Webblocks extends Component {
                                             /> : ""}
                 </Element>
                  <Element key="gridAgentsBelief" id="gridAgentsBelief">
-                    {map ? <CanvasComponent conditionName={this.conditionName} 
+                    {samples ? <CanvasComponent conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
                                             width={600} 
@@ -267,36 +330,32 @@ export default class Webblocks extends Component {
                 <Element key="text" id="text">
                     {samples ? <Text data={samples[stepNr]}/> : ""}
                 </Element>
+                <Element key="Model selection" id="Model selection">
+                    <div className={"flex"}>
+                        <div>
+                            Sampling:
+                            <input id="samplingCheck" type="checkbox" defaultChecked={this.state.requests.sampling} checked={this.state.requests.sampling} onChange={this.onChangeRequestMethods} />
+                        </div>
+                        <div>
+                            True Goal and World Belief:
+                            <input id="twgCheck" type="checkbox" defaultChecked={this.state.requests.twg} checked={this.state.requests.tgw} onChange={this.onChangeRequestMethods} />
+                        </div>
+                        <div>
+                            True World Belief:
+                            <input id="twCheck" type="checkbox" defaultChecked={this.state.requests.tw} checked={this.state.requests.tw} onChange={this.onChangeRequestMethods} />
+                        </div>
+                        <div>
+                            True Goal Belief:
+                            <input id="tgCheck" type="checkbox" defaultChecked={this.state.requests.tg} checked={this.state.requests.tg} onChange={this.onChangeRequestMethods} />
+                        </div>
+                        <div>
+                            No Assumption:
+                            <input id="naCheck" type="checkbox" defaultChecked={this.state.requests.na} checked={this.state.requests.na} onChange={this.onChangeRequestMethods} />
+                        </div>
+                    </div>
+                </Element>
                 <Element key="ratings" id="ratings">
-                    {ratingsSamples ? <FlexibleWidthXYPlot height={400} width={600}
-                        dontCheckIfEmpty={true}
-                        margin={{"left": 60, "right": 100}}>
-                    <LineSeries data={ratingsSamples.map((el, i) => {
-                        if (i > stepNr) {return []}
-                        return {"x": i, "y": el}})} stroke={"red"} />
-                    <LineSeries data={ratingsM1.map((el, i) => {
-                        if (i > stepNr) {return []}
-                        return {"x": i, "y": el}})} stroke={"blue"} />
-                    <LineSeries data={ratingsM2.map((el, i) => {
-                        if (i > stepNr) {return []}
-                        return {"x": i, "y": el}})} stroke={"green"} />
-                    <LineSeries data={ratingsM3.map((el, i) => {
-                        if (i > stepNr) {return []}
-                        return {"x": i, "y": el}})} stroke={"yellow"} />
-                    <LineSeries data={ratingsM4.map((el, i) => {
-                        if (i > stepNr) {return []}
-                        return {"x": i, "y": el}})} stroke={"black"} />
-                    <Borders style={{
-                    bottom: {fill: '#fff'},
-                    left: {fill: '#fff'},
-                    right: {fill: '#fff'},
-                    top: {fill: '#fff'}
-                  }}/>
-                    <XAxis />
-                    <YAxis />
-                    
-                </FlexibleWidthXYPlot> : ""}
-                <DiscreteColorLegend
+                    <DiscreteColorLegend
                     orientation="horizontal"
                     height={50}
                     width={500}
@@ -305,7 +364,28 @@ export default class Webblocks extends Component {
                             {"title": "TrueWorld", "color": "green"},
                             {"title": "TrueGoal", "color": "yellow"},
                             {"title": "NoAssumption", "color": "black"},]}
-                />
+                    />
+                    {lines.length > 0 ? <FlexibleWidthXYPlot height={400} width={600}
+                            dontCheckIfEmpty={true}
+                            margin={{"left": 60, "right": 100}}>
+                            {lines}
+                        <Borders style={{
+                        bottom: {fill: '#fff'},
+                        left: {fill: '#fff'},
+                        right: {fill: '#fff'},
+                        top: {fill: '#fff'}
+                    }}/>
+                        <XAxis />
+                        <YAxis />
+                        
+                    </FlexibleWidthXYPlot> : ""}
+                
+                </Element>
+                <Element key="Options" id="options">
+                    <div className={"flex"}>
+                        <ConfigLoader layoutLoaded={this.layoutLoaded}/>
+                        <ConfigSaver layout={this.state.layout}/>
+                    </div>
                 </Element>
                 </GridLayout>
             // </div>

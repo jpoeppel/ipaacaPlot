@@ -10,7 +10,9 @@ class CanvasComponent extends Component {
           showTrueTarget: false,
           showBeliefSymbols: props.beliefs ? true : false,
           showPath: false,
-          showVisibles: false
+          showVisibles: false,
+          showBeliefedVision: false,
+          visiblesUpdated: false
         }
 
         this.onChangeShowTargets = this.onChangeShowTargets.bind(this);
@@ -19,14 +21,31 @@ class CanvasComponent extends Component {
         this.onChangeShowBeliefSymbols = this.onChangeShowBeliefSymbols.bind(this);
         this.onChangeShowPath = this.onChangeShowPath.bind(this);
         this.onChangeShowVisibles = this.onChangeShowVisibles.bind(this);
+        this.onChangeShowBeliefedVision = this.onChangeShowBeliefedVision.bind(this);
     }
 
     componentDidMount() {
         this.updateCanvas();
     }
 
-    componentDidUpdate() {
-        this.updateCanvas();
+    componentDidUpdate(prevProps, prevState, snapshot) {
+
+        // if (prevProps.map.map !== this.props.map.map 
+            // || prevProps.visibles !== this.props.visibles 
+            // || prevProps.pos !== this.props.pos 
+            // || prevState.showVisibles !== this.state.showVisibles) {
+            this.updateCanvas();
+        // }
+    }
+
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if ((!nextProps.visibles || nextProps.visibles.length === 0) && !prevState.visiblesUpdated ) {
+            return {showVisibles: false,
+                    visiblesUpdated: false};
+        };
+
+        return {visiblesUpdated: false};
     }
 
     renderMap() {
@@ -52,13 +71,15 @@ class CanvasComponent extends Component {
         const showBeliefSymbols = this.state.showBeliefSymbols;
         const goalPos = this.props.map.goalPos;
         const targets = this.props.map.targets;
-        const beliefs = this.props.beliefs ? this.props.beliefs.goal: null;
+        const goalBeliefs = this.props.beliefs ? this.props.beliefs.goal: null;
+        const worldBelief = this.props.beliefs ? this.props.beliefs.world : null;
 
         const showVisibles = this.state.showVisibles;
+        const showBeliefedVision = this.state.showBeliefedVision;
         const visibles = this.props.visibles;
 
 
-        if (showVisibles && visibles) {
+        if (visibles && (showVisibles || (showBeliefedVision && worldBelief === "FreeSpace"))) {
             // Render everything black and only render visible tiles!
             context.fillStyle = "black";
             context.fillRect(0,0, canvas.width, canvas.height);
@@ -81,21 +102,21 @@ class CanvasComponent extends Component {
 
         }
 
-        if (showBeliefSymbols && beliefs) {
+        if (showBeliefSymbols && goalBeliefs) {
             for (var i=0; i<targets.length; i++) {
                 let pos = targets[i].key;
                 let tile = Object.assign({}, map[pos[0]][pos[1]]);
-                tile.symbol = beliefs[i];
+                tile.symbol = goalBeliefs[i];
                 tile.color = "lightblue";
                 renderTile(context, tile, tileSize, pos[1], pos[0]);
             }
         }
 
-        if (beliefs) {
+        if (goalBeliefs) {
             targets.forEach( (tile,i) => {
                 let pos = tile.key;
                 let symbol = tile.val.symbol;
-                let beliefSymbol = beliefs[i];
+                let beliefSymbol = goalBeliefs[i];
                 if (beliefSymbol == this.props.beliefs.desire) {
                     let tileContent = Object.assign({}, tile.val);
                     tileContent.color = "lightgreen";
@@ -204,6 +225,7 @@ class CanvasComponent extends Component {
 
     updateCanvas() {
         this.renderMap();
+
         if (this.state.showPath) {
             this.renderPath()
         }
@@ -243,7 +265,16 @@ class CanvasComponent extends Component {
     onChangeShowVisibles() {
         this.props.requestVisibles()
         this.setState({
-            showVisibles: !this.state.showVisibles
+            showVisibles: !this.state.showVisibles,
+            visiblesUpdated: true
+        });
+    }
+
+    onChangeShowBeliefedVision() {
+        this.props.requestVisibles()
+        this.setState({
+            visiblesUpdated: true,
+            showBeliefedVision: !this.state.showBeliefedVision
         })
     }
 
@@ -256,27 +287,31 @@ class CanvasComponent extends Component {
                 <div className={"flex"}>
                     <div>
                         Show Targets:
-                        <input type="checkbox" value={this.state.showTargets} onChange={this.onChangeShowTargets} />
+                        <input type="checkbox" defaultChecked={this.state.showTargets} checked={this.state.showTargets} onChange={this.onChangeShowTargets} />
                     </div>
                     <div>
                         Show True Color:
-                        <input type="checkbox" value={this.state.showTrueColor} onChange={this.onChangeShowTrueColor} />
+                        <input type="checkbox" defaultChecked={this.state.showTrueColor} checked={this.state.showTrueColor} onChange={this.onChangeShowTrueColor} />
                     </div>
                     <div>
                         Show True Target:
-                        <input type="checkbox" value={this.state.showTrueTarget} onChange={this.onChangeShowTrueTarget} />
+                        <input type="checkbox" defaultChecked={this.state.showTrueTarget} checked={this.state.showTrueTarget} onChange={this.onChangeShowTrueTarget} />
                     </div>
                     <div>
                         Show Belief Symbols:
-                        <input type="checkbox" defaultChecked={this.state.showBeliefSymbols} value={this.state.showBeliefSymbols} onChange={this.onChangeShowBeliefSymbols} />
+                        <input type="checkbox" defaultChecked={this.state.showBeliefSymbols} checked={this.state.showBeliefSymbols} onChange={this.onChangeShowBeliefSymbols} />
                     </div>
                     {this.props.traj ? <div>
                         Show Path:
-                        <input type="checkbox" value={this.state.showPath} onChange={this.onChangeShowPath} />
+                        <input type="checkbox" defaultChecked={this.state.showPath} checked={this.state.showPath} onChange={this.onChangeShowPath} />
                     </div> : ""}
                     {this.props.beliefs ? <div>
                         Show Visible area:
-                        <input type="checkbox" value={this.state.showVisibles} onChange={this.onChangeShowVisibles} />
+                        <input type="checkbox" defaultChecked={this.state.showVisibles} checked={this.state.showVisibles} onChange={this.onChangeShowVisibles} />
+                    </div> : ""}
+                    {this.props.beliefs ? <div>
+                        Show Beliefed Vision:
+                        <input type="checkbox" defaultChecked={this.state.showBeliefedVision} checked={this.state.showBeliefedVision} onChange={this.onChangeShowBeliefedVision} />
                     </div> : ""}
                 </div>
                 {/* <canvas className={"agentcanvas canvas"} ref={fgname} width={width} height={height} /> */}

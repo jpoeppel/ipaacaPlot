@@ -2,16 +2,18 @@
   "name": "WebPlots",
   "version": "0.1.0",
   "private": true,
-  "description": "A small plotting webapp using react and d3, served by Python",
+  "description": "A small plotting webapp using react, served by Python",
   "dependencies": {
     "d3": "^4.10.0",
-    "react": "^15.6.1",
-    "react-dom": "^15.6.1",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
     "react-draggable": "^3.0.5",
     "react-grid-layout": "^0.16.6",
+    "react-icons": "^2.2.7",
     "react-rangeslider": "^2.2.0",
     "react-resizable": "^1.7.5",
-    "react-scripts": "1.0.11"
+    "react-scripts": "^1.1.4",
+    "react-vis": "^1.9.3"
   },
   "scripts": {
     "start": "react-scripts start",
