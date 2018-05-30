@@ -80,7 +80,7 @@ export default class Webblocks extends Component {
 
 
     update_data(data) {
-        // console.log("received data: ", data);
+        console.log("received data: ", data);
         if (data.conditions) {
             this.setState({
                 conditions: data.conditions
@@ -131,11 +131,13 @@ export default class Webblocks extends Component {
 
     onSliderChange(value) {
         this.setState({stepNr: value})
-        this.socket.emit("message", this.conditionSrc,
-                            JSON.stringify({"pause": ""}));
         var playBtn = document.getElementById("togglePlay");
         if (playBtn) {
-            playBtn.innerText = "Replay";
+            if (playBtn.innerText === "Pause") {
+                this.socket.emit("message", this.conditionSrc,
+                            JSON.stringify({"pause": ""}));
+                playBtn.innerText = "Replay";
+            }
         }
     }
 
@@ -153,11 +155,13 @@ export default class Webblocks extends Component {
         this.setState({
             stepNr: this.state.stepNr > 0 ? this.state.stepNr-1 : 0
         })
-        this.socket.emit("message", this.conditionSrc,
-                            JSON.stringify({"pause": ""}));
         var playBtn = document.getElementById("togglePlay");
         if (playBtn) {
-            playBtn.innerText = "Replay";
+            if (playBtn.innerText === "Pause") {
+                this.socket.emit("message", this.conditionSrc,
+                            JSON.stringify({"pause": ""}));
+                playBtn.innerText = "Replay";
+            }
         }
     }
 
@@ -165,11 +169,13 @@ export default class Webblocks extends Component {
         this.setState({
             stepNr: this.state.stepNr < this.state.agentPositions.length-1 ? this.state.stepNr+1 : this.state.agentPositions.length-1
         })
-        this.socket.emit("message", this.conditionSrc,
-                            JSON.stringify({"pause": ""}));
         var playBtn = document.getElementById("togglePlay");
         if (playBtn) {
-            playBtn.innerText = "Replay";
+            if (playBtn.innerText === "Pause") {
+                this.socket.emit("message", this.conditionSrc,
+                            JSON.stringify({"pause": ""}));
+                playBtn.innerText = "Replay";
+            }
         }
     }
 
@@ -192,9 +198,6 @@ export default class Webblocks extends Component {
         }
     }
 
-    // pause() {
-    //     this.socket.emit("message", conditionSrc, JSON.stringify({"pause": ""}));
-    // }
 
 
     onLayoutChange(newLayout) {
@@ -232,7 +235,7 @@ export default class Webblocks extends Component {
         let a = {};
         a[method] = true;        
 
-        if (newRequests[method] && !this.state.runResults[method]) {
+        if (newRequests[method] && !this.state.runResults[method] && this.conditionName && this.selectedConditionRun) {
             this.socket.emit("message", this.conditionSrc, JSON.stringify({"selection": {"condition": this.conditionName, 
                                                 "runNr": this.selectedConditionRun, "methods": a}}));
         }
@@ -268,6 +271,31 @@ export default class Webblocks extends Component {
                 lines.push(<LineSeries key={key} data={runResults[key].ratingList.map((el, i) => {
                     if (i > stepNr) {return []}
                     return {"x": i, "y": el}})} stroke={colors[key]} />)
+            }
+        }
+
+        let bars = [];
+        for (var key in requests) {
+            if (requests[key] && runResults[key]) {
+                var bardata = []
+                for (var desire in runResults[key].priorList[stepNr].desire) {
+                    bardata.push({"x": desire, "y": runResults[key].priorList[stepNr].desire[desire]})
+                    // bars.push(<VerticalBarSeries key={key} data={{"x": 1, "y": runResults[key].priorList[stepNr][desire]}} />)
+                }
+                bars.push(<VerticalBarSeries key={key} data={bardata} color={colors[key]} />)
+            }
+        }
+
+        let goal_bars = [];
+        for (var key in requests) {
+            if (requests[key] && runResults[key]) {
+                var bardata = []
+                for (var gb in runResults[key].priorList[stepNr].goal) {
+                    bardata.push({"x": gb, "y": runResults[key].priorList[stepNr].goal[gb]})
+                    // bars.push(<VerticalBarSeries key={key} data={{"x": 1, "y": runResults[key].priorList[stepNr][desire]}} />)
+                }
+                console.log("bardata: ", bardata);
+                goal_bars.push(<VerticalBarSeries key={key} data={bardata} color={colors[key]} />)
             }
         }
 
@@ -386,6 +414,44 @@ export default class Webblocks extends Component {
                         <ConfigLoader layoutLoaded={this.layoutLoaded}/>
                         <ConfigSaver layout={this.state.layout}/>
                     </div>
+                </Element>
+                <Element key="Desire Beliefs" id="Desire Beliefs">
+                {bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={600}
+                            dontCheckIfEmpty={true}
+                            margin={{"left": 60, "right": 100}}
+                            xType={"ordinal"}
+                            yDomain={[0,1]}
+                            >
+                            {bars}
+                        <Borders style={{
+                        bottom: {fill: '#fff'},
+                        left: {fill: '#fff'},
+                        right: {fill: '#fff'},
+                        top: {fill: '#fff'}
+                    }}/>
+                        <XAxis />
+                        <YAxis />
+                        
+                    </FlexibleWidthXYPlot> : ""}
+                </Element>
+                <Element key="Goal Beliefs" id="Goal Beliefs">
+                {goal_bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={1000}
+                            dontCheckIfEmpty={true}
+                            margin={{"left": 60, "right": 100, "bottom":100}}
+                            xType={"ordinal"}
+                            yDomain={[0,1]}
+                            >
+                            {goal_bars}
+                        <Borders style={{
+                        bottom: {fill: '#fff'},
+                        left: {fill: '#fff'},
+                        right: {fill: '#fff'},
+                        top: {fill: '#fff'}
+                    }}/>
+                        <XAxis tickLabelAngle={-90}/>
+                        <YAxis />
+                        
+                    </FlexibleWidthXYPlot> : ""}
                 </Element>
                 </GridLayout>
             // </div>
