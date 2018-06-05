@@ -280,7 +280,6 @@ export default class Webblocks extends Component {
                 var bardata = []
                 for (var desire in runResults[key].priorList[stepNr].desire) {
                     bardata.push({"x": desire, "y": runResults[key].priorList[stepNr].desire[desire]})
-                    // bars.push(<VerticalBarSeries key={key} data={{"x": 1, "y": runResults[key].priorList[stepNr][desire]}} />)
                 }
                 bars.push(<VerticalBarSeries key={key} data={bardata} color={colors[key]} />)
             }
@@ -292,13 +291,21 @@ export default class Webblocks extends Component {
                 var bardata = []
                 for (var gb in runResults[key].priorList[stepNr].goal) {
                     bardata.push({"x": gb, "y": runResults[key].priorList[stepNr].goal[gb]})
-                    // bars.push(<VerticalBarSeries key={key} data={{"x": 1, "y": runResults[key].priorList[stepNr][desire]}} />)
                 }
-                console.log("bardata: ", bardata);
                 goal_bars.push(<VerticalBarSeries key={key} data={bardata} color={colors[key]} />)
             }
         }
 
+        let world_bars = [];
+        for (var key in requests) {
+            if (requests[key] && runResults[key]) {
+                var bardata = []
+                for (var gb in runResults[key].priorList[stepNr].world) {
+                    bardata.push({"x": gb, "y": runResults[key].priorList[stepNr].world[gb]})
+                }
+                world_bars.push(<VerticalBarSeries key={key} data={bardata} color={colors[key]} />)
+            }
+        }
 
         let samples = runResults.sampling ? runResults.sampling.sampleList : null;
 
@@ -442,6 +449,25 @@ export default class Webblocks extends Component {
                             yDomain={[0,1]}
                             >
                             {goal_bars}
+                        <Borders style={{
+                        bottom: {fill: '#fff'},
+                        left: {fill: '#fff'},
+                        right: {fill: '#fff'},
+                        top: {fill: '#fff'}
+                    }}/>
+                        <XAxis tickLabelAngle={-90}/>
+                        <YAxis />
+                        
+                    </FlexibleWidthXYPlot> : ""}
+                </Element>
+                <Element key="World Beliefs" id="World Beliefs">
+                {world_bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={400}
+                            dontCheckIfEmpty={true}
+                            margin={{"left": 60, "right": 100, "bottom":100}}
+                            xType={"ordinal"}
+                            yDomain={[0,1]}
+                            >
+                            {world_bars}
                         <Borders style={{
                         bottom: {fill: '#fff'},
                         left: {fill: '#fff'},
