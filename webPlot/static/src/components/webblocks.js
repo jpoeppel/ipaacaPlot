@@ -37,17 +37,21 @@ export default class Webblocks extends Component {
                         twg: false,
                         tw: false,
                         tg: false,
-                        na: false},
+                        na: false,
+                        switching: false},
             runResults: {},
             layout: [
-                { "i": "sel", "w": 18, "h": 4, "x": 0, "y": 0 },
-                { "i": "gridGroundTruth", "w": 6, "h": 10, "x": 0, "y": 4 },
-                { "i": "gridAgentsBelief", "w": 6, "h": 10, "x": 6, "y": 4 },
-                { "i": "slider", "w": 12, "h": 2, "x": 0, "y": 14 },
-                { "i": "text", "w": 6, "h": 1, "x": 12, "y": 4 },
-                { "i": "Model selection", "w": 6, "h": 2, "x": 12, "y": 5 },
-                { "i": "ratings", "w": 6, "h": 8, "x": 12, "y": 7 },
-                { "i": "Options", "w": 6, "h": 1, "x": 12, "y": 15 }
+                {"w": 18,"h": 4,"x": 0,"y": 0,"i": "sel"},
+                {"w": 6,"h": 10,"x": 0,"y": 4,"i": "gridGroundTruth"},
+                {"w": 6,"h": 10,"x": 6,"y": 4,"i": "gridAgentsBelief"},
+                {"w": 12,"h": 2,"x": 0,"y": 14,"i": "slider"},
+                {"w": 6,"h": 1,"x": 12,"y": 4,"i": "text"},
+                {"w": 6,"h": 2,"x": 12,"y": 5,"i": "Model selection"},
+                {"w": 6,"h": 8,"x": 12,"y": 7,"i": "ratings"},
+                {"w": 6,"h": 1,"x": 12,"y": 15,"i": "Options"},
+                {"w": 5,"h": 7,"x": 0,"y": 16,"i": "Desire Beliefs"},
+                {"w": 9,"h": 7,"x": 5,"y": 16,"i": "Goal Beliefs"},
+                {"w": 3,"h": 7,"x": 14,"y": 16,"i": "World Beliefs"}
               ]
         }
 
@@ -263,6 +267,7 @@ export default class Webblocks extends Component {
                         "tw": "green",
                         "tg": "yellow",
                         "na": "black",
+                        "switching": "orange",
                         "sampling": "red"}
 
         let lines = [];
@@ -387,18 +392,23 @@ export default class Webblocks extends Component {
                             No Assumption:
                             <input id="naCheck" type="checkbox" defaultChecked={this.state.requests.na} checked={this.state.requests.na} onChange={this.onChangeRequestMethods} />
                         </div>
+                        <div>
+                            Switching:
+                            <input id="switchingCheck" type="checkbox" defaultChecked={this.state.requests.switching} checked={this.state.requests.switching} onChange={this.onChangeRequestMethods} />
+                        </div>
                     </div>
                 </Element>
                 <Element key="ratings" id="ratings">
                     <DiscreteColorLegend
                     orientation="horizontal"
                     height={50}
-                    width={500}
-                    items={[{"title": "sample", "color": "red"}, 
-                            {"title": "TrueGoalWorld", "color": "blue"},
-                            {"title": "TrueWorld", "color": "green"},
-                            {"title": "TrueGoal", "color": "yellow"},
-                            {"title": "NoAssumption", "color": "black"},]}
+                    items={[{"title": "sample", "color": colors["sampling"]}, 
+                            {"title": "TrueGoalWorld", "color": colors["twg"]},
+                            {"title": "TrueWorld", "color": colors["tw"]},
+                            {"title": "TrueGoal", "color": colors["tg"]},
+                            {"title": "NoAssumption", "color": colors["na"]},
+                            {"title": "Switching", "color": colors["switching"]},
+                            ]}
                     />
                     {lines.length > 0 ? <FlexibleWidthXYPlot height={400} width={600}
                             dontCheckIfEmpty={true}
