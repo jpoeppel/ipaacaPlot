@@ -102,13 +102,7 @@ export default class Webblocks extends Component {
                 map: {"map": data.runData.map, "targets": data.runData.targets, "goalPos": data.runData.goalPos},
                 agentPositions: data.runData.agentPositions,
                 stepNr: 0,
-                // samples: data.runData.sampleList,
-                // ratingsSamples: data.runData.ratingListSamples,
-                runResults: newRunResults, //data.runData.methodResults,
-                // ratingsM1: data.runData.ratingListM1,
-                // ratingsM2: data.runData.ratingListM2,
-                // ratingsM3: data.runData.ratingListM3,
-                // ratingsM4: data.runData.ratingListM4,
+                runResults: newRunResults, 
                 visibleList: [],
             })
         }
@@ -152,6 +146,12 @@ export default class Webblocks extends Component {
         var playBtn = document.getElementById("togglePlay");
         if (playBtn) {
             playBtn.innerText = "Replay";
+        }
+
+        for (var key in this.state.requests) {
+            if (!this.state.requests[key]) {
+                this.state.runResults[key] = null;
+            }
         }
     }
 
@@ -305,8 +305,8 @@ export default class Webblocks extends Component {
         for (var key in requests) {
             if (requests[key] && runResults[key]) {
                 var bardata = []
-                for (var gb in runResults[key].priorList[stepNr].world) {
-                    bardata.push({"x": gb, "y": runResults[key].priorList[stepNr].world[gb]})
+                for (var wb in runResults[key].priorList[stepNr].world) {
+                    bardata.push({"x": wb, "y": runResults[key].priorList[stepNr].world[wb]})
                 }
                 world_bars.push(<VerticalBarSeries key={key} data={bardata} color={colors[key]} />)
             }

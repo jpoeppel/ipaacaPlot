@@ -36,7 +36,7 @@ def update_data_rsb(event):
 
 
 def handle_zmq(msg):
-    app.logger.info("emitting to socketio: {}".format(msg))
+    # app.logger.info("emitting to socketio: {}".format(msg))
     socketio.emit("update_data", msg)
 
 class MyTCPStreamHandler(socketserver.StreamRequestHandler):

@@ -43,7 +43,8 @@ class CustomSlider extends Component {
           max={max}
           value={value}
           labels={labels}
-          // handleLabel={value}
+          // handleLabe
+          l={value}
           onChange={this.handleChangeSlider}
           
         />

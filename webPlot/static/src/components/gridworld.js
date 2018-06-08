@@ -42,7 +42,8 @@ class CanvasComponent extends Component {
     static getDerivedStateFromProps(nextProps, prevState) {
         if ((!nextProps.visibles || nextProps.visibles.length === 0) && !prevState.visiblesUpdated ) {
             return {showVisibles: false,
-                    visiblesUpdated: false};
+                    visiblesUpdated: false,
+                    showBeliefedVision: false};
         };
 
         return {visiblesUpdated: false};
