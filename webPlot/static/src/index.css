@@ -36,6 +36,10 @@
     flex-direction: column;
 }
 
+.model-vis {
+  display: flex;
+}
+
 .channelList {
     display: flex;
     flex-direction: column;
@@ -45,7 +49,10 @@
     display: inline-block;;
     flex-direction: column;
     width: auto;
-    background: #c3c3c3;
+    /* background: #c3c3c3; */
+    border: #3a3a48;
+    border-style: dashed;
+    border-width: 2px;
 }
 
 ul {
@@ -127,6 +134,16 @@ ul {
 
 .card__header:hover svg {
     color: #777;
+}
+
+.model{
+  opacity: 0.3;
+}
+
+.selected {
+  border: #000;
+  border-style: solid;
+  opacity: 1;
 }
 
 
@@ -277,6 +294,12 @@ ul {
 .rv-xy-plot {
     color: #c3c3c3;
     position: relative;
+}
+
+.rv-xy-plot__grid-lines__line {
+  stroke: black;
+  stroke-width: 2;
+  stroke-dasharray: "5,5";
 }
 
 

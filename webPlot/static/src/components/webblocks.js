@@ -8,11 +8,11 @@ import Element from "./element.js";
 import CustomSlider from "./slider.js";
 import ConditionSelection from "./conditionSelection.js"
 import Text from "./textplot.js"
-import Chart from "./chart.js"
+import ModelVis from "./modelVisualisation.js"
+
 
 import {ConfigLoader, ConfigSaver}  from "./configIO.js"
 
-import map from "../map.js";
 
 
 import GridLayout from 'react-grid-layout';
@@ -20,7 +20,7 @@ import GridLayout from 'react-grid-layout';
 import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
     LineSeries, LineSeriesCanvas, 
     VerticalBarSeries, VerticalBarSeriesCanvas, 
-    CustomSVGSeries, DiscreteColorLegend} from "react-vis"; // ./3rdParty/
+    CustomSVGSeries, DiscreteColorLegend, VerticalGridLines} from "react-vis"; // ./3rdParty/
 
 
 
@@ -193,7 +193,7 @@ export default class Webblocks extends Component {
                             "runNr": this.selectedConditionRun, 
                             "startStep": this.state.stepNr,
                             "showVision": true,
-                            "speedup": 2}}));
+                            "speedup": 1}}));
             event.target.innerText = "Pause";
         } else {
             this.socket.emit("message", this.conditionSrc,
@@ -264,18 +264,27 @@ export default class Webblocks extends Component {
         // } 
 
         const colors = {"twg": "blue",
-                        "tw": "green",
-                        "tg": "yellow",
-                        "na": "black",
-                        "switching": "orange",
-                        "sampling": "red"}
+                        "tw": "orange",
+                        "tg": "green",
+                        "na": "purple",
+                        "switching": "red",
+                        "sampling": "yellow"}
+
+        const strokes = {"twg": "",
+                        "tw": "",
+                        "tg": "",
+                        "na": "",
+                        "switching": "7 3",
+                        "sampling": ""}
 
         let lines = [];
         for (var key in requests) {
             if (requests[key] && runResults[key]) {
                 lines.push(<LineSeries key={key} data={runResults[key].ratingList.map((el, i) => {
-                    if (i > stepNr) {return []}
-                    return {"x": i, "y": el}})} stroke={colors[key]} />)
+                            if (i > stepNr) {return []}
+                            return {"x": i, "y": el}})
+                    } 
+                    stroke={colors[key]} strokeDasharray={strokes[key]} />)
             }
         }
 
@@ -317,6 +326,21 @@ export default class Webblocks extends Component {
         let width = window.innerWidth*0.85;
         let cols = Math.floor(width/100);
 
+        var curModel = null;
+
+        var switchValues = [];
+        if (runResults["switching"]) {
+            curModel = runResults["switching"].modelList[stepNr];
+            if (requests["switching"]) {
+                // switchValues = runResults["switching"].reevaluationList;
+                for (var i in runResults["switching"].reevaluationList) {
+                    if (runResults["switching"].reevaluationList[i] <= stepNr) {
+                        switchValues.push(runResults["switching"].reevaluationList[i]);
+                    }
+                }
+            }
+        }
+
         return(
             // <div className="webblocks-container">
                 <GridLayout className="layout" layout={this.state.layout} 
@@ -337,7 +361,7 @@ export default class Webblocks extends Component {
                                             height={400} 
                                             map={map} 
                                             pos={agentPositions[stepNr]}
-                                            traj={agentPositions.slice(0, stepNr)}
+                                            traj={agentPositions.slice(0, stepNr+1)}
                                             // beliefs={samples[stepNr][1]}
                                             requestVisibles={this.requestVisibles}
                                             visibles={this.state.visibleList[stepNr]}
@@ -422,6 +446,7 @@ export default class Webblocks extends Component {
                     }}/>
                         <XAxis />
                         <YAxis />
+                        <VerticalGridLines tickValues={switchValues}/>
                         
                     </FlexibleWidthXYPlot> : ""}
                 
@@ -489,6 +514,10 @@ export default class Webblocks extends Component {
                         
                     </FlexibleWidthXYPlot> : ""}
                 </Element>
+                <Element key="Current model" id="Current model">
+                    <ModelVis curModel={curModel}/>
+                </Element>
+
                 </GridLayout>
             // </div>
         )

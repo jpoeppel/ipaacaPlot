@@ -12,6 +12,7 @@ class CanvasComponent extends Component {
           showPath: false,
           showVisibles: false,
           showBeliefedVision: false,
+          showSeenColor: false,
           visiblesUpdated: false
         }
 
@@ -22,6 +23,7 @@ class CanvasComponent extends Component {
         this.onChangeShowPath = this.onChangeShowPath.bind(this);
         this.onChangeShowVisibles = this.onChangeShowVisibles.bind(this);
         this.onChangeShowBeliefedVision = this.onChangeShowBeliefedVision.bind(this);
+        this.onChangeShowSeenColor = this.onChangeShowSeenColor.bind(this);
     }
 
     componentDidMount() {
@@ -136,8 +138,19 @@ class CanvasComponent extends Component {
 
 
                 if (!this.state.showTrueColor) {
-                    tileContent.color = "green";
-                    tileContent.symbol = "";
+                    var hideTile = true;
+                    if (visibles) {
+                        for (var i in visibles) {
+                            if (visibles[i][0] == pos[0] && visibles[i][1] == pos[1]) {
+                                hideTile = false;
+                            }
+                        }
+                    } 
+                    if (hideTile) {
+                        console.log("render green")
+                        tileContent.color = "green";
+                        tileContent.symbol = "";
+                    }
                 }
                 if (showTrueTarget && pos[0] == goalPos[0] && pos[1] == goalPos[1]) {
                     tileContent.symbol = "T";
@@ -279,6 +292,14 @@ class CanvasComponent extends Component {
         })
     }
 
+    onChangeShowSeenColor() {
+        this.props.requestVisibles()
+        this.setState({
+            visiblesUpdated: true,
+            showSeenColor: !this.state.showSeenColor
+        })
+    }
+
     render() {
         let { bgname, fgname, width, height, conditionName } = this.props;
         return (
@@ -301,6 +322,10 @@ class CanvasComponent extends Component {
                     <div>
                         Show Belief Symbols:
                         <input type="checkbox" defaultChecked={this.state.showBeliefSymbols} checked={this.state.showBeliefSymbols} onChange={this.onChangeShowBeliefSymbols} />
+                    </div>
+                    <div>
+                        Show Seen Color:
+                        <input type="checkbox" defaultChecked={this.state.showSeenColor} checked={this.state.showSeenColor} onChange={this.onChangeShowSeenColor} />
                     </div>
                     {this.props.traj ? <div>
                         Show Path:
