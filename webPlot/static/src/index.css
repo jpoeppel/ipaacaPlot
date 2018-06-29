@@ -19,6 +19,27 @@
   justify-content: space-between;
 }
 
+.controls {
+  display: none;
+  /* display: flex; */
+}
+
+.slider-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.value {
+  font-weight: bold;
+  text-align: center;
+}
+
 .draggable {
     position: absolute;
     cursor: move;
@@ -43,6 +64,11 @@
 .channelList {
     display: flex;
     flex-direction: column;
+}
+
+.condition {
+  font-size: 12pt;
+  font-weight: bold;
 }
 
 .element {
@@ -212,6 +238,10 @@ ul {
 
   .element_handle {
     cursor: move;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16pt;
+    width: 100;
   }
 
   /* Grid layout */

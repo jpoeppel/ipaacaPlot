@@ -20,7 +20,7 @@ class Element extends Component {
                 // <div {...this.props}>
                 <div {...this.props} className={classnames('element', this.props.className)} >
                 {/* // <div className={"element"}> */}
-                    <span className="element_handle">{this.props.id}</span>
+                    <div className="element_handle">{this.props.id}</div>
                     {this.props.children}
                     {/* <ChartControls title={"ElementCtrl"} group={"Data"}>
                         <div name="Data">

@@ -304,9 +304,9 @@ class CanvasComponent extends Component {
         let { bgname, fgname, width, height, conditionName } = this.props;
         return (
             <div>
-                <h2>{conditionName}</h2>
+                <div className="condition">{conditionName}</div>
                 <canvas ref={bgname} width={width} height={height} />
-                <div className={"flex"}>
+                <div className={"controls flex"}>
                     <div>
                         Show Targets:
                         <input type="checkbox" defaultChecked={this.state.showTargets} checked={this.state.showTargets} onChange={this.onChangeShowTargets} />

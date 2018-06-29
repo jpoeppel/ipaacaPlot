@@ -353,7 +353,7 @@ export default class Webblocks extends Component {
                     {/* All the finished conditions */}
                     {this.state.conditions ? <ConditionSelection onSelect={this.onConditionSelect} conditions={this.state.conditions}/>: ""}
                 </Element>
-                <Element key="gridGroundTruth" id="gridGroundTruth">
+                <Element key="gridGroundTruth" id="Observer's knowledge">
                     {map ? <CanvasComponent conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
@@ -381,13 +381,14 @@ export default class Webblocks extends Component {
                                             visibles={this.state.visibleList[stepNr]}
                                             /> : ""}
                 </Element>
-                <Element key="slider" id="slider">
+                <Element key="slider" id="Step">
                     {agentPositions ? <div onWheel={this.onWheel}>
-                                        <button onClick={this.reduceStepNr} >{"<"}</button>
-                                        <button onClick={this.increaseStepNr} >{">"}</button>
-                                        <button id="togglePlay" onClick={this.replay} >Replay</button>
                                         <CustomSlider value={stepNr} min={0} max={agentPositions.length-1} onSliderChange={this.onSliderChange}/>
-                                        
+                                        <div className={"slider-controls"} >
+                                            <button onClick={this.reduceStepNr} >{"<"}</button>
+                                            <button onClick={this.increaseStepNr} >{">"}</button>
+                                            <button id="togglePlay" onClick={this.replay} >Replay</button>
+                                        </div>
                                     </div>: ""}
                    
                 </Element>
@@ -422,11 +423,12 @@ export default class Webblocks extends Component {
                         </div>
                     </div>
                 </Element>
-                <Element key="ratings" id="ratings">
+                <Element key="ratings" id="Negative Log-Likelihood">
                     <DiscreteColorLegend
                     orientation="horizontal"
                     height={50}
-                    items={[{"title": "sample", "color": colors["sampling"]}, 
+                    items={[
+                            // {"title": "sample", "color": colors["sampling"]}, 
                             {"title": "TrueGoalWorld", "color": colors["twg"]},
                             {"title": "TrueWorld", "color": colors["tw"]},
                             {"title": "TrueGoal", "color": colors["tg"]},
@@ -434,7 +436,7 @@ export default class Webblocks extends Component {
                             {"title": "Switching", "color": colors["switching"]},
                             ]}
                     />
-                    {lines.length > 0 ? <FlexibleWidthXYPlot height={400} width={600}
+                    {lines.length > 0 ? <FlexibleWidthXYPlot height={400} width={650}
                             dontCheckIfEmpty={true}
                             margin={{"left": 60, "right": 100}}>
                             {lines}
@@ -458,7 +460,7 @@ export default class Webblocks extends Component {
                     </div>
                 </Element>
                 <Element key="Desire Beliefs" id="Desire Beliefs">
-                {bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={600}
+                {bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={650}
                             dontCheckIfEmpty={true}
                             margin={{"left": 60, "right": 100}}
                             xType={"ordinal"}
@@ -514,7 +516,7 @@ export default class Webblocks extends Component {
                         
                     </FlexibleWidthXYPlot> : ""}
                 </Element>
-                <Element key="Current model" id="Current model">
+                <Element key="Current model" id="Currently selected model">
                     <ModelVis curModel={curModel}/>
                 </Element>
 
