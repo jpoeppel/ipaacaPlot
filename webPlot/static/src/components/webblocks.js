@@ -346,12 +346,16 @@ export default class Webblocks extends Component {
         }
 
         var w,h;
+
+        var layout = {};
+
         for (var i in this.state.layout){
             var el = this.state.layout[i];
-            if (el.i=="gridGroundTruth") {
-                w = parseInt(el.w);
-                h = parseInt(el.h);
-            }
+            layout[el.i] = el; 
+            // if (el.i=="gridGroundTruth") {
+                // w = parseInt(el.w);
+                // h = parseInt(el.h);
+            // }
         }
 
         return(
@@ -370,8 +374,8 @@ export default class Webblocks extends Component {
                     {map ? <CanvasComponent conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
-                                            width={w*colwidth} 
-                                            height={h*rowHeight} 
+                                            width={layout["gridGroundTruth"] ? parseInt(layout["gridGroundTruth"].w)*colwidth : 600} 
+                                            height={layout["gridGroundTruth"] ? parseInt(layout["gridGroundTruth"].h)*rowHeight: 400} 
                                             map={map} 
                                             pos={agentPositions[stepNr]}
                                             traj={agentPositions.slice(0, stepNr+1)}
@@ -384,8 +388,8 @@ export default class Webblocks extends Component {
                     {samples ? <CanvasComponent conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
-                                            width={600} 
-                                            height={400} 
+                                            width={layout["gridAgentsBelief"] ? parseInt(layout["gridAgentsBelief"].w)*colwidth : 600} 
+                                            height={layout["gridAgentsBelief"] ? parseInt(layout["gridAgentsBelief"].h)*rowHeight: 400} 
                                             map={map} 
                                             pos={agentPositions[stepNr]}
                                             traj={agentPositions.slice(0, stepNr+1)}
@@ -449,7 +453,9 @@ export default class Webblocks extends Component {
                             {"title": "Switching", "color": colors["switching"]},
                             ]}
                     />
-                    {lines.length > 0 ? <FlexibleWidthXYPlot height={400} width={650}
+                    {lines.length > 0 ? <FlexibleWidthXYPlot 
+                            width={layout["ratings"] ? parseInt(layout["ratings"].w)*colwidth : 600} 
+                            height={layout["ratings"] ? parseInt(layout["ratings"].h)*rowHeight: 400} 
                             dontCheckIfEmpty={true}
                             margin={{"left": 60, "right": 100}}>
                             {lines}
@@ -473,7 +479,9 @@ export default class Webblocks extends Component {
                     </div>
                 </Element>
                 <Element key="Desire Beliefs" id="Desire Beliefs">
-                {bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={650}
+                {bars.length > 0 ? <FlexibleWidthXYPlot 
+                            width={layout["Desire Beliefs"] ? parseInt(layout["Desire Beliefs"].w)*colwidth : 600} 
+                            height={layout["Desire Beliefs"] ? parseInt(layout["Desire Beliefs"].h)*rowHeight: 400} 
                             dontCheckIfEmpty={true}
                             margin={{"left": 60, "right": 100}}
                             xType={"ordinal"}
@@ -492,7 +500,9 @@ export default class Webblocks extends Component {
                     </FlexibleWidthXYPlot> : ""}
                 </Element>
                 <Element key="Goal Beliefs" id="Goal Beliefs">
-                {goal_bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={1000}
+                {goal_bars.length > 0 ? <FlexibleWidthXYPlot 
+                            width={layout["Goal Beliefs"] ? parseInt(layout["Goal Beliefs"].w)*colwidth : 600} 
+                            height={layout["Goal Beliefs"] ? parseInt(layout["Goal Beliefs"].h)*rowHeight: 400} 
                             dontCheckIfEmpty={true}
                             margin={{"left": 60, "right": 100, "bottom":100}}
                             xType={"ordinal"}
@@ -511,7 +521,9 @@ export default class Webblocks extends Component {
                     </FlexibleWidthXYPlot> : ""}
                 </Element>
                 <Element key="World Beliefs" id="World Beliefs">
-                {world_bars.length > 0 ? <FlexibleWidthXYPlot height={400} width={400}
+                {world_bars.length > 0 ? <FlexibleWidthXYPlot 
+                            width={layout["World Beliefs"] ? parseInt(layout["World Beliefs"].w)*colwidth : 600} 
+                            height={layout["World Beliefs"] ? parseInt(layout["World Beliefs"].h)*rowHeight: 400} 
                             dontCheckIfEmpty={true}
                             margin={{"left": 60, "right": 100, "bottom":100}}
                             xType={"ordinal"}
