@@ -64,8 +64,8 @@ class CanvasComponent extends Component {
         let canvasMaxHeight = canvas.height;
 
         var tileSize = Math.min(Math.floor(canvasMaxWidth/map[0].length), Math.floor(canvasMaxHeight/map.length));
-        // canvas.width = tileSize*map[0].length;
-        // canvas.height = tileSize*map.length;
+        canvas.width = tileSize*map[0].length;
+        canvas.height = tileSize*map.length;
         context.clearRect(0, 0, canvas.width, canvas.height);            
 
         let renderTile = this.renderTile;
