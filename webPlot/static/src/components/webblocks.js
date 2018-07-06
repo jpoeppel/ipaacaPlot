@@ -323,8 +323,12 @@ export default class Webblocks extends Component {
 
         let samples = runResults.sampling ? runResults.sampling.sampleList : null;
 
+
+        const colwidth = 100;
+        const rowHeight = 50;
+
         let width = window.innerWidth*0.85;
-        let cols = Math.floor(width/100);
+        let cols = Math.floor(width/colwidth);
 
         var curModel = null;
 
@@ -341,11 +345,20 @@ export default class Webblocks extends Component {
             }
         }
 
+        var w,h;
+        for (var i in this.state.layout){
+            var el = this.state.layout[i];
+            if (el.i=="gridGroundTruth") {
+                w = parseInt(el.w);
+                h = parseInt(el.h);
+            }
+        }
+
         return(
             // <div className="webblocks-container">
                 <GridLayout className="layout" layout={this.state.layout} 
                             cols={cols} 
-                            rowHeight={50} 
+                            rowHeight={rowHeight} 
                             width={width} 
                             draggableHandle=".element_handle"
                             onLayoutChange={this.onLayoutChange}>
@@ -357,8 +370,8 @@ export default class Webblocks extends Component {
                     {map ? <CanvasComponent conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
-                                            width={600} 
-                                            height={400} 
+                                            width={w*colwidth} 
+                                            height={h*rowHeight} 
                                             map={map} 
                                             pos={agentPositions[stepNr]}
                                             traj={agentPositions.slice(0, stepNr+1)}

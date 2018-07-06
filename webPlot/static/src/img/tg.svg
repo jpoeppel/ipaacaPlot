@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generiert durch Microsoft Visio, SVG Export TrueGoal.svg Page-2 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="5.29032in" height="4.57674in"
+		viewBox="0 0 380.903 329.525" xml:space="preserve" color-interpolation-filters="sRGB" class="st10">
+	<v:documentProperties v:langID="1031" v:metric="true" v:viewMarkup="false">
+		<v:userDefs>
+			<v:ud v:nameU="msvNoAutoConnect" v:val="VT0(1):26"/>
+		</v:userDefs>
+	</v:documentProperties>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {fill:#ffffff;stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st2 {fill:#bfbfbf;stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st3 {fill:#000000;font-family:Calibri;font-size:1.00001em}
+		.st4 {font-size:1em}
+		.st5 {marker-end:url(#mrkr4-21);stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.237638}
+		.st6 {fill:#000000;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.086174404659928}
+		.st7 {stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.237638}
+		.st8 {marker-end:url(#mrkr4-21);stroke:#000000;stroke-dasharray:1.66346,1.18819,0,1.18819;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.237638}
+		.st9 {fill:none;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st10 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Markers">
+		<g id="lend4">
+			<path d="M 2 1 L 0 0 L 2 -1 L 2 1 " style="stroke:none"/>
+		</g>
+		<marker id="mrkr4-21" class="st6" v:arrowType="4" v:arrowSize="2" v:setback="23.2087" refX="-23.208747514911" orient="auto"
+				markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(-11.604373757455,-11.604373757455) "/>
+		</marker>
+	</defs>
+	<g v:mID="4" v:index="2" v:groupContext="foregroundPage">
+		<v:userDefs>
+			<v:ud v:nameU="msvThemeOrder" v:val="VT0(0):26"/>
+		</v:userDefs>
+		<title>TrueGoal</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<v:layer v:name="Verbinder" v:index="0"/>
+		<g id="shape1-1" v:mID="1" v:groupContext="shape" transform="translate(18.375,-39.9892)">
+			<title>Feld</title>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<rect x="0" y="68.7379" width="311.811" height="260.787" class="st1"/>
+		</g>
+		<g id="shape2-3" v:mID="2" v:groupContext="shape" transform="translate(131.761,-184.556)">
+			<title>Kreis</title>
+			<desc>Goal Belief</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="42.5197" cy="287.006" width="85.04" height="85.0394"/>
+			<path d="M0 287.01 A42.5197 42.5197 0 1 1 85.04 287.01 A42.5197 42.5197 0 0 1 0 287.01 Z" class="st2"/>
+			<text x="16.14" y="290.61" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Goal Belief</text>		</g>
+		<g id="shape3-6" v:mID="3" v:groupContext="shape" transform="translate(240.895,-184.556)">
+			<title>Kreis.2</title>
+			<desc>World Beliefs</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="42.5197" cy="287.006" width="85.04" height="85.0394"/>
+			<path d="M0 287.01 A42.5197 42.5197 0 1 1 85.04 287.01 A42.5197 42.5197 0 0 1 0 287.01 Z" class="st1"/>
+			<text x="9.87" y="290.61" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>World Beliefs</text>		</g>
+		<g id="shape4-9" v:mID="4" v:groupContext="shape" transform="translate(22.627,-184.556)">
+			<title>Kreis.3</title>
+			<desc>Goal Desires</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="42.5197" cy="287.006" width="85.04" height="85.0394"/>
+			<path d="M0 287.01 A42.5197 42.5197 0 1 1 85.04 287.01 A42.5197 42.5197 0 0 1 0 287.01 Z" class="st1"/>
+			<text x="12.14" y="290.61" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Goal <tspan
+						class="st4" v:langID="1033">Desires</tspan></text>		</g>
+		<g id="shape5-13" v:mID="5" v:groupContext="shape" transform="translate(131.761,-45.6585)">
+			<title>Kreis.4</title>
+			<desc>Action</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="42.5197" cy="287.006" width="85.04" height="85.0394"/>
+			<path d="M0 287.01 A42.5197 42.5197 0 1 1 85.04 287.01 A42.5197 42.5197 0 0 1 0 287.01 Z" class="st1"/>
+			<text x="26.81" y="290.61" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Action</text>		</g>
+		<g id="shape6-16" v:mID="6" v:groupContext="shape" v:layerMember="0" transform="translate(65.1467,-184.556)">
+			<title>Dynamischer Verbinder</title>
+			<path d="M0 329.53 L73.13 394.11" class="st5"/>
+		</g>
+		<g id="shape7-22" v:mID="7" v:groupContext="shape" v:layerMember="0" transform="translate(167.194,-184.556)">
+			<title>Dynamischer Verbinder.6</title>
+			<path d="M7.09 329.53 L7.09 377.87" class="st5"/>
+		</g>
+		<g id="shape8-27" v:mID="8" v:groupContext="shape" v:layerMember="0" transform="translate(283.414,-184.556)">
+			<title>Dynamischer Verbinder.7</title>
+			<path d="M0 329.53 L-73.13 394.11" class="st5"/>
+		</g>
+		<g id="shape9-32" v:mID="9" v:groupContext="shape" v:layerMember="0" transform="translate(167.194,-45.6585)">
+			<title>Dynamischer Verbinder.17</title>
+			<path d="M7.09 329.53 L7.09 356.1 L195.59 356.1 L195.59 63.78 L7.09 63.78 L7.09 74.41" class="st7"/>
+		</g>
+		<g id="shape10-35" v:mID="10" v:groupContext="shape" v:layerMember="0" transform="translate(174.281,-300.777)">
+			<title>Dynamischer Verbinder.19</title>
+			<path d="M0 329.53 L-103.83 359.19" class="st5"/>
+		</g>
+		<g id="shape11-40" v:mID="11" v:groupContext="shape" v:layerMember="0" transform="translate(181.367,-300.777)">
+			<title>Dynamischer Verbinder.21</title>
+			<path d="M-7.09 329.53 L-7.09 355.19" class="st8"/>
+		</g>
+		<g id="shape12-45" v:mID="12" v:groupContext="shape" v:layerMember="0" transform="translate(174.281,-300.777)">
+			<title>Dynamischer Verbinder.22</title>
+			<path d="M0 329.53 L103.83 359.19" class="st5"/>
+		</g>
+		<g id="shape13-50" v:mID="13" v:groupContext="shape" transform="translate(176.761,-144.517)">
+			<title>Tabelle.13</title>
+			<rect v:rectContext="foreign" x="0" y="306.139" width="14.8819" height="23.3858" class="st9"/>
+			<switch>
+				<foreignObject x="0" y="306.139" width="14.8819" height="23.3858"
+						requiredExtensions="http://schemas.microsoft.com/visio/2003/SVGExtensions/">
+					<v:foreignData v:dataType="ole" v:type="33280" v:orgSize="3584" v:data="data:metafile;base64,eNrtVs1rE0EUfzO
+								btGYTaAxSSwh1Eemh2FDsoYggSk3BQ6O0PXhN7DZGu9l8bCu5BT0onkSPHqx/gl68eKh41/4JegsVQSQ9iVnfezsbQmjrJni
+								x5rdM8mZm933t+73Z3U8nP796nfwCPbgMGrTdCIx0rQk1GHEAqeZt13X9ZXeIfwq/cITVOwyp//YwLf8NlsHGywEDMlDC/yr
+								UoR+MQ7jDeeoH8qPk9R1ve/GgZzQcVzS/p9yADTBhUOggRXc8QZ871elpCxi/BWX0Iw93+7afQPtCxRTUPt1/T8lSxX8TM29
+								CDWb5Co4JFX+oD/vk63nvNTHfZRf/qRdQzx/FcQJHhHMMEB32hmMJ4R3jA0NgVWi6V3u93E/hz1LxdtWu2euOsWhXLXNjJrN
+								WdOyqMZeehRjuX1sxMpXNnFO0S1xj/iQ9B62Lbyp/tE92qZ5Dild+HyJ8w4X3ONkTtIeVrO0z41K8S5Uekb7ksZgkIYlGJKX
+								FhFqLdu6LyYbcEQmUpkbGIKk4F6eoUXqLo4GK5qXHGLonBks5585qvYxNrsy2f0pD8fQpf06FJMRXi5ZZM7LmfWPZtnIl5lo
+								hqT8i9u2e3hql+GaEx8kLegv2OdrpW736xBH6Fib1NdIXH/f1Cc7b945ekF9Zb0H52WgH0Yt+Pu7109MrlN5tkWa9ee4llBU
+								dVPUhPFtx7jkA7zjXQsqzK/WaY1rwbDv8RJL++cl1lump5t4L6I1BO6RGslez1w+rnxRXxPMPZ9S82fwhz71ssQ+aEJqui8T
+								DPGhjEqIoFcizB9NwbJCBCmxCDk/+Ip6DJfwOyKrZVqBT2cDs9Xv+Eu8v/cUYBjn/YWif8RslGHnA"/>
+				</foreignObject>
+				<svg viewBox="0 0 907.84 1429.9" enable-background="new" color-interpolation-filters="sRGB" height="23.3858"
+						preserveAspectRatio="none" width="14.8819" x="0" y="306.139">
+					<defs>
+						<clipPath id="mfid354">
+							<rect id="mfid355" x="0" y="0" width="907.84" height="1429.9"/>
+						</clipPath>
+					</defs>
+					<g clip-path="url(#mfid354)">
+						<mask id="mfid353" fill-rule="evenodd">
+							<g>
+								<rect width="908" height="1430" fill="white" stroke="none"/>
+							</g>
+						</mask>
+						<g mask="url(#mfid353)">
+							<g transform="matrix(2.0268, 0, 0, 2.2344, 0, 0)">
+								<g stroke="#000000" stroke-miterlimit="10" fill="none">
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="normal" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,124" y="0" transform="translate(245,244)"
+												xml:space="preserve">*</text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,124" y="0" transform="translate(235,512)"
+												xml:space="preserve">g</text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="384">
+										<text stroke="none" fill="#000000" x="0,212" y="0" transform="translate(46,416)"
+												xml:space="preserve">b</text>
+									</g>
+								</g>
+							</g>
+						</g>
+						<mask id="mfid356" fill-rule="evenodd" fill="white" stroke="none">
+							<rect x="0" y="0" width="908" height="1430"/>
+						</mask>
+					</g>
+				</svg>
+			</switch>
+			<rect v:rectContext="foreign" x="0" y="306.139" width="14.8819" height="23.3858" class="st9"/>
+		</g>
+		<g id="shape14-53" v:mID="14" v:groupContext="shape" transform="translate(117.588,-268.472)">
+			<title>Tabelle.14</title>
+			<rect v:rectContext="foreign" x="0" y="309.622" width="14.1732" height="19.9028" class="st9"/>
+			<switch>
+				<foreignObject x="0" y="309.622" width="14.1732" height="19.9028"
+						requiredExtensions="http://schemas.microsoft.com/visio/2003/SVGExtensions/">
+					<v:foreignData v:dataType="ole" v:type="33280" v:orgSize="3584" v:data="data:metafile;base64,eNrtVr9rFEEU/mb
+								2LvHmDnI5JIbjikVCCiFHNCBoISd6QYuckuQPcNUNnsnd3o9N5LA5sLMSbQQbbbRWsNJC0MZGLawlNiJWKYJNcNc3s7NriIJ
+								7h4263zK7b2Z235v35n1v9t3b8c0Hj4sfsQcnYMDzMxjZNcZ0U8gDXPc93/fDYT/BX4Vv1NJ6D1P66SVh+W+wCIcuFyaqaNK
+								zgx4GwQTSEedlPeBvuBp/EUzP/+obI7rJ+nEOa7AxLAQ42+1P3O/2RzXtFPnfQIvWcRFXB7ZfIPtMuxPXvnx/Vctc+3+eIm+
+								ji1l1xcek9j81gH251ve6kHt630L+y1oga/4otX3UMirGSV34V8GCY3xoMMoMQwS5t5f7Jbot1C91nK6z4przTqdhr81UL9d
+								dp2POlWeRo/nTS2a1vW65daeJLPXDTnkO28eetH9rX9qV+ZzSvArrkMQjGrhOndtMzlEmG68V40pqVmZ6hodSwGIpMS5pJKU
+								ym9Rj2ei9HK/wPiuQND0yhqLmXF56TdJDahVS9IlaVr+Tw4LlXlnutajIXVC2d7ipeXpLWU1x5JfrDbtr1uxr5qLTsJqKb4e
+								mREWyb+vAxqj0b4YFnDwiNpmnvHV7gb6+F0ffByH6Ul9rItTHVNy2Ir19dlzptXpCr15AZwkhsJVXtQF4rmLCOD+41Ou6dgN
+								376dvcqn/2dSKloHPX+4hXHtgi4Wl/yfUTtbODpp/JbWjd14Wdf/M0x3+6vBXZdtgzBCCFW5YMMYYsiS5wDgS/EAVbazDopO
+								/Tudgk/4Darq3EetUNin6g56/khlH/6APw5z/SOwrfAdOJ2wf"/>
+				</foreignObject>
+				<svg viewBox="0 0 1015.9 1429.9" enable-background="new" color-interpolation-filters="sRGB" height="19.9028"
+						preserveAspectRatio="none" width="14.1732" x="0" y="309.622">
+					<defs>
+						<clipPath id="mfid358">
+							<rect id="mfid359" x="0" y="0" width="1015.9" height="1429.9"/>
+						</clipPath>
+					</defs>
+					<g clip-path="url(#mfid358)">
+						<mask id="mfid357" fill-rule="evenodd">
+							<g>
+								<rect width="1016" height="1430" fill="white" stroke="none"/>
+							</g>
+						</mask>
+						<g mask="url(#mfid357)">
+							<g transform="matrix(2.6458, 0, 0, 2.4826, 0, 0)">
+								<g stroke="#000000" stroke-miterlimit="10" fill="none">
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,58" y="0" transform="translate(254,480)"
+												xml:space="preserve">t</text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="384">
+										<text stroke="none" fill="#000000" x="0,180" y="0" transform="translate(58,384)"
+												xml:space="preserve">a</text>
+									</g>
+								</g>
+							</g>
+						</g>
+						<mask id="mfid360" fill-rule="evenodd" fill="white" stroke="none">
+							<rect x="0" y="0" width="1016" height="1430"/>
+						</mask>
+					</g>
+				</svg>
+			</switch>
+			<rect v:rectContext="foreign" x="0" y="309.622" width="14.1732" height="19.9028" class="st9"/>
+		</g>
+		<g id="shape15-56" v:mID="15" v:groupContext="shape" transform="translate(177.115,-273.817)">
+			<title>Tabelle.15</title>
+			<rect v:rectContext="foreign" x="0" y="309.622" width="14.1732" height="19.9028" class="st9"/>
+			<switch>
+				<foreignObject x="0" y="309.622" width="14.1732" height="19.9028"
+						requiredExtensions="http://schemas.microsoft.com/visio/2003/SVGExtensions/">
+					<v:foreignData v:dataType="ole" v:type="33280" v:orgSize="3584" v:data="data:metafile;base64,eNrtVjFv00AU/u6
+								ctMSJaGJVURUFZDGwNSpUQoIBFUEqGBpQ2x+AAVeYNnGTuEURSyQ2BoRgZIEFVkBiYwDBwgId+AGFASEkJAbEUmHz7nw2VUH
+								CiVgAf9bZ7+7s9+69e987b7wubd59WHmLHTgKDX6Qw8i2MaaaRBHgqu8HQRANByn+KnyjllV7mFFPPw3Lf4N5uHR5MFFHi54
+								d9DAIysjGnBf1gL/icvxpOD37q2+0+Cbqx2mswMaw0MHZdn+Sfjce17Tj5H8Tq7SOc7g0sH2D7DPlTlL74v1lJXPl/xmKvI0
+								upuSVHBPK/8wA9sVa36hC7qt9i/gvaoGo+aPUdlHLyRindeFfBQuP8aHBKDM0Pcy9ndyv0m3OOd9xu+6SZ866naa9Mlm/4Hh
+								ux5yuTaFA8ycWzHp7zfIct4U89aNObRpfDj9q/9a+sCvyOaN4FdUhgfs0cIU6N5mYo0zWXkrGVeWsyPQcj6SQxUJiXNBISDU
+								2ocby8XsFPsP7zCBp/8gYKopzReE1SfeozZCi99Ty6p0C5izv4mJvlYrcWWl7i5uKpzek1QxHcdFp2l2zYV82592m1ZJ8e7d
+								XfybY96C0Pir8m2QhJw/qm8yX3nrlUF/fT6Lv+m7dEPo2xiN9TMbtc6y3z45IvVZZV6vXobKEENoqytoAPJExYZzvW+h1Pbs
+								J4072Ghf6P+1ZUjLw4eNtRGsPbbGo9P+ExrHGqUHzryp39NbziuqffLzFXxz4Km1rjGm6zoyrFrQxhjxJHlBCih+oo401WHT
+								yO3QOtug/oKF664lOZZOiP+j5K5hx6A/6MMz5j9S+xHeA2WsJ"/>
+				</foreignObject>
+				<svg viewBox="0 0 1015.9 1429.9" enable-background="new" color-interpolation-filters="sRGB" height="19.9028"
+						preserveAspectRatio="none" width="14.1732" x="0" y="309.622">
+					<defs>
+						<clipPath id="mfid362">
+							<rect id="mfid363" x="0" y="0" width="1015.9" height="1429.9"/>
+						</clipPath>
+					</defs>
+					<g clip-path="url(#mfid362)">
+						<mask id="mfid361" fill-rule="evenodd">
+							<g>
+								<rect width="1016" height="1430" fill="white" stroke="none"/>
+							</g>
+						</mask>
+						<g mask="url(#mfid361)">
+							<g transform="matrix(2.6458, 0, 0, 2.4826, 0, 0)">
+								<g stroke="#000000" stroke-miterlimit="10" fill="none">
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,58" y="0" transform="translate(254,480)"
+												xml:space="preserve">t</text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="384">
+										<text stroke="none" fill="#000000" x="0,180" y="0" transform="translate(58,384)"
+												xml:space="preserve">a</text>
+									</g>
+								</g>
+							</g>
+						</g>
+						<mask id="mfid364" fill-rule="evenodd" fill="white" stroke="none">
+							<rect x="0" y="0" width="1016" height="1430"/>
+						</mask>
+					</g>
+				</svg>
+			</switch>
+			<rect v:rectContext="foreign" x="0" y="309.622" width="14.1732" height="19.9028" class="st9"/>
+		</g>
+		<g id="shape16-59" v:mID="16" v:groupContext="shape" transform="translate(223.887,-266.731)">
+			<title>Tabelle.16</title>
+			<rect v:rectContext="foreign" x="0" y="309.622" width="14.1732" height="19.9028" class="st9"/>
+			<switch>
+				<foreignObject x="0" y="309.622" width="14.1732" height="19.9028"
+						requiredExtensions="http://schemas.microsoft.com/visio/2003/SVGExtensions/">
+					<v:foreignData v:dataType="ole" v:type="33280" v:orgSize="3584" v:data="data:metafile;base64,eNrtVjFv00AU/u6
+								ctMSJaGJVURUFZDGwNSpUQoIBFUEqGBpQ2x+AAVeYNnGTuEURSyQ2BoRgZIEFVkBiYwDBwgId+AGFASEkJAbEUmHz7nw2VUH
+								CiVgAf9bZ7+7s9+69e987b7wubd59WHmLHTgKDX6Qw8i2MaaaRBHgqu8HQRANByn+KnyjllV7mFFPPw3Lf4N5uHR5MFFHi54
+								d9DAIysjGnBf1gL/icvxpOD37q2+0+Cbqx2mswMaw0MHZdn+Sfjce17Tj5H8Tq7SOc7g0sH2D7DPlTlL74v1lJXPl/xmKvI0
+								upuSVHBPK/8wA9sVa36hC7qt9i/gvaoGo+aPUdlHLyRindeFfBQuP8aHBKDM0Pcy9ndyv0m3OOd9xu+6SZ866naa9Mlm/4Hh
+								ux5yuTaFA8ycWzHp7zfIct4U89aNObRpfDj9q/9a+sCvyOaN4FdUhgfs0cIU6N5mYo0zWXkrGVeWsyPQcj6SQxUJiXNBISDU
+								2ocby8XsFPsP7zCBp/8gYKopzReE1SfeozZCi99Ty6p0C5izv4mJvlYrcWWl7i5uKpzek1QxHcdFp2l2zYV82592m1ZJ8e7d
+								XfybY96C0Pir8m2QhJw/qm8yX3nrlUF/fT6Lv+m7dEPo2xiN9TMbtc6y3z45IvVZZV6vXobKEENoqytoAPJExYZzvW+h1Pbs
+								J4072Ghf6P+1ZUjLw4eNtRGsPbbGo9P+ExrHGqUHzryp39NbziuqffLzFXxz4Km1rjGm6zoyrFrQxhjxJHlBCih+oo401WHT
+								yO3QOtug/oKF664lOZZOiP+j5K5hx6A/6MMz5j9S+xHeA2WsJ"/>
+				</foreignObject>
+				<svg viewBox="0 0 1015.9 1429.9" enable-background="new" color-interpolation-filters="sRGB" height="19.9028"
+						preserveAspectRatio="none" width="14.1732" x="0" y="309.622">
+					<defs>
+						<clipPath id="mfid366">
+							<rect id="mfid367" x="0" y="0" width="1015.9" height="1429.9"/>
+						</clipPath>
+					</defs>
+					<g clip-path="url(#mfid366)">
+						<mask id="mfid365" fill-rule="evenodd">
+							<g>
+								<rect width="1016" height="1430" fill="white" stroke="none"/>
+							</g>
+						</mask>
+						<g mask="url(#mfid365)">
+							<g transform="matrix(2.6458, 0, 0, 2.4826, 0, 0)">
+								<g stroke="#000000" stroke-miterlimit="10" fill="none">
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,58" y="0" transform="translate(254,480)"
+												xml:space="preserve">t</text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="384">
+										<text stroke="none" fill="#000000" x="0,180" y="0" transform="translate(58,384)"
+												xml:space="preserve">a</text>
+									</g>
+								</g>
+							</g>
+						</g>
+						<mask id="mfid368" fill-rule="evenodd" fill="white" stroke="none">
+							<rect x="0" y="0" width="1016" height="1430"/>
+						</mask>
+					</g>
+				</svg>
+			</switch>
+			<rect v:rectContext="foreign" x="0" y="309.622" width="14.1732" height="19.9028" class="st9"/>
+		</g>
+		<g id="shape17-62" v:mID="17" v:groupContext="shape" transform="translate(238.414,-127.863)">
+			<title>Tabelle.17</title>
+			<rect v:rectContext="foreign" x="0" y="306.139" width="20.9055" height="23.3858" class="st9"/>
+			<switch>
+				<foreignObject x="0" y="306.139" width="20.9055" height="23.3858"
+						requiredExtensions="http://schemas.microsoft.com/visio/2003/SVGExtensions/">
+					<v:foreignData v:dataType="ole" v:type="33280" v:orgSize="3584" v:data="data:metafile;base64,eNrtVs9rE1EQnvc
+								2ac0m0BiKhhpkKeJBaAjmULwIoink0Cht/4AmusXVbrZJtg3BS8GbJ9GjIPXqTRG89FDw5EU9+AfoTQpCD+KlmHXm7ewSquB
+								u8FLdb3m7837szJvZ+ebth/cnPz17MfMZjuAyaDD0MjAxMia4KeQBJPeHnucFw16CY4Uf2NL8DVP8HCZh+W+wBA5eLhhQgzY
+								+uzCAODgF6ZDzVA/kO6nG9/zphd+9o4U3qh/XYR1MGBc6SDHqT9T3psOadhX9t2ED99GCO7HtF9C+YHei2qf1d1mW7P8NjLw
+								JPaioKzqK7H8qhn3a60cu5EP+bgH/qRZQzZ/EdgJbRsU4qQv/KoR/jI8NgZmh6X7uHeV+CW+L1s2u03PWXGPB6drm+lztluU
+								6XaNarkAO568tG7XOZtO1nDZksR90ylX4dull54/2yS7lc4p5FdQhwlcceIqdR4LmMJO1t4pxJTVLmZ6RgeSzmCQhiUYklUW
+								Rx7LhupxclXuigNL5iSmYYc7lyWuUXmPbRkWncX2W1+RgseneXhlsYJFbVbYPpcE8faispiTkVyzb7BkNs28sOXazrfh2T+i
+								zxL6D6a1J8m9O+Jy8iEVvX3nbr/v6todR9M2f1Z+Tvkox0CdU3A5CvTuirPS26jrvXgfOEoRvK69qA8CuiomQcnZ50HNNG2o
+								76QeS9F84t8YywJf9JxDs3bclgtL/CxpXGvW4+VdSX/TxmzPcr7w6lLvV78q2JoSm66JwvwXalIQsSv2RP9gExDfowCY08eS
+								38Bxs439Ag3tbkU5lA6Mf9/wlZsz/RR/GOf8hsa/wE1BaaTc="/>
+				</foreignObject>
+				<svg viewBox="0 0 1275.3 1429.9" enable-background="new" color-interpolation-filters="sRGB" height="23.3858"
+						preserveAspectRatio="none" width="20.9055" x="0" y="306.139">
+					<defs>
+						<clipPath id="mfid370">
+							<rect id="mfid371" x="0" y="0" width="1275.3" height="1429.9"/>
+						</clipPath>
+					</defs>
+					<g clip-path="url(#mfid370)">
+						<mask id="mfid369" fill-rule="evenodd">
+							<g>
+								<rect width="1275" height="1430" fill="white" stroke="none"/>
+							</g>
+						</mask>
+						<g mask="url(#mfid369)">
+							<g transform="matrix(2.846, 0, 0, 2.352, 0, 0)">
+								<g stroke="#000000" stroke-miterlimit="10" fill="none">
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,124" y="0" transform="translate(234,512)"
+												xml:space="preserve">w</text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="384">
+										<text stroke="none" fill="#000000" x="0,159" y="0" transform="translate(46,416)"
+												xml:space="preserve">b</text>
+									</g>
+								</g>
+							</g>
+						</g>
+						<mask id="mfid372" fill-rule="evenodd" fill="white" stroke="none">
+							<rect x="0" y="0" width="1275" height="1430"/>
+						</mask>
+					</g>
+				</svg>
+			</switch>
+			<rect v:rectContext="foreign" x="0" y="306.139" width="20.9055" height="23.3858" class="st9"/>
+		</g>
+		<g id="shape18-65" v:mID="18" v:groupContext="shape" transform="translate(89.2411,-130.344)">
+			<title>Tabelle.18</title>
+			<rect v:rectContext="foreign" x="0" y="306.139" width="14.1732" height="23.3858" class="st9"/>
+			<switch>
+				<foreignObject x="0" y="306.139" width="14.1732" height="23.3858"
+						requiredExtensions="http://schemas.microsoft.com/visio/2003/SVGExtensions/">
+					<v:foreignData v:dataType="ole" v:type="33280" v:orgSize="3584" v:data="data:metafile;base64,eNrtVs1rE0EU/81
+								s0ppNoGkQDSXC4sFbQzEH0YMgmoLSRml7EDxF3da13Ww+tpWAh4A3vQgeRYj/gXrxoAfFu/oXSL2JJw+Ch+Ku783OxlIKJsG
+								DH/tb3s6br/3Nm5n33r5/N739+OnMR+zBaRgIwgwmdrUJLQp5QOp6EIZh3Bwm+KvwnSStzzClyyDZlv8GS/Do8WGhigaVbXQ
+								xCg4hPfB5jgfyrVTtr6Lu+f3mGCQ9GceUi9iAjXFhQord9gw77+Agpp0l+100aR1XcXNk/gLxC23TsPw8fl3rUtt/iXbeRgd
+								z6hkeRW1/agR+XuttHcgDfW6x/3Ms4Jg/SXIgiQf/PESUxseGoBtimNHd2+v7JXotOtfaXsdb9a15r+3aG7PV647vta1KeQ4
+								56j+3bFVbm3Xf8RrIUj2ulCv4evJZ65f8zMv3OaX9Ko5DjGlSXpOcEtyXoYv/SHlcSfXyTc/IWIu8mDUh2Y1YK4uibssOxuV
+								kT26LAmnHJqYwo30uz1aT9pykTx86QeOzekwOi3X/xkq3SUGuqbh3ZC+IVnhfsaYk8iuOa3esmn3LWvLcekP53ZUj5gWOcE+
+								KW5Ns36yIfPK42RcLytq1y6ZmMaFPkxBx5JUPAy/V2oWUR5e7Hd92gX76ruTvfjBX77HOMz99foiIQ6jyi4jixH6onamdj/W
+								S2tEHbw7Hv4UvduSC/KY4DSEM0xSFO2swpiSy4uffY4I/BFW0sIk6ZX6H8mCD/gNqurY1VFa26PRHzb/kiaj8RhvGyf9I+BV
+								+AEkVYkk="/>
+				</foreignObject>
+				<svg viewBox="0 0 864.65 1429.9" enable-background="new" color-interpolation-filters="sRGB" height="23.3858"
+						preserveAspectRatio="none" width="14.1732" x="0" y="306.139">
+					<defs>
+						<clipPath id="mfid374">
+							<rect id="mfid375" x="0" y="0" width="864.65" height="1429.9"/>
+						</clipPath>
+					</defs>
+					<g clip-path="url(#mfid374)">
+						<mask id="mfid373" fill-rule="evenodd">
+							<g>
+								<rect width="865" height="1430" fill="white" stroke="none"/>
+							</g>
+						</mask>
+						<g mask="url(#mfid373)">
+							<g transform="matrix(1.8021, 0, 0, 2.2344, 0, 0)">
+								<g stroke="#000000" stroke-miterlimit="10" fill="none">
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="384">
+										<text stroke="none" fill="#000000" x="0,238" y="0" transform="translate(76,416)"
+												xml:space="preserve">g</text>
+									</g>
+								</g>
+							</g>
+						</g>
+						<mask id="mfid376" fill-rule="evenodd" fill="white" stroke="none">
+							<rect x="0" y="0" width="865" height="1430"/>
+						</mask>
+					</g>
+				</svg>
+			</switch>
+			<rect v:rectContext="foreign" x="0" y="306.139" width="14.1732" height="23.3858" class="st9"/>
+		</g>
+		<g id="shape19-68" v:mID="19" v:groupContext="shape" transform="translate(184.202,-18.375)">
+			<title>Tabelle.19</title>
+			<rect v:rectContext="foreign" x="0" y="308.974" width="27.6378" height="20.5512" class="st9"/>
+			<switch>
+				<foreignObject x="0" y="308.974" width="27.6378" height="20.5512"
+						requiredExtensions="http://schemas.microsoft.com/visio/2003/SVGExtensions/">
+					<v:foreignData v:dataType="ole" v:type="33280" v:orgSize="3584" v:data="data:metafile;base64,eNrtV81rE0EU/81
+								s0ppNtEkoUkqUtQcvpSG1Jz2IXylUaBqaHrwITTXFaDbbJNtK8GBFEfFU8ChIvXhWzxWkFfRk+yfEg549CBWKiW9mZ9MQWk1
+								iL2p+y8u+nZl9HzPvY7O1Gao8fzX4CU04Cw3Vmg89DWNMkUQQ4Oq5WqvV3OFaF38VfhB51Rl61L3a3Zb/BtOw6LJhII483Ys
+								oox0chbee86Ie8I9cjr91psf3ekcT85pbU6aQQwadQgdnjf60+l5/vaZdJP9NLJAdc7jZtv4w6WfKp1b1i/W3FM+V/0na+Qx
+								KiMmrdQwo/z1t6Be2PnCOSeY7b8h/UQtEze8lOkTkk3sM+IkCRIe7NeKfAnPaeMdgFA2a7sRec+5H6Gcye61olax52xi3imY
+								mNxK/nrWtojEWjcl4upQy4oXFtJ218jLG3IfoGL6dfl34rX6hV8SzR+WVW4cEnhFzh+gCF3MUydoJ6W5EzopI93GXc7JYcIy
+								LNBJclA2oMX99XYCf47M8TNzJnj4MqpwLCq+Je0Fk0NovzMkYsSaAybR9Y6a8QEVuVure4YbK0xX5OeXhCM5kzUzJSGRuG9O
+								Wmc7LHNuO6Osi+1ZCS73CvxHm5OQpvcLWpb2jlT3kcSEvVTbnrBywtbNqv7l3VRfyksf190JerN+Vx+S+fW2QOyXlDk80y2W
+								/tnNDyH0Z3rXTkcvqcr/L07EvO3KXq63IJXs/SP/3tXeZnZFy08d0tds6VFQTHF1BWcuANXmGjPOhVLlkZ0x8XvU+5kL+XTa
+								veODK5lM0+6DtE3uJ84kJ/CEisgc82RhSz8m1Hf4utC1t0RjTdJ2F76eh9TH4ibPBHw6DPxoFQjgIxFHAItLU+bPUB/P0HZB
+								QT0stdWWDrG+3/x6R/y8ODp30f3T1S/wEzHOHQQ=="/>
+				</foreignObject>
+				<svg viewBox="0 0 1426.6 1063.2" enable-background="new" color-interpolation-filters="sRGB" height="20.5512"
+						preserveAspectRatio="none" width="27.6378" x="0" y="308.974">
+					<defs>
+						<clipPath id="mfid378">
+							<rect id="mfid379" x="0" y="0" width="1426.6" height="1063.2"/>
+						</clipPath>
+					</defs>
+					<g clip-path="url(#mfid378)">
+						<mask id="mfid377" fill-rule="evenodd">
+							<g>
+								<rect width="1427" height="1063" fill="white" stroke="none"/>
+							</g>
+						</mask>
+						<g mask="url(#mfid377)">
+							<g transform="matrix(2.347, 0, 0, 1.8455, 0, 0)">
+								<g stroke="#000000" stroke-miterlimit="10" fill="none">
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="normal" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,88" y="0" transform="translate(450,480)"
+												xml:space="preserve">1</text>
+									</g>
+									<g font-family="&#39;S&#39;" font-style="normal" font-weight="400" font-size="224">
+										<text stroke="none" fill="#000000" x="0,97" y="0" transform="translate(335,480)"
+												xml:space="preserve"></text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="224">
+										<text stroke="none" fill="#000000" x="0,49" y="0" transform="translate(248,480)"
+												xml:space="preserve">t</text>
+									</g>
+									<g font-family="&#39;Times New Roman&#39;,roman,serif" font-style="italic" font-weight="400"
+											font-size="384">
+										<text stroke="none" fill="#000000" x="0,151" y="0" transform="translate(58,384)"
+												xml:space="preserve">a</text>
+									</g>
+								</g>
+							</g>
+						</g>
+						<mask id="mfid380" fill-rule="evenodd" fill="white" stroke="none">
+							<rect x="0" y="0" width="1427" height="1063"/>
+						</mask>
+					</g>
+				</svg>
+			</switch>
+			<rect v:rectContext="foreign" x="0" y="308.974" width="27.6378" height="20.5512" class="st9"/>
+		</g>
+		<g id="shape20-71" v:mID="20" v:groupContext="shape" transform="translate(24.0443,-277.391)">
+			<title>Feld.45</title>
+			<desc>Agent</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.2598" cy="317.832" width="42.52" height="23.3858"/>
+			<rect x="0" y="306.139" width="42.5197" height="23.3858" class="st9"/>
+			<text x="6.82" y="321.43" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Agent</text>		</g>
+	</g>
+</svg>
