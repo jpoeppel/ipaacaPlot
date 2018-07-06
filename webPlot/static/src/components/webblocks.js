@@ -457,7 +457,7 @@ export default class Webblocks extends Component {
                             width={layout["ratings"] ? parseInt(layout["ratings"].w)*colwidth : 600} 
                             height={layout["ratings"] ? parseInt(layout["ratings"].h)*rowHeight: 400} 
                             dontCheckIfEmpty={true}
-                            margin={{"left": 60, "right": 100}}>
+                            margin={{"left": 60, "right": 30}}>
                             {lines}
                         <Borders style={{
                         bottom: {fill: '#fff'},
