@@ -41,14 +41,14 @@ export default class Webblocks extends Component {
                         switching: false},
             runResults: {},
             layout: [
-                {"w": 18,"h": 4,"x": 0,"y": 0,"i": "sel"},
-                {"w": 6,"h": 10,"x": 0,"y": 4,"i": "gridGroundTruth"},
-                {"w": 6,"h": 10,"x": 6,"y": 4,"i": "gridAgentsBelief"},
-                {"w": 12,"h": 2,"x": 0,"y": 14,"i": "slider"},
-                {"w": 6,"h": 1,"x": 12,"y": 4,"i": "text"},
-                {"w": 6,"h": 2,"x": 12,"y": 5,"i": "Model selection"},
+                {"w": 18,"h": 8,"x": 0,"y": 0,"i": "sel"},
+                {"w": 6,"h": 18,"x": 0,"y": 4,"i": "gridGroundTruth"},
+                {"w": 6,"h": 18,"x": 6,"y": 4,"i": "gridAgentsBelief"},
+                {"w": 12,"h": 5,"x": 0,"y": 14,"i": "slider"},
+                {"w": 6,"h": 2,"x": 12,"y": 4,"i": "text"},
+                {"w": 6,"h": 3,"x": 12,"y": 5,"i": "Model selection"},
                 {"w": 6,"h": 8,"x": 12,"y": 7,"i": "ratings"},
-                {"w": 6,"h": 1,"x": 12,"y": 15,"i": "Options"},
+                {"w": 6,"h": 2,"x": 12,"y": 15,"i": "Options"},
                 {"w": 5,"h": 7,"x": 0,"y": 16,"i": "Desire Beliefs"},
                 {"w": 9,"h": 7,"x": 5,"y": 16,"i": "Goal Beliefs"},
                 {"w": 3,"h": 7,"x": 14,"y": 16,"i": "World Beliefs"}
@@ -325,7 +325,7 @@ export default class Webblocks extends Component {
 
 
         const colwidth = 100;
-        const rowHeight = 50;
+        const rowHeight = 20;
 
         let width = window.innerWidth*0.85;
         let cols = Math.floor(width/colwidth);
@@ -358,6 +358,8 @@ export default class Webblocks extends Component {
             // }
         }
 
+        let margin = [10,10];
+
         return(
             // <div className="webblocks-container">
                 <GridLayout className="layout" layout={this.state.layout} 
@@ -375,7 +377,7 @@ export default class Webblocks extends Component {
                                             bgname={"bg"} 
                                             fgname={"fg"} 
                                             width={layout["gridGroundTruth"] ? parseInt(layout["gridGroundTruth"].w)*colwidth : 600} 
-                                            height={layout["gridGroundTruth"] ? parseInt(layout["gridGroundTruth"].h)*rowHeight: 400} 
+                                            height={layout["gridGroundTruth"] ? (parseInt(layout["gridGroundTruth"].h))*(rowHeight+margin[1]) - margin[1]: 400}
                                             map={map} 
                                             pos={agentPositions[stepNr]}
                                             traj={agentPositions.slice(0, stepNr+1)}
@@ -389,7 +391,7 @@ export default class Webblocks extends Component {
                                             bgname={"bg"} 
                                             fgname={"fg"} 
                                             width={layout["gridAgentsBelief"] ? parseInt(layout["gridAgentsBelief"].w)*colwidth : 600} 
-                                            height={layout["gridAgentsBelief"] ? parseInt(layout["gridAgentsBelief"].h)*rowHeight: 400} 
+                                            height={layout["gridGroundTruth"] ? (parseInt(layout["gridGroundTruth"].h))*(rowHeight+margin[1]) - margin[1]: 400}
                                             map={map} 
                                             pos={agentPositions[stepNr]}
                                             traj={agentPositions.slice(0, stepNr+1)}

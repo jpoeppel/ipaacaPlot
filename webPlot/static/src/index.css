@@ -20,8 +20,8 @@
 }
 
 .controls {
-  display: none;
-  /* display: flex; */
+  /* display: none; */
+  display: flex;
 }
 
 .slider-controls {
