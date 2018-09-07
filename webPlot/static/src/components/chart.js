@@ -29,57 +29,57 @@ export default class Chart extends PureComponent {
                     dragging: false
                     };
                     
-        this.onWheel = this.onWheel.bind(this);
+        // this.onWheel = this.onWheel.bind(this);
         
         // this.togglePos = this.togglePos.bind(this);
         
-        this.onMouseDown = this.onMouseDown.bind(this);
-        this.onMouseUp = this.onMouseUp.bind(this);
-        this.onMouseMove = this.onMouseMove.bind(this);
+        // this.onMouseDown = this.onMouseDown.bind(this);
+        // this.onMouseUp = this.onMouseUp.bind(this);
+        // this.onMouseMove = this.onMouseMove.bind(this);
     }
     
     
-    componentDidMount() {
-        var pos = ReactDOM.findDOMNode(this).getBoundingClientRect();
-        this.setState({pos: {x: pos.left, y: pos.top}})
-    }
+    // componentDidMount() {
+    //     var pos = ReactDOM.findDOMNode(this).getBoundingClientRect();
+    //     this.setState({pos: {x: pos.left, y: pos.top}})
+    // }
     
     
     // calculate relative position to the mouse and set dragging=true
-    onMouseDown(e) {
-        // only left mouse button
-        if (e.button !== 0) return
-        var pos = ReactDOM.findDOMNode(this).getBoundingClientRect()
-        this.setState({
-          dragging: true,
-          rel: {
-            x: e.pageX - (pos.left + window.scrollX),
-            y: e.pageY - (pos.top + window.scrollY)
-          }
-        })
-        e.stopPropagation()
-        e.preventDefault()
-    }
+    // onMouseDown(e) {
+    //     // only left mouse button
+    //     if (e.button !== 0) return
+    //     var pos = ReactDOM.findDOMNode(this).getBoundingClientRect()
+    //     this.setState({
+    //       dragging: true,
+    //       rel: {
+    //         x: e.pageX - (pos.left + window.scrollX),
+    //         y: e.pageY - (pos.top + window.scrollY)
+    //       }
+    //     })
+    //     e.stopPropagation()
+    //     e.preventDefault()
+    // }
     
     
-    onMouseUp(e) {
-        this.setState({dragging: false})
-        e.stopPropagation()
-        e.preventDefault()
-    }
+    // onMouseUp(e) {
+    //     this.setState({dragging: false})
+    //     e.stopPropagation()
+    //     e.preventDefault()
+    // }
     
     
-    onMouseMove(e) {
-        if (!this.state.dragging) return
-        this.setState({
-          pos: {
-            x: e.pageX - this.state.rel.x,
-            y: e.pageY - this.state.rel.y
-          }
-        })
-        e.stopPropagation()
-        e.preventDefault()
-    }
+    // onMouseMove(e) {
+    //     if (!this.state.dragging) return
+    //     this.setState({
+    //       pos: {
+    //         x: e.pageX - this.state.rel.x,
+    //         y: e.pageY - this.state.rel.y
+    //       }
+    //     })
+    //     e.stopPropagation()
+    //     e.preventDefault()
+    // }
     
     // togglePos(e) {
     //     this.setState({
@@ -125,7 +125,7 @@ export default class Chart extends PureComponent {
                             ]
                 case "bar":
                     let Bar = this.state.svg ? VerticalBarSeries : VerticalBarSeriesCanvas;
-                    return <Bar data={c.data} color={c.color} />
+                    return <Bar data={c.data} color={c.color} colorType="literal"/>
                 default:
                     return "Invalid plottype";
             }
@@ -243,12 +243,12 @@ export default class Chart extends PureComponent {
     }
     
     
-    onWheel(event) {
+    // onWheel(event) {
     
-        console.log("Used MouseWheel on plot");
-        console.log("event: ", event.deltaY);
+    //     console.log("Used MouseWheel on plot");
+    //     console.log("event: ", event.deltaY);
     
-    };
+    // };
     
     render() {
         let {id, channels, tileIDs, height, width} = this.props;
@@ -284,23 +284,22 @@ export default class Chart extends PureComponent {
         }
         
         max = Math.max(10, max);
-        console.log("Width: ", width);
-        console.log("height: ", height);
             
         // let className = classNames("tile", {"draggable": this.state.absPos, "fixed": !this.state.absPos})
         // let style = {left: this.state.pos.x, top: this.state.pos.y}
      //   }
         return (
             <div className={"tile"} //style={style} 
-                onMouseDown={this.onMouseDown}
-                onMouseUp={this.onMouseUp}
-                onMouseMove={this.onMouseMove}>
+                // onMouseDown={this.onMouseDown}
+                // onMouseUp={this.onMouseUp}
+                // onMouseMove={this.onMouseMove}
+                >
                 Chart number: {id}
                 <FlexibleWidthXYPlot 
                         width={width}
                         height={height}
                         dontCheckIfEmpty={false}
-                        onWheel={this.onWheel}
+                        // onWheel={this.onWheel}
                         xType={barPresent ? "ordinal" : "linear"}
                         xDomain={this.state.xRange ? [min,max] : null} 
                         yDomain={this.state.yRange}

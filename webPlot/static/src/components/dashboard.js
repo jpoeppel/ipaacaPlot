@@ -308,10 +308,17 @@ export default class Dashboard extends Component {
                     case "line":
                         channel.data.push({"x":channel.data.length, "y": payload, 
                                     "size":channel.markSize, 
-                                    "style":{"fill":channel.color}});
+                                    "style":{"fill":channel.color}
+                                });
                         break;
                     case "bar":
-                        channel.data = payload.map( item => { return {"x":item[0], "y":item[1]}});
+                        channel.data = payload.map( item => { 
+                                                                if (item.length === 3) { 
+                                                                    return {"x":item[0], "y":item[1], "color": item[2]}
+                                                                } else {
+                                                                    return {"x":item[0], "y":item[1]}
+                                                                }
+                                                            });
                         break;
                     case "text":
                         channel.data = payload; 
@@ -514,7 +521,7 @@ export default class Dashboard extends Component {
         let textTiles = this.state.textTiles;
         let advancedChannels = this.connectionMap[this.probingConnection] ? this.connectionMap[this.probingConnection].slice() : [];
 
-        let width = window.innerWidth*0.85;
+        let width = window.innerWidth*0.95;
         let cols = Math.floor(width/this.colwidth);
         
         //console.log("master render, advancedChannels: ", advancedChannels);

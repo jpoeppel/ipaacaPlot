@@ -6,6 +6,7 @@ Created on Sat Jun 24 00:45:04 2017
 """
 
 import numpy as np
+import random
 import time
 #import rsb
 
@@ -42,6 +43,10 @@ try:
 #        data = {"channel": "test", "y": list(np.random.rand(1))}
         data = {"y": np.random.rand(1)[0], # For Line data
                 "dist": list(enumerate(list(np.random.rand(5))))}
+
+        idx = random.randint(0,4)
+        el = data["dist"][idx]
+        data["dist"][idx] = (el[0], el[1], "red")
 #        print("Sending data: ", data)
 #        informer.publishData(json.dumps(data))
         
