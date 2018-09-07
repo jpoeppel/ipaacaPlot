@@ -40,22 +40,22 @@ try:
     while True:
     
 #        data = {"channel": "test", "y": list(np.random.rand(1))}
-        data = {"y": np.random.rand(1)[0]}
-        data["dist"] = list(np.random.rand(5))
+        data = {"y": np.random.rand(1)[0], # For Line data
+                "dist": list(enumerate(list(np.random.rand(5))))}
 #        print("Sending data: ", data)
 #        informer.publishData(json.dumps(data))
         
         try:
-            port = 9080
+            port = 9081
             client("localhost", port, json.dumps(data))
         except:
             pass
         
-        try:
-            port = 9081
-            client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}))
-        except:
-            pass
+        # try:
+        #     port = 9081
+        #     client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}))
+        # except:
+        #     pass
 #        sock.close()
 #        msg = ipaaca.Message("test")
 #        msg.payload = {k: str(v) for k,v in data.items()}

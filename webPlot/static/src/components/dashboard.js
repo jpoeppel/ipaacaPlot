@@ -294,7 +294,7 @@ export default class Dashboard extends Component {
                                     "style":{"fill":channel.color}});
                         break;
                     case "bar":
-                        channel.data = payload.map( (v, i) => { return {"x":i, "y":v}});
+                        channel.data = payload.map( item => { return {"x":item[0], "y":item[1]}});
                         break;
                     case "text":
                         channel.data = payload; 
