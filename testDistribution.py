@@ -46,16 +46,16 @@ try:
 #        informer.publishData(json.dumps(data))
         
         try:
-            port = 9081
+            port = 9080
             client("localhost", port, json.dumps(data))
         except:
             pass
         
-        # try:
-        #     port = 9081
-        #     client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}))
-        # except:
-        #     pass
+        try:
+            port = 9081
+            client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}))
+        except:
+            pass
 #        sock.close()
 #        msg = ipaaca.Message("test")
 #        msg.payload = {k: str(v) for k,v in data.items()}

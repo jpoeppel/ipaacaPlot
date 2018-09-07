@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import CollapsibleCard from './collapsibleCard';
 import TabView from "./tabView";
+import {ConfigLoader, ConfigSaver}  from "./configIO.js"
 
 export default class ChannelCtrl extends PureComponent {
 
@@ -142,6 +143,10 @@ export default class ChannelCtrl extends PureComponent {
                             </button> 
                         </div>
                         
+                    </div>
+                    <div name="Config-Layout">
+                        <ConfigLoader layoutLoaded={this.props.layoutLoaded}/>
+                        <ConfigSaver layout={this.props.layout}/>
                     </div>
                 </TabView>
             </CollapsibleCard>

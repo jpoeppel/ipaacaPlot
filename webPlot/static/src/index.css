@@ -9,7 +9,7 @@
     border: 1px solid;
     display: flex;
     flex-direction: column;
-    width: 800px;
+    /* width: 800px; */
 }
 
 
@@ -249,7 +249,7 @@ ul {
   .react-grid-layout {
     position: relative;
     transition: height 200ms ease;
-    margin-left: 5%;
+    margin-left: 2.5%;
   }
   .react-grid-item {
     transition: all 200ms ease;

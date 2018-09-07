@@ -7,6 +7,9 @@ import Chart from "./chart";
 import TextOutput from "./textOutput";
 
 import ChannelCtrl from "./channelCtrl";
+import GridLayout from 'react-grid-layout';
+import Element from "./element.js";
+
 
 export default class Dashboard extends Component {
 
@@ -21,7 +24,8 @@ export default class Dashboard extends Component {
             channels: [],
             textChannels: [],
             channelCounter: 0,
-            probeMessage: ""
+            probeMessage: "",
+            layout: []
         };
         
         this.channelMap = {};
@@ -44,6 +48,19 @@ export default class Dashboard extends Component {
         this.probeConnection = this.probeConnection.bind(this);
         this.addNewChannel = this.addNewChannel.bind(this);
         this.updateChannel = this.updateChannel.bind(this);
+
+
+        // For Layout:
+        this.onLayoutChange = this.onLayoutChange.bind(this);
+        this.layoutLoaded = this.layoutLoaded.bind(this);
+        this.colwidth = 100;
+        this.rowHeight = 20;
+    }
+
+    layoutLoaded(newLayout) {
+        this.setState({
+            layout: newLayout
+        })
     }
     
     updateChannel(connection, channelId, key, plottype, color, tileId) {
@@ -265,7 +282,7 @@ export default class Dashboard extends Component {
     }
     
     update_data(msg) {
-        console.log("received data: ", msg);
+        // console.log("received data: ", msg);
         let connection = msg.connection;
         
         if (connection === this.probingConnection) { 
@@ -318,19 +335,24 @@ export default class Dashboard extends Component {
         //let channels = this.channels.filter( (c) => {return c.tile === tile.id });
         let channels = this.state.channels.filter( (c) => {return c.tile === tile.id });
        // console.log("Channels: ", channels);
+       let layout = this.state.layout;
         return (
-            <Chart 
-                id={tile.id}
-                key={tile.id}
-                channels={channels}
-                removeChannel={this.removeChannel} 
-                togglePauseChannel={this.togglePauseChannel}
-                tileChanged={this.update_channel_tile}
-                markChanged={this.update_channel_mark}
-                colorChanged={this.update_channel_color}
-                tileIDs={this.state.tiles.map( (tile) => {return tile.id})}
-            >
-            </Chart>
+            <Element key={tile.id} id={tile.id}>
+                <Chart 
+                    id={tile.id}
+                    key={tile.id}
+                    channels={channels}
+                    removeChannel={this.removeChannel} 
+                    togglePauseChannel={this.togglePauseChannel}
+                    tileChanged={this.update_channel_tile}
+                    markChanged={this.update_channel_mark}
+                    colorChanged={this.update_channel_color}
+                    tileIDs={this.state.tiles.map( (tile) => {return tile.id})}
+                    width={layout[tile.id] ? parseInt(layout[tile.id].w)*this.colwidth -50 : 600} 
+                    height={layout[tile.id] ? parseInt(layout[tile.id].h)*this.rowHeight: 400} 
+                >
+                </Chart>
+            </Element>
         )
     }
     
@@ -338,16 +360,18 @@ export default class Dashboard extends Component {
         let channels = this.state.textChannels.filter( (c) => {return c.tile === tile.id });
         
         return (
-            <TextOutput
-                id={tile.id}
-                key={tile.id}
-                textChannels={channels}
-                removeChannel={this.removeChannel}
-                colorChanged={this.update_channel_color}
-                togglePauseChannel={this.togglePauseChannel}
-                tileIDs={this.state.textTiles.map( (tile) => {return tile.id})}
-            >
-            </TextOutput>
+            <Element key={"text" + tile.id} id={"text" + tile.id}>
+                <TextOutput
+                    id={tile.id}
+                    key={tile.id}
+                    textChannels={channels}
+                    removeChannel={this.removeChannel}
+                    colorChanged={this.update_channel_color}
+                    togglePauseChannel={this.togglePauseChannel}
+                    tileIDs={this.state.textTiles.map( (tile) => {return tile.id})}
+                >
+                </TextOutput>
+            </Element>
         )
     }
     
@@ -473,6 +497,14 @@ export default class Dashboard extends Component {
         this.socket.emit("add_connection", connection);
         //TODO Trigger and handle incorrect connection specifications!
     }
+
+
+    onLayoutChange(newLayout) {
+        console.log("new layout: ", newLayout);
+        this.setState({
+            layout: newLayout
+        })
+    }
   
     render() {
   
@@ -480,7 +512,10 @@ export default class Dashboard extends Component {
   
         let tiles = this.state.tiles;
         let textTiles = this.state.textTiles;
-        let advancedChannels = this.connectionMap[this.probingConnection] ? this.connectionMap[this.probingConnection].slice() : []
+        let advancedChannels = this.connectionMap[this.probingConnection] ? this.connectionMap[this.probingConnection].slice() : [];
+
+        let width = window.innerWidth*0.85;
+        let cols = Math.floor(width/this.colwidth);
         
         //console.log("master render, advancedChannels: ", advancedChannels);
         return (
@@ -500,16 +535,28 @@ export default class Dashboard extends Component {
                             addNewChannel={this.addNewChannel}     
                             updateChannel={this.updateChannel} 
                             removeChannel={this.removeChannel}
+                            layout={this.state.layout}
+                            layoutLoaded={this.layoutLoaded}
                         />
                     </div>
                  </div>
                  {children}
-                 <div className="tile-board">
+                 <GridLayout className="layout" layout={this.state.layout} 
+                            cols={cols} 
+                            rowHeight={this.rowHeight} 
+                            width={width} 
+                            draggableHandle=".element_handle"
+                            onLayoutChange={this.onLayoutChange}
+                            >
                     {tiles.map(this.createTile)}
+                    {textTiles.map(this.createTextTile)}
+                </GridLayout>
+                 {/* <div className="tile-board">
+                    
                  </div>
                  <div className="TextTile-board">
-                    {textTiles.map(this.createTextTile)}
-                 </div>
+                    
+                 </div> */}
                  
                  
             </div>  

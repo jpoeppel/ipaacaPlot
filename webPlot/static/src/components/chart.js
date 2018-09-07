@@ -31,7 +31,7 @@ export default class Chart extends PureComponent {
                     
         this.onWheel = this.onWheel.bind(this);
         
-        this.togglePos = this.togglePos.bind(this);
+        // this.togglePos = this.togglePos.bind(this);
         
         this.onMouseDown = this.onMouseDown.bind(this);
         this.onMouseUp = this.onMouseUp.bind(this);
@@ -81,12 +81,11 @@ export default class Chart extends PureComponent {
         e.preventDefault()
     }
     
-    togglePos(e) {
-        this.setState({
-            absPos: !this.state.absPos
-        })
-    
-    }
+    // togglePos(e) {
+    //     this.setState({
+    //         absPos: !this.state.absPos
+    //     })
+    // }
 /*
     componentWillReceiveProps(nextProps){
         console.log("new chart props: ", this.props == nextProps);
@@ -234,9 +233,9 @@ export default class Chart extends PureComponent {
                             {"Clear"}
                       </button>
                       </div>
-                      <div>
+                      {/* <div>
                           <input type="checkbox" name="absPos" value="test" checked={this.state.absPos} onClick={this.togglePos}/> Use absolute position
-                      </div>
+                      </div> */}
                   </div>
               </ChartControls>
         
@@ -252,7 +251,7 @@ export default class Chart extends PureComponent {
     };
     
     render() {
-        let {id, channels, tileIDs, height} = this.props;
+        let {id, channels, tileIDs, height, width} = this.props;
         let { xRange } = this.state;
         let min=0, max = 0;
         let barPresent = false;
@@ -285,17 +284,21 @@ export default class Chart extends PureComponent {
         }
         
         max = Math.max(10, max);
+        console.log("Width: ", width);
+        console.log("height: ", height);
             
-        let className = classNames("tile", {"draggable": this.state.absPos, "fixed": !this.state.absPos})
-        let style = {left: this.state.pos.x, top: this.state.pos.y}
+        // let className = classNames("tile", {"draggable": this.state.absPos, "fixed": !this.state.absPos})
+        // let style = {left: this.state.pos.x, top: this.state.pos.y}
      //   }
         return (
-            <div className={className} style={style} 
+            <div className={"tile"} //style={style} 
                 onMouseDown={this.onMouseDown}
                 onMouseUp={this.onMouseUp}
                 onMouseMove={this.onMouseMove}>
                 Chart number: {id}
-                <FlexibleWidthXYPlot height={height}
+                <FlexibleWidthXYPlot 
+                        width={width}
+                        height={height}
                         dontCheckIfEmpty={false}
                         onWheel={this.onWheel}
                         xType={barPresent ? "ordinal" : "linear"}
@@ -334,5 +337,4 @@ Chart.propTypes = {
 Chart.defaultProps = {
     channel:    "",
     color: "black",
-    height: 300
 }

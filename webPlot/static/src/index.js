@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 ReactDOM.render(
   <Dashboard >
-  </Dashboard>,
+  </Dashboard>, 
   // <Webblocks />,
   document.getElementById('dashboard')
 );

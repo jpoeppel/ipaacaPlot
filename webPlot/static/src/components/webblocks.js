@@ -205,7 +205,6 @@ export default class Webblocks extends Component {
 
 
     onLayoutChange(newLayout) {
-        // TODO Allow saving the current layout
         console.log("new layout: ", newLayout);
         this.setState({
             layout: newLayout
