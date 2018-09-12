@@ -148,6 +148,9 @@ export default class ChannelCtrl extends PureComponent {
                         <ConfigLoader layoutLoaded={this.props.layoutLoaded}/>
                         <ConfigSaver layout={this.props.layout}/>
                     </div>
+                    <div name="Options">
+                        Header: <input type="text" id="header" onChange={this.props.headerChanged} value={this.props.header}/>
+                    </div>
                 </TabView>
             </CollapsibleCard>
 

@@ -25,7 +25,8 @@ export default class Dashboard extends Component {
             textChannels: [],
             channelCounter: 0,
             probeMessage: "",
-            layout: []
+            layout: [],
+            header: ""
         };
         
         this.channelMap = {};
@@ -48,6 +49,8 @@ export default class Dashboard extends Component {
         this.probeConnection = this.probeConnection.bind(this);
         this.addNewChannel = this.addNewChannel.bind(this);
         this.updateChannel = this.updateChannel.bind(this);
+
+        this.headerChanged = this.headerChanged.bind(this);
 
 
         // For Layout:
@@ -513,6 +516,13 @@ export default class Dashboard extends Component {
         })
     }
   
+
+    headerChanged(e) {
+        this.setState({
+            header: e.target.value
+        })
+    }
+
     render() {
   
         let {children} = this.props;
@@ -528,9 +538,9 @@ export default class Dashboard extends Component {
         return (
             <div>
                 <div className="header">
-                    {/* <div className="title">
-                        <h1> {this.state.title} </h1>
-                    </div> */}
+                    {this.state.header ? <div className="title">
+                        <h1> {this.state.header} </h1>
+                    </div> : ""}
                     <div className="ctrl">
                         <ChannelCtrl 
                             addSimpleChannel={this.addSimpleChannel} 
@@ -544,6 +554,8 @@ export default class Dashboard extends Component {
                             removeChannel={this.removeChannel}
                             layout={this.state.layout}
                             layoutLoaded={this.layoutLoaded}
+                            header={this.state.header}
+                            headerChanged={this.headerChanged}
                         />
                     </div>
                  </div>
