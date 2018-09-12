@@ -528,9 +528,9 @@ export default class Dashboard extends Component {
         return (
             <div>
                 <div className="header">
-                    <div className="title">
-                        <h1> My first dashboard try </h1>
-                    </div>
+                    {/* <div className="title">
+                        <h1> {this.state.title} </h1>
+                    </div> */}
                     <div className="ctrl">
                         <ChannelCtrl 
                             addSimpleChannel={this.addSimpleChannel} 
