@@ -11,6 +11,7 @@ import GridLayout from 'react-grid-layout';
 import Element from "./element.js";
 
 
+
 export default class Dashboard extends Component {
 
     constructor(props) {
@@ -316,12 +317,12 @@ export default class Dashboard extends Component {
                         break;
                     case "bar":
                         channel.data = payload.map( item => { 
-                                                                if (item.length === 3) { 
-                                                                    return {"x":item[0], "y":item[1], "color": item[2]}
-                                                                } else {
-                                                                    return {"x":item[0], "y":item[1]}
-                                                                }
-                                                            });
+                                        if (item.length === 3) { 
+                                            return {"x":item[0], "y":item[1], "color": item[2]}
+                                        } else {
+                                            return {"x":item[0], "y":item[1]}
+                                        }
+                                    });
                         break;
                     case "text":
                         channel.data = payload; 

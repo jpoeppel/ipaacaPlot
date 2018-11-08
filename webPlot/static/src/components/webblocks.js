@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import io from "socket.io-client";
 
 
-import CanvasComponent from "./gridworld.js";
+import CanvasGridworld from "./gridworld.js";
 import Element from "./element.js";
 import CustomSlider from "./slider.js";
 import ConditionSelection from "./conditionSelection.js"
@@ -372,7 +372,7 @@ export default class Webblocks extends Component {
                     {this.state.conditions ? <ConditionSelection onSelect={this.onConditionSelect} conditions={this.state.conditions}/>: ""}
                 </Element>
                 <Element key="gridGroundTruth" id="Observer's knowledge">
-                    {map ? <CanvasComponent conditionName={this.conditionName} 
+                    {map ? <CanvasGridworld conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
                                             width={layout["gridGroundTruth"] ? parseInt(layout["gridGroundTruth"].w)*colwidth : 600} 
@@ -386,7 +386,7 @@ export default class Webblocks extends Component {
                                             /> : ""}
                 </Element>
                  <Element key="gridAgentsBelief" id="gridAgentsBelief">
-                    {samples ? <CanvasComponent conditionName={this.conditionName} 
+                    {samples ? <CanvasGridworld conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
                                             width={layout["gridAgentsBelief"] ? parseInt(layout["gridAgentsBelief"].w)*colwidth : 600} 

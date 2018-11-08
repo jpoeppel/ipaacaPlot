@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-class CanvasComponent extends Component {
+class CanvasGridworld extends Component {
 
     constructor (props, context) {
         super(props, context)
@@ -347,4 +347,4 @@ class CanvasComponent extends Component {
 
 }
 
-export default CanvasComponent;
+export default CanvasGridworld;

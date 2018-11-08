@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import CollapsibleCard from './collapsibleCard';
 import TabView from "./tabView";
 import {ConfigLoader, ConfigSaver}  from "./configIO.js"
+import ModuleSelection from './moduleSelection';
 
 export default class ChannelCtrl extends PureComponent {
 
@@ -18,7 +19,10 @@ export default class ChannelCtrl extends PureComponent {
         
         this.activateChannel = this.activateChannel.bind(this);
         this.removeChannel = this.removeChannel.bind(this);
+
     }
+
+    
     
     activateChannel(e) {
         //console.log("pressed button for channel: ", e.target.id);
@@ -150,6 +154,9 @@ export default class ChannelCtrl extends PureComponent {
                     </div>
                     <div name="Options">
                         Header: <input type="text" id="header" onChange={this.props.headerChanged} value={this.props.header}/>
+                    </div>
+                    <div name="Modules">
+                        <ModuleSelection moduleList={this.props.modules} addModule={this.props.addModule}/>
                     </div>
                 </TabView>
             </CollapsibleCard>

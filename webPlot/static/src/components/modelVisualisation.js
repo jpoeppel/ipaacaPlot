@@ -1,11 +1,11 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import classnames from 'classnames';
 
 import twg from '../img/twg.svg'
 import tw from '../img/tw.svg'
 import tg from '../img/tg.svg'
 
-class ModelVis extends Component {
+class ModelVis extends PureComponent {
   constructor (props, context) {
     super(props, context)
   }
@@ -26,13 +26,13 @@ class ModelVis extends Component {
     return (
       <div className='model-vis'>
         <div className={curModel == "TWG" ? classesSelected : classes}>
-            <img src={twg} width={200}/>
+            <img src={twg} alt={"TWG"} width={200}/>
         </div>
         <div className={curModel == "TW" ? classesSelected : classes}>
-            <img src={tw} width={200}/>
+            <img src={tw} alt={"TW"} width={200}/>
         </div>
         <div className={curModel == "TG" ? classesSelected : classes}>
-            <img src={tg} width={200}/>
+            <img src={tg} alt={"TG"} width={200}/>
         </div>
       </div>
     )

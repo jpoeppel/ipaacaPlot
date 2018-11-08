@@ -13,10 +13,46 @@
 }
 
 
+.module-selection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+ }
+
+ .module {
+   border: 1px solid;
+   display: flex;
+   flex-direction: column;
+ }
+
+ .bordered {
+   border: 1px solid;
+ }
+
+.margin {
+  margin: 2px;
+}
+
 .flex {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+}
+
+.vflex {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.moduleConfig {
+  width: 400px;
+  height: auto;
+  display: block;
+  border: 1px solid;
+  position: absolute;
+  left: 50%;
+  margin-left: -200px;
 }
 
 .controls {
