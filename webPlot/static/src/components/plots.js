@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import {connect} from 'react-redux';
 
-import {FlexibleWidthXYPlot, XAxis, YAxis, Borders, VerticalGridLines, LineSeries} from "react-vis"; // ./3rdParty/
-import { getScalePropTypesByAttribute } from 'react-vis/dist/utils/scales-utils';
+import {FlexibleWidthXYPlot, XAxis, YAxis, Borders, 
+    VerticalGridLines, LineSeries, VerticalBarSeries} from "react-vis"; // ./3rdParty/
 
 
 // An object specifying the kind of information which is requested when creating
@@ -10,52 +10,50 @@ import { getScalePropTypesByAttribute } from 'react-vis/dist/utils/scales-utils'
 export const LinePlotInformation = {
     type: "LinePlot",
     dataSrc: {
-        channel: "",
-        // dataKey: ["", false], //Tuple containing key and if the key should be logged or not.
-        dataKeys: [{"name": "Payload key", "val": "y", "log": false}],
+        channel: "tcp:9080",
+        dataKeys: [{"name": "Payload key", "val": "y", "log": true}],
         color: "black",
         strokes: ""
     },
     title: "LinePlot",
-    width: 3,
-    height: 4,
+    width: 10,
+    height: 6,
     allowMultipleSources: true
 }
 
-function createLineSeries(channelState, channel, stepNr, sourceProps) {
-    
-    return <LineSeries key={channel} 
-                data={channelState[sourceProps.dataKeys.val].map((el, i) => {
-                    if (i > stepNr) {return []}
-                    return {"x": i, "y": el}
-                    })
-                } 
+function createLineSeries(channelState, stepNr, sourceProps) {
+    let data = channelState[sourceProps.dataKeys[0].val].map((el, i) => {
+        if (i > stepNr) {return []}
+        return {"x": i, "y": el}
+        })
+    return <LineSeries key={sourceProps.dataKeys[0].val} 
+                data={data} 
             stroke={sourceProps.color} strokeDasharray={sourceProps.strokes} />
 }
 
 
 function mapStateToPropsLines(state, ownProps) {
-    //test if it exists
-    console.log("mapSTP state: ", state)
+    let data = state.data
     let lines = [];
     let vlines = []
-    let sources = ownProps.config.dataSources;
+    let sources = ownProps.config;
     for (var id in sources) {
-        let c = sources[id].channel
-        if (state.channels[c]) { 
-            lines.push(createLineSeries(state.channels[c], c, state.stepNr, sources[id])) //Assumes state.stepNr exists!
+        let channelData = data.channels[sources[id].channel]
+        if (channelData && channelData[sources[id].dataKeys[0].val]) { 
+            lines.push(createLineSeries(channelData, state.data.stepNr, sources[id])) //Assumes state.stepNr exists!
         } 
     }
-
     return {lines: lines, vlines: vlines}
 }
 
-export class LinePlot extends Component {
+class LinePlot extends PureComponent {
 
+    // componentDidMount() {
+    //     this.props.configCallback()
+    // }
 
     render() {
-
-        let {width, height, config, lines, vlines} = this.props;
+        let {width, height, lines, vlines} = this.props;
 
         return(
             <FlexibleWidthXYPlot 
@@ -84,7 +82,6 @@ LinePlot.defaultProps = {
     height: 400,
     lines: [],
     vlines: [],
-    config: {dataSources: {}},
   };
 
 const LinePlotStore = connect(mapStateToPropsLines)(LinePlot);
@@ -93,18 +90,60 @@ export {LinePlotStore};
 
 
 export const BarPlotInformation = {
+    type: "BarPlot",
     dataSrc: {
-        channel: "",
-        dataKey: ("", false), //Tuple containing key and if the key should be logged or not.
+        channel: "tcp:9080",
+        dataKeys: [{"name": "Payload key", "val": "dist", "log": false}],
         color: "black",
     },
+    title: "BarPlot",
+    width: 10,
+    height: 6,
     allowMultipleSources: true
 }
 
-export class BarPlot extends Component {
+function createBarSeries(channelState, stepNr, sourceProps) {
+    var bardata = []
+    let data = channelState[sourceProps.dataKeys[0].val]
+    let type = Object.prototype.toString.call(data) 
+
+    if (stepNr) {
+        // If stepNr is set, we are assuming to have a store of data objects
+        data = data[stepNr]
+    }
+
+    if (type == '[object Array]') {
+        bardata = data.map( (el,i) => {
+            return {"x": el[0], "y": el[1]}
+        })
+    } else if (type == '[object Object]') {
+        for (var key in data) {
+            bardata.push({"x": key, "y": data[key]})
+        }
+    }
+
+    return <VerticalBarSeries key={sourceProps.dataKeys[0].val} 
+                             data={bardata} 
+                             color={sourceProps.color} />
+}
+
+function mapStateToPropsBars(state, ownProps) {
+    let data = state.data
+    let bars = [];
+    let sources = ownProps.config;
+    for (var id in sources) {
+        let channelData = data.channels[sources[id].channel];
+        if (channelData && channelData[sources[id].dataKeys[0].val]) { 
+            bars.push(createBarSeries(channelData, state.stepNr, sources[id])) //Assumes state.stepNr exists!
+        } 
+    }
+    return {bars: bars}
+}
+
+export class BarPlot extends PureComponent {
 
     render() {
-        let {width, height, channel, bars} = this.props;
+        let {width, height, bars} = this.props;
 
         return(
             <FlexibleWidthXYPlot 
@@ -122,10 +161,14 @@ export class BarPlot extends Component {
                     right: {fill: '#fff'},
                     top: {fill: '#fff'}
                 }}/>
-                <XAxis />
-                <YAxis />
+                {bars.length > 0 ? <XAxis /> : null}
+                {bars.length > 0 ? <YAxis /> : null}
                         
             </FlexibleWidthXYPlot>
         )
     }
 }
+
+const BarPlotStore = connect(mapStateToPropsBars)(BarPlot);
+
+export {BarPlotStore};

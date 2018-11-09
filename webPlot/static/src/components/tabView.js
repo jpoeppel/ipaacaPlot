@@ -19,14 +19,15 @@ export default class TabView extends PureComponent {
 
     render() {
     
-        const { children: groups } = this.props;
+        const { children } = this.props;
         const { openedGroup } = this.state;
         
-        
+        let groups = React.Children.toArray(children)
         return (
             <div className="tabs_container">
                 <div className="tabs__menu">
                     {groups.map(group => {
+                        if (!group) {return null}
                         return (
                             <div
                                 key={group.props.name}
@@ -43,6 +44,7 @@ export default class TabView extends PureComponent {
                     })}
                 </div>
                 {groups.map(group => {
+                    if (!group) {return null}
                     return (
                         <div
                             key={group.props.name}

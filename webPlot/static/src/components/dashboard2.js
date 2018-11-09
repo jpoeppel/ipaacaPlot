@@ -9,11 +9,13 @@ import TextOutput from "./textOutput";
 import ChannelCtrl from "./channelCtrl";
 import GridLayout from 'react-grid-layout';
 import Element from "./element.js";
+import ChartControls from "./chartControls";
 
-import {LinePlotStore, LinePlot, LinePlotInformation} from "./plots";
+import {LinePlotStore, LinePlotInformation, BarPlotInformation, BarPlotStore} from "./plots";
+import {SliderInformation, CustomSliderStore} from "./slider";
 
 import ModuleConfiguration from "./moduleConfiguration";
-import {SocketConnection, SocketConnectionStore} from "./io"
+import {SocketConnectionStore} from "./io"
 
 var modules = [{id: 1,
     name: "LinePlot",
@@ -23,11 +25,14 @@ var modules = [{id: 1,
     img: null},
     {id: 3,
     name: "Gridworld",
+    img: null},
+    {id: 4,
+    name: "Slider",
     img: null}]
 
 
-const mapIDToConfig = {1: LinePlotInformation}
-const mapTypeToComponent = {"LinePlot": LinePlotStore}
+const mapIDToConfig = {1: LinePlotInformation, 2: BarPlotInformation, 4: SliderInformation}
+const mapTypeToComponent = {"LinePlot": LinePlotStore, "BarPlot": BarPlotStore, "Slider": CustomSliderStore}
 
 export default class Dashboard extends Component {
 
@@ -36,14 +41,16 @@ export default class Dashboard extends Component {
         this.state = {
             tiles: [],
             tileIDCounter: 0,
-            layout: [],
+            layout: [{"i": "12", "w":4, "h":3, "x": 0, "y":0}],
             moduleConfig: null,
-            colwidth: 100,
+            colWidth: 100,
             rowHeight: 20
         };
 
+        this.connectionMap = {};
 
         this.addModule = this.addModule.bind(this);
+        this.closeConfig = this.closeConfig.bind(this);
         this.createModule = this.createModule.bind(this);
         this.createTile = this.createTile.bind(this);
         
@@ -56,6 +63,12 @@ export default class Dashboard extends Component {
     // componentDidMount() {
     //     this.socketConnection = new SocketConnection();
     // }
+
+    closeConfig() {
+        this.setState({
+            moduleConfig: null
+        })
+    }
 
     addModule(moduleId) {
         console.log("Should add module: ", moduleId);
@@ -76,15 +89,16 @@ export default class Dashboard extends Component {
             title: config.moduleConfig.title,
             type: type,
             dataSources: JSON.parse(JSON.stringify(config.dataConfig))
+            
         }
 
         var newLayout = this.state.layout;
         newLayout.push({
-            i: newTile.id,
+            i: newTile.id.toString(),
             w: parseInt(config.moduleConfig.width),
             h: parseInt(config.moduleConfig.height),
             x: 0,
-            y: 0
+            y: Infinity
         })
 
         newTiles.push(newTile)
@@ -96,8 +110,19 @@ export default class Dashboard extends Component {
         })
 
         for (var dataSrc in config.dataConfig) {
-            this.addConnection(config.dataConfig[dataSrc])
+            let src = config.dataConfig[dataSrc]
+            if (this.connectionMap[src.channel]) {
+                //Add only if it does not already exist
+                if (this.connectionMap[src.channel].indexOf(newTile.id) == -1) {
+                    this.connectionMap[src.channel].push(newTile.id)
+                }
+            } else {
+                this.connectionMap[src.channel] = [newTile.id]
+            }
+            this.addConnection(src)
         }
+
+        console.log("ConnectionMap after adding: ", this.connectionMap);
     }
 
     layoutLoaded(newLayout) {
@@ -107,28 +132,106 @@ export default class Dashboard extends Component {
     }
 
     onLayoutChange(newLayout) {
-        console.log("new layout: ", newLayout);
+        // console.log("new layout: ", newLayout);
         this.setState({
             layout: newLayout
         })
     }
     
 
+    removeTile(tileId) {
+        console.log("should remove tile: ", tileId)
+
+        var removedTile = null;
+        let newTiles = this.state.tiles.filter( t => {
+            if (t.id !== tileId) {
+                return t
+            } else {
+                removedTile = t;
+            }
+        })
+        console.log("remvoedTile: ", removedTile)
+        console.log("conmap before: ", this.connectionMap);
+        for (var key in removedTile.dataSources) {
+            let src = removedTile.dataSources[key];
+            let idx = this.connectionMap[src.channel].indexOf(removedTile.id);
+            console.log("idx: ", idx);
+            if (idx > -1) {
+                this.connectionMap[src.channel].splice(idx, 1);
+            }
+            // if (this.connectionMap[src.channel].length == 0) {
+                this.removeConnection(src.channel, src.dataKeys)
+            // }
+        }
+
+        console.log("conmap after: ", this.connectionMap);
+
+        let newLayout = this.state.layout.filter( l => {
+            if (l.i !== tileId) {
+                return l
+            }
+        })
+
+        this.setState({
+            layout: newLayout,
+            tiles: newTiles
+        })
+    }
+
+    createDataSourceControl(sources) {
+        console.log("sources: ", sources);
+        // let res = sources.map( (s,i) => {
+
+        let blocks = []
+        for (var sID in sources) {
+
+            let elements = [];
+            for (var key in sources[sID]) {
+                let val = sources[sID][key];
+                elements.push(
+                    <span>{key} : <input type="text" id={key} value={val}/></span>
+                    );
+            }
+
+            blocks.push(
+                <div name={"Data Source " + sID}>
+                    {elements}
+                </div>
+            )
+        // });
+        }
+        console.log("blocks: ", blocks);
+        return blocks;
+    }
+
     createTile(tile) {
         let Module = mapTypeToComponent[tile.type];
 
-        let layout = this.state.layout;
+        let layout = this.state.layout.filter( el => {
+            if (el.i == tile.id) {
+                return el
+            }
+        })[0]
         let colWidth = this.state.colWidth;
         let rowHeight = this.state.rowHeight;
-
-
-
+        let children = null;
+        let createControls = null;
         return(
-            <Element key={tile.id} id={tile.id}>
-                {/* <Module width={parseInt(layout[tile.id].w)*colWidth} 
-                    height={parseInt(layout[tile.id].h)*rowHeight}
-                    config={tile.dataSrc}/> */}
-                <LinePlot/>
+            <Element key={tile.id.toString()} id={tile.title} data-grid={layout} >
+                <Module width={parseInt(layout.w)*colWidth} 
+                    height={parseInt(layout.h)*rowHeight}
+                    config={tile.dataSources}
+                    // configCallback={fn => createControls = fn}
+                />
+                <ChartControls title={"Module settings"} group={"General"}>
+                    <div name={"General"}>
+                        <button onClick={ () => {this.removeTile(tile.id) } } >
+                                Remove Module
+                        </button>
+                    </div>
+                    {this.createDataSourceControl(tile.dataSources).map( e => (e))}
+                    {/* {children} */}
+                </ChartControls>
             </Element>
         )
     }
@@ -141,7 +244,7 @@ export default class Dashboard extends Component {
         let tiles = this.state.tiles;
 
         let width = window.innerWidth*0.95;
-        let cols = Math.floor(width/this.colwidth);
+        let cols = Math.floor(width/this.state.colWidth);
         
         return (
             <div>
@@ -172,10 +275,13 @@ export default class Dashboard extends Component {
                     </div>
                  </div>
                  {children}
-                 {this.state.moduleConfig === null ? "": <ModuleConfiguration moduleInformation={this.state.moduleConfig} createModule={this.createModule}/>}
-                 <GridLayout className="layout" layout={this.state.layout} 
+                 {this.state.moduleConfig === null ? "": <ModuleConfiguration moduleInformation={this.state.moduleConfig} 
+                    createModule={this.createModule} 
+                    closeConfig={this.closeConfig}/>}
+                 <GridLayout className="layout" 
+                            layout={this.state.layout} 
                             cols={cols} 
-                            rowHeight={this.rowHeight} 
+                            rowHeight={this.state.rowHeight} 
                             width={width} 
                             draggableHandle=".element_handle"
                             onLayoutChange={this.onLayoutChange}

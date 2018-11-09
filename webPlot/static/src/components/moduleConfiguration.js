@@ -11,27 +11,26 @@ class SourceBlock extends Component {
         for (var key in sourceInformation) {
             let oldVal = curVals[key];
             if (Object.prototype.toString.call(oldVal) == '[object Array]') {
-                console.log("old val: ", oldVal)
+                // console.log("old val: ", oldVal)
                 for (var i=0; i < oldVal.length; i++) {
                     let dataKeyObj = oldVal[i];
-                    console.log("dataKey obj: ", dataKeyObj)
                     const listIdx = i;
                     elements.push(
                         <span>{dataKeyObj.name} : <input type="text" id={dataKeyObj.name} value={dataKeyObj.val} onChange={e => this.props.updateValues(e, "dataConfig", id, listIdx, "val")}/>  
                         {dataKeyObj.log !== null ? ["Log :", <input type="checkbox" id={dataKeyObj.name} value={dataKeyObj.log} checked={dataKeyObj.log} onChange={e => this.props.updateValues(e, "dataConfig", id, listIdx, "log")}/> ]: null}
                         </span>
-
                         );
                 }
-                // elements.push(
-                //     <span>{key} : <input type="text" id={key} value={oldVal[0]} onChange={e => this.props.updateValues(e, "dataConfig", id, 0)}/> 
-                //     Log?: <input type="checkbox" id={key} value={oldVal[1]} checked={oldVal[1]} onChange={e => this.props.updateValues(e, "dataConfig", id, 1)}/>  </span>
-                //     );
             } else {
-                
-                elements.push(
-                <span>{key} : <input type="text" id={key} value={oldVal} onChange={e => this.props.updateValues(e, "dataConfig", id)}/>  </span>
-                );
+                if (key == "color") {
+                    elements.push(
+                        <span>{key} : <input type="color" id={key} value={oldVal} onChange={e => this.props.updateValues(e, "dataConfig", id)}/>  </span>
+                        );
+                } else {
+                    elements.push(
+                    <span>{key} : <input type="text" id={key} value={oldVal} onChange={e => this.props.updateValues(e, "dataConfig", id)}/>  </span>
+                    );
+                }
             }
         }
 
@@ -61,7 +60,23 @@ export default class ModuleConfiguration extends Component {
         }
         this.removeDataSource = this.removeDataSource.bind(this);
         this.updateValues = this.updateValues.bind(this);
+        this.handleClickOutside = this.handleClickOutside.bind(this);
     }
+
+    componentDidMount() {
+        document.addEventListener('mousedown', this.handleClickOutside);
+    }
+    
+    componentWillUnmount() {
+        document.removeEventListener('mousedown', this.handleClickOutside);
+    }
+
+    handleClickOutside(event) {
+        if (!this.containerDiv.contains(event.target)) {
+            this.props.closeConfig();
+        }
+    }
+    
 
     updateValues(e, config, key1=null, key2=null, key3=null) {
         var newState = {...this.state};
@@ -74,20 +89,15 @@ export default class ModuleConfiguration extends Component {
         // console.log("acc: ", acc)
 
         let modifyPart = newConfig
-        console.log("modify part1: ", modifyPart)
         if (key1 !== null) {
             modifyPart = modifyPart[key1]
         }
-        console.log("modify part2: ", modifyPart)
-        console.log("key2: ", key2)
         if (key2 !== null) {
             modifyPart = modifyPart.dataKeys[key2]
         }
         // let finalVal = acc.reduce( (prev, curr) => {
             // return curr === null ? prev : prev[curr]
         // }, newConfig)
-
-        console.log("modify part3: ", modifyPart)
         if (key3 === null) {
             modifyPart[attribKey] = val;
         } else {
@@ -135,7 +145,7 @@ export default class ModuleConfiguration extends Component {
         let {children, moduleInformation} = this.props;
 
         return(
-            <div className={"moduleConfig"}>
+            <div className={"moduleConfig"} ref={node => this.containerDiv = node}>
                 <div className={"vflex"}>
                     <h4>{moduleInformation.type}</h4>    
                     <span>Title: <input type="text" id="title" value={this.state.moduleConfig.title} 

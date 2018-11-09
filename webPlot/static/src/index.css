@@ -50,9 +50,11 @@
   height: auto;
   display: block;
   border: 1px solid;
-  position: absolute;
+  position: fixed;
+  z-index: 1;
   left: 50%;
   margin-left: -200px;
+  background-color: lightgray;
 }
 
 .controls {

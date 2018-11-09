@@ -38,11 +38,19 @@ export default class SocketConnection extends Component {
 
         this.props.addConnection(this.addConnection);
         this.props.removeConnection(this.removeConnection);
+
+
+        let addSocket = {
+            type: "ADD_SOCKET",
+            payload: this.socket
+        }
+        this.props.dispatch(addSocket);
         
     }
 
     updateData(msg) {
-        console.log("Received Message: ", msg)
+        // console.log("Received Message: ", msg);
+        // console.log("this.state in update: ", this.state);
         let channel = msg.connection;
         if (channel in this.state.channels) {
             let channelConfig = this.state.channels[channel];
@@ -59,6 +67,9 @@ export default class SocketConnection extends Component {
     }
 
     _updateStore(channel, dataKey, payload, shouldLog) {
+        if (shouldLog === null) {
+            return;
+        }
         let updateAction = {
             type: shouldLog ?  "UPDATE_CHANNEL_ADD" : "UPDATE_CHANNEL_REPLACE",
             channel: channel,
@@ -70,25 +81,56 @@ export default class SocketConnection extends Component {
 
     addConnection(connectionInfo) {
         let channel = connectionInfo.channel
-
+        // console.log("add connection: ", connectionInfo);
         this.socket.emit("add_connection", channel);
 
         let newChannels = {...this.state.channels};
-        // if (channel in newChannels) {
-            // newChannels[channel].push(connectionInfo.dataKey)
-        //     let channelConfig = newChannels[channel];
-        //     for (var i=0; i<channelConfig.length; i++) {
-        //         if (channelConfig[i].val == connectionInfo.)
-        //     }
-        // }
-        newChannels[channel] = connectionInfo.dataKeys
-        this.setState({
+        if (newChannels[channel]) {
+            newChannels[channel] = newChannels[channel].concat(connectionInfo.dataKeys);
+        } else {
+            newChannels[channel] = connectionInfo.dataKeys
+        }
+
+        //This should not be done, but otherwise, state is not updated
+        //quick enough...
+        this.state = {...this.state,
             channels: newChannels
-        })
+        }
+        //For some reason we still seem to need this for anything to happen...
+        this.setState(this.state);
     }
 
-    removeConnection(connection) {
-        this.socket.emit("remove_connection", connection);
+    removeConnection(connection, dataKeys) {
+        let cleanAction = {
+            type: "CLEAN_CHANNEL",
+            channel: connection,
+            dataKeys: dataKeys
+        }
+        this.props.dispatch(cleanAction);
+
+
+        let newChannels = {...this.state.channels};
+        let channel = newChannels[connection].filter( c => {
+            for (var i=0; i<dataKeys.length; i++) {
+                let key = dataKeys[i];
+                if (c.val !== key.val) {
+                    return c
+                }
+            }
+        })
+
+        newChannels[connection] = channel;
+        if (channel.length === 0) {
+            this.socket.emit("remove_connection", connection);
+        }
+
+        //This should not be done, but otherwise, state is not updated
+        //quick enough...
+        this.state = {...this.state,
+            channels: newChannels
+        }
+        //For some reason we still seem to need this for anything to happen...
+        this.setState(this.state);
     }
 
     render() {

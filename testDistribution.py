@@ -42,7 +42,10 @@ try:
     
 #        data = {"channel": "test", "y": list(np.random.rand(1))}
         data = {"y": np.random.rand(1)[0], # For Line data
-                "dist": list(enumerate(list(np.random.rand(5))))}
+                "dist": list(enumerate(list(np.random.rand(5)))),
+                "dist2": {c: np.random.rand(1)[0] for c in "abcde"},
+                "y2": list(np.random.rand(20))
+                }
 
         idx = random.randint(0,4)
         el = data["dist"][idx]
