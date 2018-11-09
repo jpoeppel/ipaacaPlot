@@ -27,7 +27,7 @@ var modules = [{id: 1,
 
 
 const mapIDToConfig = {1: LinePlotInformation}
-const mapTypeToComponent = {"LinePlot": LinePlot}
+const mapTypeToComponent = {"LinePlot": LinePlotStore}
 
 export default class Dashboard extends Component {
 

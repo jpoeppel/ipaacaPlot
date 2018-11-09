@@ -15,9 +15,10 @@ class SourceBlock extends Component {
                 for (var i=0; i < oldVal.length; i++) {
                     let dataKeyObj = oldVal[i];
                     console.log("dataKey obj: ", dataKeyObj)
+                    const listIdx = i;
                     elements.push(
-                        <span>{dataKeyObj.name} : <input type="text" id={dataKeyObj.name} value={dataKeyObj.val} onChange={e => this.props.updateValues(e, "dataConfig", id, "val")}/>  
-                        {dataKeyObj.log === null ? <input type="checkbox" id={dataKeyObj.name} value={dataKeyObj.log} checked={dataKeyObj.log} onChange={e => this.props.updateValues(e, "dataConfig", id, "log")}/> : null}
+                        <span>{dataKeyObj.name} : <input type="text" id={dataKeyObj.name} value={dataKeyObj.val} onChange={e => this.props.updateValues(e, "dataConfig", id, listIdx, "val")}/>  
+                        {dataKeyObj.log !== null ? ["Log :", <input type="checkbox" id={dataKeyObj.name} value={dataKeyObj.log} checked={dataKeyObj.log} onChange={e => this.props.updateValues(e, "dataConfig", id, listIdx, "log")}/> ]: null}
                         </span>
 
                         );
@@ -62,29 +63,35 @@ export default class ModuleConfiguration extends Component {
         this.updateValues = this.updateValues.bind(this);
     }
 
-    updateValues(e, config, key1=null, key2=null) {
+    updateValues(e, config, key1=null, key2=null, key3=null) {
         var newState = {...this.state};
         var newConfig = {...newState[config]};
 
         let attribKey = e.target.id;
-        let val = key2 === "log" ? e.target.checked : e.target.value;
+        let val = key3 === "log" ? e.target.checked : e.target.value;
 
         // let acc = [key1,key2];
         // console.log("acc: ", acc)
 
         let modifyPart = newConfig
+        console.log("modify part1: ", modifyPart)
         if (key1 !== null) {
             modifyPart = modifyPart[key1]
+        }
+        console.log("modify part2: ", modifyPart)
+        console.log("key2: ", key2)
+        if (key2 !== null) {
+            modifyPart = modifyPart.dataKeys[key2]
         }
         // let finalVal = acc.reduce( (prev, curr) => {
             // return curr === null ? prev : prev[curr]
         // }, newConfig)
 
-
-        if (key2 === null) {
+        console.log("modify part3: ", modifyPart)
+        if (key3 === null) {
             modifyPart[attribKey] = val;
         } else {
-            modifyPart[attribKey][key2] = val;
+            modifyPart[key3] = val;
         }
 
         newState[config] = newConfig;

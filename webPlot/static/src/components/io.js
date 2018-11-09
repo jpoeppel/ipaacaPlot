@@ -44,21 +44,23 @@ export default class SocketConnection extends Component {
     updateData(msg) {
         console.log("Received Message: ", msg)
         let channel = msg.connection;
-        let channelConfig = this.state.channels[channel];
-        for (var i=0; i<channelConfig.length; i++) {
-            let dataKey = channelConfig[i].val;
-            let shouldLog = channelConfig[i].log;
-            if (dataKey in msg) {
-                this._updateStore(channel, dataKey, msg[dataKey], shouldLog)
-            } else {
-                //Ignore
+        if (channel in this.state.channels) {
+            let channelConfig = this.state.channels[channel];
+            for (var i=0; i<channelConfig.length; i++) {
+                let dataKey = channelConfig[i].val;
+                let shouldLog = channelConfig[i].log;
+                if (dataKey in msg) {
+                    this._updateStore(channel, dataKey, msg[dataKey], shouldLog)
+                } else {
+                    //Ignore
+                }
             }
         }
     }
 
     _updateStore(channel, dataKey, payload, shouldLog) {
         let updateAction = {
-            type: shouldLog ? "UPDATE_CHANNEL_REPLACE" : "UPDATE_CHANNEL_ADD",
+            type: shouldLog ?  "UPDATE_CHANNEL_ADD" : "UPDATE_CHANNEL_REPLACE",
             channel: channel,
             dataKey: dataKey,
             payload: payload,
@@ -71,13 +73,18 @@ export default class SocketConnection extends Component {
 
         this.socket.emit("add_connection", channel);
 
-        if (channel in this.state.channels) {
-            let channelConfig = this.state.channels[channel];
-
-        }
-        // this.setState({
-            // channels: 
-        // })
+        let newChannels = {...this.state.channels};
+        // if (channel in newChannels) {
+            // newChannels[channel].push(connectionInfo.dataKey)
+        //     let channelConfig = newChannels[channel];
+        //     for (var i=0; i<channelConfig.length; i++) {
+        //         if (channelConfig[i].val == connectionInfo.)
+        //     }
+        // }
+        newChannels[channel] = connectionInfo.dataKeys
+        this.setState({
+            channels: newChannels
+        })
     }
 
     removeConnection(connection) {

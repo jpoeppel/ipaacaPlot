@@ -36,6 +36,7 @@ function createLineSeries(channelState, channel, stepNr, sourceProps) {
 
 function mapStateToPropsLines(state, ownProps) {
     //test if it exists
+    console.log("mapSTP state: ", state)
     let lines = [];
     let vlines = []
     let sources = ownProps.config.dataSources;
