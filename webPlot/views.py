@@ -36,7 +36,7 @@ def update_data_rsb(event):
 
 
 def handle_zmq(msg):
-    # app.logger.info("emitting to socketio: {}".format(msg))
+    app.logger.info("emitting to socketio: {}".format(msg))
     socketio.emit("update_data", msg)
 
 class MyTCPStreamHandler(socketserver.StreamRequestHandler):
@@ -86,6 +86,8 @@ def add_connection(connection):
         app.connection_manager.add_connection(connection, update_data, prot)
     elif prot == "tcp":
         app.connection_manager.add_connection(connection, MyTCPStreamHandler, prot)
+    elif prot == "zmq":
+        app.connection_manager.add_connection(connection, handle_zmq, prot)
     else:
         app.logger.debug("Ignoring invalid protocol ({})".format(prot))
     
@@ -101,6 +103,7 @@ def connect():
 
     modelstring = "zmq:5057"
     if app.connection_manager.connections[modelstring].ident:
+        app.logger.info("request conditions")
         app.connection_manager.notify(modelstring, json.dumps({"conditionRequest": ""}))
     return 
 

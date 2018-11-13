@@ -1,9 +1,29 @@
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 
-class CanvasGridworld extends PureComponent {
+class CanvasGridworldOld extends Component {
 
     constructor (props, context) {
         super(props, context)
+        this.state = {
+          showTargets: props.beliefs ? false : true,
+          showTrueColor: props.beliefs ? false : true,
+          showTrueTarget: false,
+          showBeliefSymbols: props.beliefs ? true : false,
+          showPath: false,
+          showVisibles: false,
+          showBeliefedVision: false,
+          showSeenColor: false,
+          visiblesUpdated: false
+        }
+
+        this.onChangeShowTargets = this.onChangeShowTargets.bind(this);
+        this.onChangeShowTrueColor = this.onChangeShowTrueColor.bind(this);
+        this.onChangeShowTrueTarget = this.onChangeShowTrueTarget.bind(this);
+        this.onChangeShowBeliefSymbols = this.onChangeShowBeliefSymbols.bind(this);
+        this.onChangeShowPath = this.onChangeShowPath.bind(this);
+        this.onChangeShowVisibles = this.onChangeShowVisibles.bind(this);
+        this.onChangeShowBeliefedVision = this.onChangeShowBeliefedVision.bind(this);
+        this.onChangeShowSeenColor = this.onChangeShowSeenColor.bind(this);
     }
 
     componentDidMount() {
@@ -11,7 +31,24 @@ class CanvasGridworld extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+
+        // if (prevProps.map.map !== this.props.map.map 
+            // || prevProps.visibles !== this.props.visibles 
+            // || prevProps.pos !== this.props.pos 
+            // || prevState.showVisibles !== this.state.showVisibles) {
             this.updateCanvas();
+        // }
+    }
+
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if ((!nextProps.visibles || nextProps.visibles.length === 0) && !prevState.visiblesUpdated ) {
+            return {showVisibles: false,
+                    visiblesUpdated: false,
+                    showBeliefedVision: false};
+        };
+
+        return {visiblesUpdated: false};
     }
 
     renderMap() {
@@ -33,15 +70,15 @@ class CanvasGridworld extends PureComponent {
 
         let renderTile = this.renderTile;
 
-        const showTrueTarget = this.props.showTrueTarget;
-        const showBeliefSymbols = this.props.showBeliefSymbols;
+        const showTrueTarget = this.state.showTrueTarget;
+        const showBeliefSymbols = this.state.showBeliefSymbols;
         const goalPos = this.props.map.goalPos;
         const targets = this.props.map.targets;
         const goalBeliefs = this.props.beliefs ? this.props.beliefs.goal: null;
         const worldBelief = this.props.beliefs ? this.props.beliefs.world : null;
 
-        const showVisibles = this.props.showVisibles;
-        const showBeliefedVision = this.props.showBeliefedVision;
+        const showVisibles = this.state.showVisibles;
+        const showBeliefedVision = this.state.showBeliefedVision;
         const visibles = this.props.visibles;
 
 
@@ -92,13 +129,15 @@ class CanvasGridworld extends PureComponent {
             });
         }
 
-        if (this.props.showTargets) {
+        if (this.state.showTargets) {
             targets.forEach( tile => {
                 let pos = tile.key;
                 let symbold = tile.val.symbol;
                 let tileContent = Object.assign({}, tile.val);
 
-                if (!this.props.showTrueColor) {
+
+
+                if (!this.state.showTrueColor) {
                     var hideTile = true;
                     if (visibles) {
                         for (var i in visibles) {
@@ -119,6 +158,9 @@ class CanvasGridworld extends PureComponent {
                 renderTile(context, tileContent, tileSize, pos[1], pos[0]);
             })
         }
+
+
+
 
         this.tileSize = tileSize;
     }
@@ -196,21 +238,108 @@ class CanvasGridworld extends PureComponent {
     }
 
     updateCanvas() {
-        if (this.props.map) {
-            this.renderMap();
+        this.renderMap();
 
-            if (this.props.showPath) {
-                this.renderPath()
-            }
-            this.renderAgent();
-        };
+        if (this.state.showPath) {
+            this.renderPath()
+        }
+        this.renderAgent();
+    }
+
+    onChangeShowTargets() {
+        this.setState({
+            showTargets: !this.state.showTargets
+        })
+    }
+
+    onChangeShowTrueColor() {
+        this.setState({
+            showTrueColor: !this.state.showTrueColor
+        })
+    }
+
+    onChangeShowTrueTarget() {
+        this.setState({
+            showTrueTarget: !this.state.showTrueTarget
+        })
+    }
+
+    onChangeShowBeliefSymbols() {
+        this.setState({
+            showBeliefSymbols: !this.state.showBeliefSymbols
+        })
+    }
+
+    onChangeShowPath() {
+        this.setState({
+            showPath: !this.state.showPath
+        })
+    }
+
+    onChangeShowVisibles() {
+        this.props.requestVisibles()
+        this.setState({
+            showVisibles: !this.state.showVisibles,
+            visiblesUpdated: true
+        });
+    }
+
+    onChangeShowBeliefedVision() {
+        this.props.requestVisibles()
+        this.setState({
+            visiblesUpdated: true,
+            showBeliefedVision: !this.state.showBeliefedVision
+        })
+    }
+
+    onChangeShowSeenColor() {
+        this.props.requestVisibles()
+        this.setState({
+            visiblesUpdated: true,
+            showSeenColor: !this.state.showSeenColor
+        })
     }
 
     render() {
-        let { bgname, fgname, width, height } = this.props;
+        let { bgname, fgname, width, height, conditionName } = this.props;
         return (
             <div>
+                <div className="condition">{conditionName}</div>
                 <canvas ref={bgname} width={width} height={height} />
+                <div className={"controls flex"}>
+                    <div>
+                        Show Targets:
+                        <input type="checkbox" defaultChecked={this.state.showTargets} checked={this.state.showTargets} onChange={this.onChangeShowTargets} />
+                    </div>
+                    <div>
+                        Show True Color:
+                        <input type="checkbox" defaultChecked={this.state.showTrueColor} checked={this.state.showTrueColor} onChange={this.onChangeShowTrueColor} />
+                    </div>
+                    <div>
+                        Show True Target:
+                        <input type="checkbox" defaultChecked={this.state.showTrueTarget} checked={this.state.showTrueTarget} onChange={this.onChangeShowTrueTarget} />
+                    </div>
+                    <div>
+                        Show Belief Symbols:
+                        <input type="checkbox" defaultChecked={this.state.showBeliefSymbols} checked={this.state.showBeliefSymbols} onChange={this.onChangeShowBeliefSymbols} />
+                    </div>
+                    <div>
+                        Show Seen Color:
+                        <input type="checkbox" defaultChecked={this.state.showSeenColor} checked={this.state.showSeenColor} onChange={this.onChangeShowSeenColor} />
+                    </div>
+                    {this.props.traj ? <div>
+                        Show Path:
+                        <input type="checkbox" defaultChecked={this.state.showPath} checked={this.state.showPath} onChange={this.onChangeShowPath} />
+                    </div> : ""}
+                    {this.props.beliefs ? <div>
+                        Show Visible area:
+                        <input type="checkbox" defaultChecked={this.state.showVisibles} checked={this.state.showVisibles} onChange={this.onChangeShowVisibles} />
+                    </div> : ""}
+                    {this.props.beliefs ? <div>
+                        Show Beliefed Vision:
+                        <input type="checkbox" defaultChecked={this.state.showBeliefedVision} checked={this.state.showBeliefedVision} onChange={this.onChangeShowBeliefedVision} />
+                    </div> : ""}
+                </div>
                 {/* <canvas className={"agentcanvas canvas"} ref={fgname} width={width} height={height} /> */}
             </div>
         )
@@ -218,4 +347,4 @@ class CanvasGridworld extends PureComponent {
 
 }
 
-export default CanvasGridworld;
+export default CanvasGridworldOld;

@@ -33,8 +33,9 @@ function baseReducer(prevState = initialState, action) {
             newState.channels = channels;
             return newState;
         }
-        case "ADD_SOCKET": {
-            newState.socket = action.payload;
+        case "ADD_MSG_FNC": {
+            console.log("adding message send function")
+            newState.sendMessage = action.payload;
             return newState;
         }
         case "CLEAN_CHANNEL": {

@@ -18,7 +18,16 @@ if (process.env.NODE_ENV !== 'production') {
 }
 */
 
+const initialState = {};
+
+function reducer(prevState = initialState, action) {
+  return prevState;
+}
+
+// const store = createStore(reducer)
+
 const store = configureStore({})
+console.log("store: ", store.getState())
 
 ReactDOM.render(
   <Provider store={store}>

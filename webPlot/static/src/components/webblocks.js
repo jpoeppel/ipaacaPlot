@@ -3,7 +3,8 @@ import React, { Component } from 'react';
 import io from "socket.io-client";
 
 
-import CanvasGridworld from "./gridworld.js";
+import ExperimentView from "./experimentView";
+// import CanvasGridworldOld from "./gridworldOld";
 import Element from "./element.js";
 import CustomSlider from "./slider.js";
 import ConditionSelection from "./conditionSelection.js"
@@ -21,8 +22,6 @@ import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
     LineSeries, LineSeriesCanvas, 
     VerticalBarSeries, VerticalBarSeriesCanvas, 
     CustomSVGSeries, DiscreteColorLegend, VerticalGridLines} from "react-vis"; // ./3rdParty/
-
-
 
 
 export default class Webblocks extends Component {
@@ -372,7 +371,7 @@ export default class Webblocks extends Component {
                     {this.state.conditions ? <ConditionSelection onSelect={this.onConditionSelect} conditions={this.state.conditions}/>: ""}
                 </Element>
                 <Element key="gridGroundTruth" id="Observer's knowledge">
-                    {map ? <CanvasGridworld conditionName={this.conditionName} 
+                    {map ? <ExperimentView conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
                                             width={layout["gridGroundTruth"] ? parseInt(layout["gridGroundTruth"].w)*colwidth : 600} 
@@ -386,7 +385,7 @@ export default class Webblocks extends Component {
                                             /> : ""}
                 </Element>
                  <Element key="gridAgentsBelief" id="gridAgentsBelief">
-                    {samples ? <CanvasGridworld conditionName={this.conditionName} 
+                    {samples ? <ExperimentView conditionName={this.conditionName} 
                                             bgname={"bg"} 
                                             fgname={"fg"} 
                                             width={layout["gridAgentsBelief"] ? parseInt(layout["gridAgentsBelief"].w)*colwidth : 600} 

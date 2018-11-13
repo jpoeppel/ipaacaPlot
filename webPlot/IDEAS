@@ -2,3 +2,28 @@ Incorporate custom "widgets" that allow more interaction and can be coupled to
 plots.
 
 Start with adding canvas, which can be styled by custom provided JS and react to events based on custom JS (would be helpful for me and Sebastian!)
+
+
+Current TODOS:
+
+- Documentation and examples to make it easier for other people to work on this
+- Fill tile options automatically with relevant aspects from configuration (e.g. color for plots)
+- Allow Barplots to specify color per bar in the data which should overwrite global settings
+    - Mainly a problem of how to read and interpret barplot data
+- Consider handling the "sendMessage"-method in a more "redux"-way, i.e. not storing
+an unserializable function in the store, but maybe consider enhancers and middlewares of redux?
+- Implement saving and loading for configurations
+- Allow nested DataKeys for all modules (consider using "." to seperate automatically, e.g. "runData.map" )
+- Allow modules to react to "internal channels", i.e. to data stored somewhere in the store by other components
+instead of by the io component, e.g. using special keyword "internal"?
+- Slider: Consider automatically logging the channel related to the slider?
+- Consider structuring the module tab, e.g. by type and maybe consider implementing a search feature for it?
+- Improve css
+
+Wishlist:
+
+- Automatically discover available modules and present them in the module tab!
+    - Would require automatic discovery and recompilation from the python side.
+        - Compilation currently requires babel and webpack as well as any other dependencies
+        -> we would need to setup a node environment to install dependencies into -.-
+    - Look more into react code-splitting and loading (https://github.com/jamiebuilds/react-loadable)

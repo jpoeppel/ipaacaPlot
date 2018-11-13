@@ -17,6 +17,8 @@ import {SliderInformation, CustomSliderStore} from "./slider";
 import ModuleConfiguration from "./moduleConfiguration";
 import {SocketConnectionStore} from "./io"
 
+import { ExperimentViewInformation, ExperimentViewStore } from './experimentViewStore';
+
 var modules = [{id: 1,
     name: "LinePlot",
     img: null},
@@ -28,11 +30,14 @@ var modules = [{id: 1,
     img: null},
     {id: 4,
     name: "Slider",
+    img: null},
+    {id: 5,
+    name: "ExperimentView",
     img: null}]
 
 
-const mapIDToConfig = {1: LinePlotInformation, 2: BarPlotInformation, 4: SliderInformation}
-const mapTypeToComponent = {"LinePlot": LinePlotStore, "BarPlot": BarPlotStore, "Slider": CustomSliderStore}
+const mapIDToConfig = {1: LinePlotInformation, 2: BarPlotInformation, 4: SliderInformation, 5: ExperimentViewInformation}
+const mapTypeToComponent = {"LinePlot": LinePlotStore, "BarPlot": BarPlotStore, "Slider": CustomSliderStore, "ExperimentView": ExperimentViewStore}
 
 export default class Dashboard extends Component {
 

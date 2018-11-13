@@ -18,6 +18,7 @@ export default class SocketConnection extends Component {
         }
 
         this.updateData = this.updateData.bind(this);
+        this.sendMessage = this.sendMessage.bind(this);
         this.addConnection = this.addConnection.bind(this);
         this.removeConnection = this.removeConnection.bind(this);
         this._updateStore = this._updateStore.bind(this);
@@ -40,16 +41,24 @@ export default class SocketConnection extends Component {
         this.props.removeConnection(this.removeConnection);
 
 
-        let addSocket = {
-            type: "ADD_SOCKET",
-            payload: this.socket
+        console.log("send adding message")
+        let addFunction = {
+            type: "ADD_MSG_FNC",
+            payload: this.sendMessage
         }
-        this.props.dispatch(addSocket);
+        this.props.dispatch(addFunction);
         
     }
 
+    sendMessage(channel, message){
+        this.socket.emit("message", channel,
+                        JSON.stringify(message))
+    }
+
+
+
     updateData(msg) {
-        // console.log("Received Message: ", msg);
+        console.log("Received Message: ", msg);
         // console.log("this.state in update: ", this.state);
         let channel = msg.connection;
         if (channel in this.state.channels) {
