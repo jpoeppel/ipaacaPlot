@@ -32,6 +32,7 @@ def client(ip, port, message):
     sock.connect((ip, port))
     sock.sendall(bytes(message + "\n", "utf-8"))
     sock.close()
+    # pass
 
 #sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #
@@ -54,16 +55,17 @@ try:
 #        informer.publishData(json.dumps(data))
         
         try:
+            port = 8082 # 
             port = 9080
             client("localhost", port, json.dumps(data))
         except:
             pass
         
-        try:
-            port = 9081
-            client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}))
-        except:
-            pass
+        # try:
+        #     port = 9081
+        #     client("localhost", port, json.dumps({"txt": np.random.choice(["a:1","b","c","d"])}))
+        # except:
+        #     pass
 #        sock.close()
 #        msg = ipaaca.Message("test")
 #        msg.payload = {k: str(v) for k,v in data.items()}
@@ -73,6 +75,7 @@ try:
 #        data = {"channel":"bartest", "dist": list(np.random.rand(5))}
         
 #        informer2.publishData(json.dumps(data))
+        print("sleeping: ", time.time())
         time.sleep(0.15)
 except KeyboardInterrupt:
     pass

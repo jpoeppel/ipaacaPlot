@@ -27,14 +27,14 @@ class SocketClient(object):
         self.sock.connect((host,port))
         
     def send(self, msg):
-        sent = self.sock.send(msg)
+        sent = self.sock.send(bytes(msg, "utf-8"))
         print("send {} bytes".format(sent))
         
         self.sock.close()
         
-    def __del__(self):
-        self.sock.shutdown(socket.SHUT_RDWR)
-        self.sock.close()
+    # def __del__(self):
+        # self.sock.shutdown(socket.SHUT_RDWR)
+        # self.sock.close()
     
 class MyTCPHandler(socketserver.BaseRequestHandler):
     
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     
     
     port = 8082
+    # port = 9080
     
 #    server = SocketServer(port)
     server = ThreadedTCPServer((servername, port), MyTCPHandler)
@@ -113,14 +114,15 @@ if __name__ == "__main__":
     server_thread.start()
     
     
-    client = SocketClient()
-    client.connect(servername, port)
     
-    client.send("testmsg asdas")
-    
-    time.sleep(0.1)
-#    del client
+    while True:
+        # client = SocketClient()
+        # client.connect(servername, port)
+        # client.send("testmsg asdas")
+        print("sleeping")
+        time.sleep(0.1)
     
     
     server.shutdown()
     server.server_close()
+    print("after server close")

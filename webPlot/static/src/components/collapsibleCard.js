@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
-import UpIcon from 'react-icons/lib/md/keyboard-arrow-up'
-import DownIcon from 'react-icons/lib/md/keyboard-arrow-down'
+import { MdKeyboardArrowDown as DownIcon } from 'react-icons/md'
+import { MdKeyboardArrowUp as UpIcon } from 'react-icons/md'
 
 
 export default class CollapsibleCard extends PureComponent {

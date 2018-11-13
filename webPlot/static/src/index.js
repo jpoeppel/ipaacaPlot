@@ -32,7 +32,7 @@ console.log("store: ", store.getState())
 ReactDOM.render(
   <Provider store={store}>
     <Dashboard >
-    </Dashboard>
+    </Dashboard>  
     {/* <Webblocks /> */}
   </Provider>,
   document.getElementById('dashboard')
