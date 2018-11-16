@@ -15,14 +15,18 @@ import socket
 import json
 
 from builtins import bytes
+# import sys
+# sys.path.append('/homes/jpoeppel/repo/ipaaca/ipaacalib/python/build/lib')
 
-#informer = rsb.createInformer("/test")
+# import ipaaca
 
-#informer2 = rsb.createInformer("/bartest")
+# informer = rsb.createInformer("/test")
+
+# informer2 = rsb.createInformer("/bartest")
 
 #import ipaaca
 
-#ipaacaOutbuffer = ipaaca.OutputBuffer("IpaacaTest")
+# ipaacaOutbuffer = ipaaca.OutputBuffer("IpaacaTest")
 
 
 
@@ -45,7 +49,9 @@ try:
         data = {"y": np.random.rand(1)[0], # For Line data
                 "dist": list(enumerate(list(np.random.rand(5)))),
                 "dist2": {c: np.random.rand(1)[0] for c in "abcde"},
-                "y2": list(np.random.rand(20))
+                "y2": list(np.random.rand(20)),
+                "x": ["a","b","c","d"],
+                "d": list(np.random.rand(4))
                 }
 
         idx = random.randint(0,4)
@@ -67,17 +73,20 @@ try:
         # except:
         #     pass
 #        sock.close()
-#        msg = ipaaca.Message("test")
-#        msg.payload = {k: str(v) for k,v in data.items()}
+        # msg = ipaaca.Message("test")
+        # msg.payload = {k: str(v) for k,v in data.items()}
+        # msg.payload["x"] = ["a","b","c","d"]
+        # msg.payload["d"] = list(np.random.rand(4))
+
+
+
+        # ipaacaOutbuffer.add(msg)
         
-#        ipaacaOutbuffer.add(msg)
+        # data = {"channel":"bartest", "dist": list(np.random.rand(5))}
         
-#        data = {"channel":"bartest", "dist": list(np.random.rand(5))}
-        
-#        informer2.publishData(json.dumps(data))
-        print("sleeping: ", time.time())
+        # informer2.publishData(json.dumps(data))
         time.sleep(0.15)
 except KeyboardInterrupt:
     pass
 #    del informer
-#    del ipaacaOutbuffer
+    # del ipaacaOutbuffer

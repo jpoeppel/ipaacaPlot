@@ -6,7 +6,7 @@ import TabView from "./tabView";
 import {ConfigLoader, ConfigSaver}  from "./configIO.js"
 import ModuleSelection from './moduleSelection';
 
-export default class ChannelCtrl extends PureComponent {
+export default class DashboardCtrl extends PureComponent {
 
     constructor(props) {
         super(props)
@@ -111,7 +111,7 @@ export default class ChannelCtrl extends PureComponent {
     
         this.options = options;
         return (
-            <CollapsibleCard title="Channel Control" expandedByDefault={true}>
+            <CollapsibleCard title="Dashboard Control" expandedByDefault={true}>
                 <TabView group="Simple">
                     <div name={"Simple"}>
                         Channel: <input type="text" id="channel" />
@@ -165,7 +165,7 @@ export default class ChannelCtrl extends PureComponent {
     }
 }
 
-ChannelCtrl.propTypes = {
+DashboardCtrl.propTypes = {
     tiles:          PropTypes.array,
     addChannel:     PropTypes.func
 }

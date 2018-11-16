@@ -6,13 +6,13 @@ import io from "socket.io-client";
 import Chart from "./chart";
 import TextOutput from "./textOutput";
 
-import ChannelCtrl from "./channelCtrl";
+import DashboardCtrl from "./dashboardCtrl";
 import GridLayout from 'react-grid-layout';
 import Element from "./element.js";
 
 
 
-export default class Dashboard extends Component {
+export default class DashboardOld extends Component {
 
     constructor(props) {
         super(props);
@@ -543,7 +543,7 @@ export default class Dashboard extends Component {
                         <h1> {this.state.header} </h1>
                     </div> : ""}
                     <div className="ctrl">
-                        <ChannelCtrl 
+                        <DashboardCtrl 
                             addSimpleChannel={this.addSimpleChannel} 
                             changePlottype={this.selectPlottype}
                             probeConnection={this.probeConnection}

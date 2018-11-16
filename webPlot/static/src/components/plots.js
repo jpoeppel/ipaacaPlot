@@ -10,6 +10,7 @@ import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
 export const LinePlotInformation = {
     type: "LinePlot",
     dataSrc: {
+        name: "0",
         channel: "tcp:9080",
         dataKeys: [{"name": "Payload key", "val": "y", "log": true}],
         color: "black",
@@ -36,7 +37,7 @@ function mapStateToPropsLines(state, ownProps) {
     let data = state.data
     let lines = [];
     let vlines = []
-    let sources = ownProps.config;
+    let sources = ownProps.config.dataConfig;
     for (var id in sources) {
         let channelData = data.channels[sources[id].channel]
         if (channelData && channelData[sources[id].dataKeys[0].val]) { 
@@ -92,6 +93,7 @@ export {LinePlotStore};
 export const BarPlotInformation = {
     type: "BarPlot",
     dataSrc: {
+        name: "0",
         channel: "tcp:9080",
         dataKeys: [{"name": "Payload key", "val": "dist", "log": false}],
         color: "black",

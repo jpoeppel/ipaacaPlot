@@ -6,7 +6,7 @@ import io from "socket.io-client";
 import Chart from "./chart";
 import TextOutput from "./textOutput";
 
-import ChannelCtrl from "./channelCtrl";
+import DashboardCtrl from "./dashboardCtrl";
 import GridLayout from 'react-grid-layout';
 import Element from "./element.js";
 import ChartControls from "./chartControls";
@@ -15,25 +15,32 @@ import {LinePlotStore, LinePlotInformation, BarPlotInformation, BarPlotStore} fr
 import {SliderInformation, CustomSliderStore} from "./slider";
 
 import ModuleConfiguration from "./moduleConfiguration";
+import {SourceBlock} from "./moduleConfiguration";
+import {updateState} from "../utils";
 import {SocketConnectionStore} from "./io"
 
 import { ExperimentViewInformation, ExperimentViewStore } from './experimentViewStore';
 
+import lineThumb from '../img/linePlot.png'
+import barThumb from '../img/barPlot.png'
+import sliderThumb from '../img/slider.png'
+import gridThumb from '../img/gridPlot.png'
+
 var modules = [{id: 1,
     name: "LinePlot",
-    img: null},
+    img: lineThumb},
     {id: 2,
     name: "BarPlot",
-    img: null},
+    img: barThumb},
     {id: 3,
     name: "Gridworld",
-    img: null},
+    img: gridThumb},
     {id: 4,
     name: "Slider",
-    img: null},
+    img: sliderThumb},
     {id: 5,
     name: "ExperimentView",
-    img: null}]
+    img: gridThumb}]
 
 
 const mapIDToConfig = {1: LinePlotInformation, 2: BarPlotInformation, 4: SliderInformation, 5: ExperimentViewInformation}
@@ -58,6 +65,7 @@ export default class Dashboard extends Component {
         this.closeConfig = this.closeConfig.bind(this);
         this.createModule = this.createModule.bind(this);
         this.createTile = this.createTile.bind(this);
+        this.updateConfig = this.updateConfig.bind(this);
         
         // For Layout:
         this.onLayoutChange = this.onLayoutChange.bind(this);
@@ -91,10 +99,10 @@ export default class Dashboard extends Component {
 
         var newTile = {
             id: this.state.tileIDCounter,
-            title: config.moduleConfig.title,
+            config: JSON.parse(JSON.stringify(config)),
+            // title: config.moduleConfig.title,
             type: type,
-            dataSources: JSON.parse(JSON.stringify(config.dataConfig))
-            
+            // dataSources: JSON.parse(JSON.stringify(config.dataConfig))
         }
 
         var newLayout = this.state.layout;
@@ -110,21 +118,21 @@ export default class Dashboard extends Component {
         this.setState({
             tiles: newTiles,
             layout: newLayout,
-            tileIDCounter: newTile.id + 1, 
+            tileIDCounter: this.state.tileIDCounter + 1, 
             moduleConfig: null
         })
 
         for (var dataSrc in config.dataConfig) {
-            let src = config.dataConfig[dataSrc]
+            let src = config.dataConfig[dataSrc];
             if (this.connectionMap[src.channel]) {
                 //Add only if it does not already exist
                 if (this.connectionMap[src.channel].indexOf(newTile.id) == -1) {
-                    this.connectionMap[src.channel].push(newTile.id)
+                    this.connectionMap[src.channel].push(newTile.id);
                 }
             } else {
-                this.connectionMap[src.channel] = [newTile.id]
+                this.connectionMap[src.channel] = [newTile.id];
             }
-            this.addConnection(src)
+            this.addConnection(src);
         }
 
         console.log("ConnectionMap after adding: ", this.connectionMap);
@@ -164,9 +172,9 @@ export default class Dashboard extends Component {
             if (idx > -1) {
                 this.connectionMap[src.channel].splice(idx, 1);
             }
-            // if (this.connectionMap[src.channel].length == 0) {
+            if (this.connectionMap[src.channel].length == 0) {
                 this.removeConnection(src.channel, src.dataKeys)
-            // }
+            }
         }
 
         console.log("conmap after: ", this.connectionMap);
@@ -183,27 +191,81 @@ export default class Dashboard extends Component {
         })
     }
 
-    createDataSourceControl(sources) {
-        console.log("sources: ", sources);
+    updateConfig(e, tileID) {
+        console.log("should update config for tile: ", tileID);
+        console.log("event: ", e);
+
+        let tilePos = this.state.tiles.findIndex( el => el.id === tileID);
+
+        let keys = e.target.id.split(".");
+        let val = e.target.type === "checkbox" ? JSON.parse(e.target.checked) : e.target.value;
+        let newTileState = updateState(this.state.tiles[tilePos].config, keys, val);
+        let newTiles = this.state.tiles.splice();
+        newTiles[tilePos] = newTileState;
+        this.setState({...this.state, tiles: newTiles});
+    }
+
+    removeDateSource() {
+        console.log("remove data source");
+    }
+
+
+    createTab(tileID, name, contents) {
+        console.log("CreateTab for tile: ", tileID)
+        let elements = [];
+        for (var key in contents) {
+            let val = contents[key];
+            console.log("val: ", val);
+            if (Object.prototype.toString.call(val) === '[object Array]') {
+                for (var i=0;i<val.length;i++) {
+                    elements.push(<SourceBlock id={i} configOptions={val[i]} 
+                                allowRemoval={false} 
+                                updateValues={(e) => {this.updateConfig(e, tileID)}} 
+                                removeDataSource={this.removeDateSource}
+                    />);
+                    // let type = Object.prototype.toString.call(val[i].val) === '[object Boolean]' ? "checkbox" : "text";
+                    // elements.push(
+                    //     <span>{val[i].name} : <input type={type} id={val[i].name} value={val[i].val} checked={val[i].val}/></span>
+                    // )
+                }
+            } else {
+                let type = Object.prototype.toString.call(val) === '[object Boolean]' ? "checkbox" : "text";
+                if (key === "color") {
+                    type = "color";
+                }
+                elements.push(
+                    <span>{key} : <input type={type} id={key} value={val} checked={val}/></span>
+                    );
+            }
+        }
+        return(
+            <div name={name} className={"vflex"}>
+                {/* {elements} */}
+                <SourceBlock id={name} configOptions={contents} 
+                                allowRemoval={false} 
+                                updateValues={this.updateConfig} 
+                                removeDataSource={this.removeDateSource}
+                    />
+            </div>
+        )
+    }
+
+    createDataSourceControl(tileID, config) {
+        console.log("Create data source for tile: ", tileID)
+        console.log("config: ", config);
         // let res = sources.map( (s,i) => {
 
         let blocks = []
-        for (var sID in sources) {
-
-            let elements = [];
-            for (var key in sources[sID]) {
-                let val = sources[sID][key];
-                elements.push(
-                    <span>{key} : <input type="text" id={key} value={val}/></span>
-                    );
+        for (var confN in config) {
+            let confObj = config[confN]
+            if (Object.prototype.toString.call(confObj) == '[object Array]') {
+                for (var i=0;i<confObj.length;i++) {
+                    blocks.push(this.createTab(tileID, confN + ": " + confObj[i].name, confObj[i]))
+                }
+            } else {
+                let name = confN + ": " + (confObj.name ? confObj.name : "");
+                blocks.push(this.createTab(tileID, name, confObj))
             }
-
-            blocks.push(
-                <div name={"Data Source " + sID}>
-                    {elements}
-                </div>
-            )
-        // });
         }
         console.log("blocks: ", blocks);
         return blocks;
@@ -222,10 +284,10 @@ export default class Dashboard extends Component {
         let children = null;
         let createControls = null;
         return(
-            <Element key={tile.id.toString()} id={tile.title} data-grid={layout} >
+            <Element key={tile.id.toString()} id={tile.config.moduleConfig.title} data-grid={layout} >
                 <Module width={parseInt(layout.w)*colWidth} 
                     height={parseInt(layout.h)*rowHeight}
-                    config={tile.dataSources}
+                    config={tile.config}
                     // configCallback={fn => createControls = fn}
                 />
                 <ChartControls title={"Module settings"} group={"General"}>
@@ -234,7 +296,7 @@ export default class Dashboard extends Component {
                                 Remove Module
                         </button>
                     </div>
-                    {this.createDataSourceControl(tile.dataSources).map( e => (e))}
+                    {this.createDataSourceControl(tile.id, tile.config)}
                     {/* {children} */}
                 </ChartControls>
             </Element>
@@ -260,7 +322,7 @@ export default class Dashboard extends Component {
                         <h1> {this.state.header} </h1>
                     </div> : ""}
                     <div className="ctrl">
-                        <ChannelCtrl 
+                        <DashboardCtrl 
                             addSimpleChannel={this.addSimpleChannel} 
                             changePlottype={this.selectPlottype}
                             probeConnection={this.probeConnection}

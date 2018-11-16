@@ -58,7 +58,7 @@ export default class SocketConnection extends Component {
 
 
     updateData(msg) {
-        console.log("Received Message: ", msg);
+        // console.log("Received Message: ", msg);
         // console.log("this.state in update: ", this.state);
         let channel = msg.connection;
         if (channel in this.state.channels) {
@@ -91,7 +91,9 @@ export default class SocketConnection extends Component {
     addConnection(connectionInfo) {
         let channel = connectionInfo.channel
         // console.log("add connection: ", connectionInfo);
-        this.socket.emit("add_connection", channel);
+        if (channel !== "internal") {
+            this.socket.emit("add_connection", channel);
+        }
 
         let newChannels = {...this.state.channels};
         if (newChannels[channel]) {
