@@ -148,9 +148,9 @@ export default class DashboardCtrl extends PureComponent {
                         </div>
                         
                     </div>
-                    <div name="Config-Layout">
-                        <ConfigLoader layoutLoaded={this.props.layoutLoaded}/>
-                        <ConfigSaver layout={this.props.layout}/>
+                    <div name="Config-IO">
+                        <ConfigLoader configLoaded={this.props.configLoaded}/>
+                        <ConfigSaver config={this.props.config}/>
                     </div>
                     <div name="Options">
                         Header: <input type="text" id="header" onChange={this.props.headerChanged} value={this.props.header}/>

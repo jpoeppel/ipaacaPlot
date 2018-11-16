@@ -10,7 +10,7 @@ export class SourceBlock extends PureComponent {
         let elements = []
 
         for (var key in configOptions) {
-            let idS = `dataConfig.${id}.${key}`;
+            let idS = `${id}.${key}`;
 
             let oldVal = configOptions[key];
             if (Object.prototype.toString.call(oldVal) == '[object Array]') {
@@ -18,7 +18,7 @@ export class SourceBlock extends PureComponent {
                 for (var i=0; i < oldVal.length; i++) {
                     let dataKeyObj = oldVal[i];
                     const listIdx = i;
-                    let idS = `dataConfig.${id}.dataKeys.${listIdx}.`;
+                    let idS = `${id}.dataKeys.${listIdx}.`;
                     elements.push(
                         <span>{dataKeyObj.name} : <input type="text" id={idS + "val"} value={dataKeyObj.val} onChange={this.props.updateValues}/>  
                         {dataKeyObj.log !== null ? ["Log :", <input type="checkbox" id={idS+"log"} value={dataKeyObj.log} checked={dataKeyObj.log} onChange={this.props.updateValues}/> ]: null}
@@ -116,7 +116,7 @@ export default class ModuleConfiguration extends Component {
         // console.log("create data src inputs state: ", this.state)
         for (var i=0; i<this.state.dataConfig.length; i++) {
             var config = this.state.dataConfig[i];
-            sourceBlocks.push(<SourceBlock key={i} id={i} 
+            sourceBlocks.push(<SourceBlock key={i} id={`dataConfig.${i}`} 
                                     configOptions={config} 
                                     removeDataSource={this.removeDataSource}
                                     updateValues={this.updateValues}

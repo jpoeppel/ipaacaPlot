@@ -474,8 +474,8 @@ export default class Webblocks extends Component {
                 </Element>
                 <Element key="Options" id="options">
                     <div className={"flex"}>
-                        <ConfigLoader layoutLoaded={this.layoutLoaded}/>
-                        <ConfigSaver layout={this.state.layout}/>
+                        <ConfigLoader configLoaded={this.layoutLoaded}/>
+                        <ConfigSaver config={this.state.layout}/>
                     </div>
                 </Element>
                 <Element key="Desire Beliefs" id="Desire Beliefs">

@@ -17,8 +17,8 @@ export class ConfigLoader extends PureComponent
         // Closure to capture the file information.
         reader.onload = (file) => {
             console.log("loaded: ", file.target.result);
-            let newLayout = JSON.parse(file.target.result);
-            this.props.layoutLoaded(newLayout);
+            let newConfig = JSON.parse(file.target.result);
+            this.props.configLoaded(newConfig);
         };
 
         reader.readAsText(e.target.files[0])
@@ -43,7 +43,7 @@ export class ConfigSaver extends PureComponent {
 
     onSave() {
 
-        let layoutstring = JSON.stringify(this.props.layout, null, 2);
+        let layoutstring = JSON.stringify(this.props.config, null, 2);
         var blob = new Blob([layoutstring], {type: "application/json"});
         var url  = URL.createObjectURL(blob);
         var downloadAnchorNode = document.getElementById('downloadAnchorElem');

@@ -69,9 +69,41 @@ export default class Dashboard extends Component {
         
         // For Layout:
         this.onLayoutChange = this.onLayoutChange.bind(this);
-        this.layoutLoaded = this.layoutLoaded.bind(this);
+        this.configLoaded = this.configLoaded.bind(this);
     }
 
+    clearTiles() {
+        for (var i=0;i<this.state.tiles.length;i++) {
+            let tile = this.state.tiles[i];
+            this.removeTile(tile.id);
+        }
+    }
+
+    configLoaded(config) {
+
+        this.clearTiles();
+
+        console.log("loading config: ", config)
+
+        for (var i=0; i<config.tiles.length;i++){
+
+            let tile = config.tiles[i];
+            let conf = tile.config;
+            for (var dataSrc in conf.dataConfig) {
+                let src = conf.dataConfig[dataSrc];
+                if (this.connectionMap[src.channel]) {
+                    //Add only if it does not already exist
+                    if (this.connectionMap[src.channel].indexOf(tile.id) == -1) {
+                        this.connectionMap[src.channel].push(tile.id);
+                    }
+                } else {
+                    this.connectionMap[src.channel] = [tile.id];
+                }
+                this.addConnection(src);
+            }
+        }
+        this.setState(config);
+    }
 
     // componentDidMount() {
     //     this.socketConnection = new SocketConnection();
@@ -122,7 +154,9 @@ export default class Dashboard extends Component {
             moduleConfig: null
         })
 
+            console.log("adding tile dataconfig: ", config.dataConfig)
         for (var dataSrc in config.dataConfig) {
+            console.log("adding Tile dataSrc: ", dataSrc)
             let src = config.dataConfig[dataSrc];
             if (this.connectionMap[src.channel]) {
                 //Add only if it does not already exist
@@ -163,10 +197,10 @@ export default class Dashboard extends Component {
                 removedTile = t;
             }
         })
-        console.log("remvoedTile: ", removedTile)
+        console.log("removedTile: ", removedTile)
         console.log("conmap before: ", this.connectionMap);
-        for (var key in removedTile.dataSources) {
-            let src = removedTile.dataSources[key];
+        for (var i=0;i<removedTile.config.dataConfig.length; i++) {
+            let src = removedTile.config.dataConfig[i];
             let idx = this.connectionMap[src.channel].indexOf(removedTile.id);
             console.log("idx: ", idx);
             if (idx > -1) {
@@ -191,17 +225,23 @@ export default class Dashboard extends Component {
         })
     }
 
-    updateConfig(e, tileID) {
+    updateConfig(tileID, e) {
         console.log("should update config for tile: ", tileID);
         console.log("event: ", e);
 
         let tilePos = this.state.tiles.findIndex( el => el.id === tileID);
 
+        console.log("TilePos: ", tilePos);
+        console.log("state slice: ", this.state.tiles[tilePos])
+        
+
         let keys = e.target.id.split(".");
+        console.log("keys: ", keys)
         let val = e.target.type === "checkbox" ? JSON.parse(e.target.checked) : e.target.value;
         let newTileState = updateState(this.state.tiles[tilePos].config, keys, val);
-        let newTiles = this.state.tiles.splice();
-        newTiles[tilePos] = newTileState;
+        let newTiles = this.state.tiles.slice();
+        console.log("newTiles: ", newTiles)
+        newTiles[tilePos].config = newTileState;
         this.setState({...this.state, tiles: newTiles});
     }
 
@@ -210,40 +250,17 @@ export default class Dashboard extends Component {
     }
 
 
-    createTab(tileID, name, contents) {
+    createTab(tileID, name, contents, index="") {
         console.log("CreateTab for tile: ", tileID)
-        let elements = [];
-        for (var key in contents) {
-            let val = contents[key];
-            console.log("val: ", val);
-            if (Object.prototype.toString.call(val) === '[object Array]') {
-                for (var i=0;i<val.length;i++) {
-                    elements.push(<SourceBlock id={i} configOptions={val[i]} 
-                                allowRemoval={false} 
-                                updateValues={(e) => {this.updateConfig(e, tileID)}} 
-                                removeDataSource={this.removeDateSource}
-                    />);
-                    // let type = Object.prototype.toString.call(val[i].val) === '[object Boolean]' ? "checkbox" : "text";
-                    // elements.push(
-                    //     <span>{val[i].name} : <input type={type} id={val[i].name} value={val[i].val} checked={val[i].val}/></span>
-                    // )
-                }
-            } else {
-                let type = Object.prototype.toString.call(val) === '[object Boolean]' ? "checkbox" : "text";
-                if (key === "color") {
-                    type = "color";
-                }
-                elements.push(
-                    <span>{key} : <input type={type} id={key} value={val} checked={val}/></span>
-                    );
-            }
-        }
+        console.log("contents: ", contents)
+        let suffix = contents.name ? contents.name : "";
+        let sourceID = name + (index !== "" ? "." + index : "");
         return(
-            <div name={name} className={"vflex"}>
+            <div name={name + ": " + suffix} className={"vflex"}>
                 {/* {elements} */}
-                <SourceBlock id={name} configOptions={contents} 
+                <SourceBlock id={sourceID} configOptions={contents} 
                                 allowRemoval={false} 
-                                updateValues={this.updateConfig} 
+                                updateValues={(e) => this.updateConfig(tileID,e)} 
                                 removeDataSource={this.removeDateSource}
                     />
             </div>
@@ -260,11 +277,11 @@ export default class Dashboard extends Component {
             let confObj = config[confN]
             if (Object.prototype.toString.call(confObj) == '[object Array]') {
                 for (var i=0;i<confObj.length;i++) {
-                    blocks.push(this.createTab(tileID, confN + ": " + confObj[i].name, confObj[i]))
+                    blocks.push(this.createTab(tileID, confN, confObj[i], i))
                 }
             } else {
                 let name = confN + ": " + (confObj.name ? confObj.name : "");
-                blocks.push(this.createTab(tileID, name, confObj))
+                blocks.push(this.createTab(tileID, confN, confObj))
             }
         }
         console.log("blocks: ", blocks);
@@ -332,8 +349,8 @@ export default class Dashboard extends Component {
                             addNewChannel={this.addNewChannel}     
                             updateChannel={this.updateChannel} 
                             removeChannel={this.removeChannel}
-                            layout={this.state.layout}
-                            layoutLoaded={this.layoutLoaded}
+                            config={this.state}
+                            configLoaded={this.configLoaded}
                             header={this.state.header}
                             headerChanged={this.headerChanged}
                             modules={modules}

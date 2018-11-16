@@ -132,7 +132,7 @@ function createBarSeries(channelState, stepNr, sourceProps) {
 function mapStateToPropsBars(state, ownProps) {
     let data = state.data
     let bars = [];
-    let sources = ownProps.config;
+    let sources = ownProps.config.dataConfig;
     for (var id in sources) {
         let channelData = data.channels[sources[id].channel];
         if (channelData && channelData[sources[id].dataKeys[0].val]) { 

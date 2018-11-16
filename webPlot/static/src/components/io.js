@@ -90,7 +90,7 @@ export default class SocketConnection extends Component {
 
     addConnection(connectionInfo) {
         let channel = connectionInfo.channel
-        // console.log("add connection: ", connectionInfo);
+        console.log("add connection: ", connectionInfo);
         if (channel !== "internal") {
             this.socket.emit("add_connection", channel);
         }

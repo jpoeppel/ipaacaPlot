@@ -8,11 +8,14 @@ Current TODOS:
 
 - Documentation and examples to make it easier for other people to work on this
 - Fill tile options automatically with relevant aspects from configuration (e.g. color for plots)
+    - Done rudimentary. But we should now consider changing configs again, to specify which 
+    options should be changeable in options dialog, as not all options make sense to change!
 - Allow Barplots to specify color per bar in the data which should overwrite global settings
     - Mainly a problem of how to read and interpret barplot data
 - Consider handling the "sendMessage"-method in a more "redux"-way, i.e. not storing
 an unserializable function in the store, but maybe consider enhancers and middlewares of redux?
 - Implement saving and loading for configurations
+    - Looks like it is working :-)
 - Allow nested DataKeys for all modules (consider using "." to seperate automatically, e.g. "runData.map" )
 - Allow modules to react to "internal channels", i.e. to data stored somewhere in the store by other components
 instead of by the io component, e.g. using special keyword "internal"?
