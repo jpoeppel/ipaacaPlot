@@ -99,7 +99,7 @@ def remove_connection(connection):
     
 @socketio.on('connect')
 def connect(): 
-    app.logger.info("client connected")
+    app.logger.info("client connected")y
 
     modelstring = "zmq:5057"
     if app.connection_manager.connections[modelstring].ident:
