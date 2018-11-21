@@ -144,7 +144,10 @@ class ZMQRouter(object):
 
     def send(self, msg):
         app.logger.info("sending message {} to {}".format(msg, self.ident))
-        self.socket.send_multipart([self.ident, msg.encode('utf-8')])
+        if self.ident:
+            self.socket.send_multipart([self.ident, msg.encode('utf-8')])
+        else:
+            app.logger.info("No ident set to send message to")
 
     def __del__(self):
         self.running = False
@@ -173,7 +176,7 @@ class ConnectionManager(object):
             #Use port as channel in the tcp case for now
             #The callback needs to be a HandlerClass!
             self.connections[channelID] = SocketConnection(callback, int(channel))
-        elif protocol == "zmq":
+        elif protocol == "zmq" and zmqAvailable:
             self.connections[channelID] = ZMQRouter(callback, int(channel))
         else:
             app.logger.error("Could not add connection for protocol {}. Is this \

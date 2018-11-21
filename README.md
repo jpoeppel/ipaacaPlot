@@ -1,5 +1,8 @@
 # WebPlot branch
 
+**Concentrated development has been moved to** https://gitlab.ub.uni-bielefeld.de/scs/webviz 
+**As such, this repository has become deprecated**
+
 In this branch I am exploring the idea of getting rid of platform dependent native GUI-Frameworks (currently ipaacaPlot uses wx which is not easiliy installed across systems or Python-versions) in favor of web-based rendering. The plotting work will be done using a combination of react.js and d3.js while the Python-Flask-Backend handles communication with (potentially several) middlewares.
 
 While there exist a few frameworks for combining react and d3 (e.g. reactd3.org, rd3 https://github.com/yang-wei/rd3 and many small others), most of those use d3 v3 and/or are searching for new maintainers. On top of this, I wanted to get my hands dirty myself, to familiarize myself more with both react and d3 so I currently wrote the charts as they are now myself, taking inspiration from various projects I could find, usually conferting them to es2015 and d3 v4.

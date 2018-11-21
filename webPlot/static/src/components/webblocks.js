@@ -77,6 +77,10 @@ export default class Webblocks extends Component {
         this.socket.on("connect", function() {
             console.log("Connected");
         });
+
+        // this.socket.emit("add_connection", "zmq:5057");
+        
+        // this.socket.emit("message", "zmq:5057", JSON.stringify({"conditionRequest":""}));
         
         this.socket.on("update_data", this.update_data);
     }

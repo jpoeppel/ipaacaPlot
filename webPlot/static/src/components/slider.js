@@ -22,7 +22,7 @@ export const SliderInformation = {
 
 function mapStateToProps(state, ownProps) {
     let data = state.data;
-    let source = ownProps.config[0]; //There should only be one in a slider
+    let source = ownProps.config.dataConfig[0]; //There should only be one in a slider
 
     let minV = 0;
     let maxV = Infinity;

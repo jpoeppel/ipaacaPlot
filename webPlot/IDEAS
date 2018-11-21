@@ -10,6 +10,8 @@ Current TODOS:
 - Fill tile options automatically with relevant aspects from configuration (e.g. color for plots)
     - Done rudimentary. But we should now consider changing configs again, to specify which 
     options should be changeable in options dialog, as not all options make sense to change!
+- Allow hiding of module configs
+    - Also fix module height when options are shown/unfolded
 - Allow Barplots to specify color per bar in the data which should overwrite global settings
     - Mainly a problem of how to read and interpret barplot data
 - Consider handling the "sendMessage"-method in a more "redux"-way, i.e. not storing
@@ -30,3 +32,7 @@ Wishlist:
         - Compilation currently requires babel and webpack as well as any other dependencies
         -> we would need to setup a node environment to install dependencies into -.-
     - Look more into react code-splitting and loading (https://github.com/jamiebuilds/react-loadable)
+- Allow Pause/Resume on the different plots 
+    - Questions:
+        - Should data still be received/stored when pausing (i.e. only "freeze" vis at that point)
+        - If data recieving should be stopped: What about other modules that also listen to same channel/key?

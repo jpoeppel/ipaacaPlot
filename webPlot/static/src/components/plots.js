@@ -8,13 +8,28 @@ import {FlexibleWidthXYPlot, XAxis, YAxis, Borders,
 // An object specifying the kind of information which is requested when creating
 // a new LinePlot
 export const LinePlotInformation = {
+    type: "LinePlot", //mandatory
+    dataSrc: {
+        name: "0", //mandatory
+        channel: "tcp:9080", //mandatory
+        dataKeys: [{"name": "Payload key", "val": "y", "log": true}], //mandatory
+        color: "black", //LinePlot specific
+        strokes: "" //LinePlot specific
+    },
+    title: "LinePlot", //mandatory
+    width: 10, //mandatory ?
+    height: 6, //mandatory ?
+    allowMultipleSources: true //mandatory ?
+}
+
+const LinePlotInformationTestNew = {
     type: "LinePlot",
     dataSrc: {
-        name: "0",
-        channel: "tcp:9080",
-        dataKeys: [{"name": "Payload key", "val": "y", "log": true}],
-        color: "black",
-        strokes: ""
+        name: {val: "0", type: "text", changable: true},
+        channel: {val: "tcp:9080", type: "text", changable: false},
+        dataKeys: [{name: "Payload key", val: "y", log: true}],
+        color: {val: "black", type: "color", changable: true},
+        strokes: {val: "", type: "text", changable: true}
     },
     title: "LinePlot",
     width: 10,
@@ -22,8 +37,9 @@ export const LinePlotInformation = {
     allowMultipleSources: true
 }
 
+
 function createLineSeries(channelState, stepNr, sourceProps) {
-    let data = channelState[sourceProps.dataKeys[0].val].map((el, i) => {
+    let data = channelState.map((el, i) => {
         if (i > stepNr) {return []}
         return {"x": i, "y": el}
         })
@@ -41,7 +57,7 @@ function mapStateToPropsLines(state, ownProps) {
     for (var id in sources) {
         let channelData = data.channels[sources[id].channel]
         if (channelData && channelData[sources[id].dataKeys[0].val]) { 
-            lines.push(createLineSeries(channelData, state.data.stepNr, sources[id])) //Assumes state.stepNr exists!
+            lines.push(createLineSeries(channelData[sources[id].dataKeys[0].val], state.data.stepNr, sources[id])) //Assumes state.stepNr exists!
         } 
     }
     return {lines: lines, vlines: vlines}

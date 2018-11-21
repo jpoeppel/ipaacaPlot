@@ -13,6 +13,7 @@ import ChartControls from "./chartControls";
 
 import {LinePlotStore, LinePlotInformation, BarPlotInformation, BarPlotStore} from "./plots";
 import {SliderInformation, CustomSliderStore} from "./slider";
+import {CheckedTextStore, CheckedTextInformation} from './connectedCheckedData';
 
 import ModuleConfiguration from "./moduleConfiguration";
 import {SourceBlock} from "./moduleConfiguration";
@@ -40,11 +41,15 @@ var modules = [{id: 1,
     img: sliderThumb},
     {id: 5,
     name: "ExperimentView",
-    img: gridThumb}]
+    img: gridThumb},
+    {id: 6,
+    name: "CheckedText",
+    img: null}
+]
 
 
-const mapIDToConfig = {1: LinePlotInformation, 2: BarPlotInformation, 4: SliderInformation, 5: ExperimentViewInformation}
-const mapTypeToComponent = {"LinePlot": LinePlotStore, "BarPlot": BarPlotStore, "Slider": CustomSliderStore, "ExperimentView": ExperimentViewStore}
+const mapIDToConfig = {1: LinePlotInformation, 2: BarPlotInformation, 4: SliderInformation, 5: ExperimentViewInformation, 6:CheckedTextInformation}
+const mapTypeToComponent = {"LinePlot": LinePlotStore, "BarPlot": BarPlotStore, "Slider": CustomSliderStore, "ExperimentView": ExperimentViewStore, "CheckedText":CheckedTextStore}
 
 export default class Dashboard extends Component {
 

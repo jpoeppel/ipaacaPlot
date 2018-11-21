@@ -2,15 +2,12 @@ import './index.css';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import DashboardOld from "./components/dashboard";
 import Dashboard from "./components/dashboard2";
-
 import Webblocks from "./components/webblocks.js";
-
 import { Provider } from 'react-redux'
-import { createStore } from 'redux'
 
 import configureStore from './store'
+
 
 /*
 if (process.env.NODE_ENV !== 'production') {
@@ -34,6 +31,7 @@ ReactDOM.render(
   <Provider store={store}>
     <Dashboard />
     {/* <Webblocks /> */}
+    {/* <CheckedText/> */}
   </Provider>,
   document.getElementById('dashboard')
 );
